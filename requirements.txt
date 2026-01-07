@@ -1,0 +1,3 @@
+# Default requirements file - points to local for development
+-r requirements/local.txt
+
