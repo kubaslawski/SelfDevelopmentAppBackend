@@ -25,10 +25,28 @@ class EmailTokenObtainPairView(TokenObtainPairView):
     serializer_class = EmailTokenObtainPairSerializer
 
 
+from apps.users.auth_views import EmailLoginView, EmailLogoutView
+
 urlpatterns = [
     # Admin
     path("admin/", admin.site.urls),
-    # JWT Token endpoints (using email)
+    # =========================================================================
+    # Authentication (Email-based login for OAuth flow)
+    # =========================================================================
+    path("accounts/login/", EmailLoginView.as_view(), name="email_login"),
+    path("accounts/logout/", EmailLogoutView.as_view(), name="email_logout"),
+    # =========================================================================
+    # OAuth 2.0 + OpenID Connect (Authorization Code + PKCE)
+    # =========================================================================
+    # OAuth2 Provider endpoints:
+    # - /o/authorize/          - Authorization endpoint (user login in browser)
+    # - /o/token/              - Token endpoint (exchange code for tokens)
+    # - /o/revoke_token/       - Revoke token endpoint
+    # - /o/introspect/         - Token introspection
+    # - /o/userinfo/           - OIDC UserInfo endpoint
+    # - /o/.well-known/openid-configuration/ - OIDC discovery
+    path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
+    # JWT Token endpoints (legacy, still supported)
     path("api/token/", EmailTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),

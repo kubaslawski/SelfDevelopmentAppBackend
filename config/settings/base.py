@@ -28,6 +28,7 @@ THIRD_PARTY_APPS = [
     "django_filters",
     "corsheaders",
     "drf_spectacular",
+    "oauth2_provider",
 ]
 
 LOCAL_APPS = [
@@ -43,7 +44,12 @@ AUTH_USER_MODEL = "users.User"
 # Authentication Backends
 AUTHENTICATION_BACKENDS = [
     "apps.users.backends.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+    "oauth2_provider.backends.OAuth2Backend",
 ]
+
+# Login URL for OAuth2 authorization flow
+LOGIN_URL = "/accounts/login/"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -118,6 +124,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Django REST Framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
@@ -175,4 +182,32 @@ SIMPLE_JWT = {
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
+}
+
+# OAuth2 Provider settings (django-oauth-toolkit)
+OAUTH2_PROVIDER = {
+    # PKCE is required for mobile apps (Authorization Code + PKCE)
+    "PKCE_REQUIRED": True,
+    # OpenID Connect support
+    "OIDC_ENABLED": True,
+    "OIDC_ISS_ENDPOINT": config("OIDC_ISS_ENDPOINT", default="http://localhost:8000"),
+    # Scopes
+    "SCOPES": {
+        "openid": "OpenID Connect scope",
+        "profile": "Access to user profile",
+        "email": "Access to user email",
+        "read": "Read access to resources",
+        "write": "Write access to resources",
+    },
+    "DEFAULT_SCOPES": ["openid", "profile", "email", "read"],
+    # Token settings
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,  # 1 hour
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 604800,  # 7 days
+    "ROTATE_REFRESH_TOKEN": True,
+    # Use custom user model
+    "OAUTH2_VALIDATOR_CLASS": "apps.users.oauth.CustomOAuth2Validator",
+    # Application model
+    "APPLICATION_MODEL": "oauth2_provider.Application",
+    # Allow confidential applications to use authorization code flow
+    "ALLOWED_REDIRECT_URI_SCHEMES": ["selfdevelopmentapp", "http", "https"],
 }

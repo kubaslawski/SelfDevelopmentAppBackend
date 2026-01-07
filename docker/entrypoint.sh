@@ -38,6 +38,10 @@ if [ "$SEED_DATA" = "true" ]; then
     python manage.py seed_data --skip-if-exists
 fi
 
+# Setup OAuth2 application for mobile app
+echo "Setting up OAuth2 application..."
+python manage.py setup_oauth_app
+
 # Collect static files (only in production)
 if [ "$DJANGO_SETTINGS_MODULE" = "config.settings.production" ]; then
     echo "Collecting static files..."

@@ -7,6 +7,9 @@ djangorestframework-simplejwt==5.4.0
 django-filter==24.3
 django-cors-headers==4.6.0
 
+# OAuth 2.0 + OpenID Connect
+django-oauth-toolkit==3.0.1
+
 # Database
 psycopg2-binary==2.9.10
 
