@@ -1,0 +1,50 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.postgres
+    container_name: sda-postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: selfdevelopmentapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d selfdevelopmentapp"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django
+    container_name: sda-django
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Prevent overriding venv in container
+      - /app/venv
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=selfdevelopmentapp
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - SEED_DATA=true
+    depends_on:
+      db:
+        condition: service_healthy
+    # Auto-restart on code changes (Django runserver handles this)
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+

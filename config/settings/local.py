@@ -11,14 +11,15 @@ DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # Database - PostgreSQL in Docker
+# Supports both DB_* (docker-compose) and POSTGRES_* (legacy) env vars
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', default='selfdevelopmentapp'),
-        'USER': config('POSTGRES_USER', default='postgres'),
-        'PASSWORD': config('POSTGRES_PASSWORD', default='postgres'),
-        'HOST': config('POSTGRES_HOST', default='localhost'),
-        'PORT': config('POSTGRES_PORT', default='5432'),
+        'NAME': config('DB_NAME', default=config('POSTGRES_DB', default='selfdevelopmentapp')),
+        'USER': config('DB_USER', default=config('POSTGRES_USER', default='postgres')),
+        'PASSWORD': config('DB_PASSWORD', default=config('POSTGRES_PASSWORD', default='postgres')),
+        'HOST': config('DB_HOST', default=config('POSTGRES_HOST', default='localhost')),
+        'PORT': config('DB_PORT', default=config('POSTGRES_PORT', default='5432')),
     }
 }
 

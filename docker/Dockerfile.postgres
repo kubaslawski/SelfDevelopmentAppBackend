@@ -6,14 +6,9 @@ ENV POSTGRES_DB=selfdevelopmentapp
 ENV POSTGRES_USER=postgres
 ENV POSTGRES_PASSWORD=postgres
 
-# Copy initialization scripts
-# These run automatically on first container start (when data volume is empty)
-# Scripts run in alphabetical order
-COPY --chmod=755 init/*.sql /docker-entrypoint-initdb.d/
-
 # Expose PostgreSQL port
 EXPOSE 5432
 
 # Health check
-HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+HEALTHCHECK --interval=5s --timeout=3s --retries=10 \
     CMD pg_isready -U postgres -d selfdevelopmentapp || exit 1
