@@ -15,10 +15,10 @@ class TaskCompletionInline(admin.TabularInline):
     readonly_fields = ['completed_at']
     fields = ['completed_at', 'notes', 'duration_minutes']
     ordering = ['-completed_at']
-    
+
     def has_add_permission(self, request, obj=None):
         return True
-    
+
     def has_change_permission(self, request, obj=None):
         return True
 
@@ -26,7 +26,7 @@ class TaskCompletionInline(admin.TabularInline):
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     """Admin interface for Task model."""
-    
+
     list_display = [
         'id',
         'title',
@@ -53,7 +53,7 @@ class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     list_per_page = 25
     inlines = [TaskCompletionInline]
-    
+
     fieldsets = (
         ('Basic Information', {
             'fields': ('title', 'description')
@@ -124,7 +124,7 @@ class TaskAdmin(admin.ModelAdmin):
         """Display recurrence info as a badge."""
         if not obj.is_recurring:
             return '-'
-        
+
         display = obj.recurrence_display or 'Recurring'
         return format_html(
             '<span style="background-color: #17a2b8; color: white; padding: 3px 8px; '
@@ -146,18 +146,18 @@ class TaskAdmin(admin.ModelAdmin):
         """Display completion count for recurring tasks."""
         if not obj.is_recurring:
             return '-'
-        
+
         current = obj.completions_in_current_period
         target = obj.recurrence_target_count or 1
         total = obj.completions.count()
-        
+
         if current >= target:
             color = '#28a745'
             icon = '✓'
         else:
             color = '#ffc107'
             icon = '○'
-        
+
         return format_html(
             '<span style="color: {};">{} {}/{} (total: {})</span>',
             color, icon, current, target, total
@@ -168,7 +168,7 @@ class TaskAdmin(admin.ModelAdmin):
         """Detailed completions summary for the detail view."""
         if not obj.is_recurring:
             return 'This is not a recurring task.'
-        
+
         current = obj.completions_in_current_period
         target = obj.recurrence_target_count or 1
         remaining = obj.remaining_completions_in_period
@@ -176,11 +176,11 @@ class TaskAdmin(admin.ModelAdmin):
         last = obj.last_completion
         period_start = obj.current_period_start
         period_end = obj.current_period_end
-        
+
         last_str = last.strftime('%Y-%m-%d %H:%M') if last else 'Never'
         period_start_str = period_start.strftime('%Y-%m-%d %H:%M') if period_start else '-'
         period_end_str = period_end.strftime('%Y-%m-%d %H:%M') if period_end else '-'
-        
+
         return format_html(
             '<strong>Current period:</strong> {} to {}<br>'
             '<strong>Progress:</strong> {}/{} completions<br>'
@@ -217,7 +217,7 @@ class TaskAdmin(admin.ModelAdmin):
 @admin.register(TaskCompletion)
 class TaskCompletionAdmin(admin.ModelAdmin):
     """Admin interface for TaskCompletion model."""
-    
+
     list_display = [
         'id',
         'task_link',
@@ -235,7 +235,7 @@ class TaskCompletionAdmin(admin.ModelAdmin):
     date_hierarchy = 'completed_at'
     list_per_page = 50
     raw_id_fields = ['task']
-    
+
     fieldsets = (
         ('Completion Info', {
             'fields': ('task', 'completed_at')

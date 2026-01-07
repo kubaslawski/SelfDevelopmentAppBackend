@@ -9,7 +9,7 @@ from .models import Task, TaskCompletion
 class TaskFilter(django_filters.FilterSet):
     """
     Filter for Task model.
-    
+
     Allows filtering by:
     - status: exact match or list
     - priority: exact match or list
@@ -19,7 +19,7 @@ class TaskFilter(django_filters.FilterSet):
     - created_at: range (before/after)
     - tags: contains
     """
-    
+
     due_date_before = django_filters.DateTimeFilter(
         field_name='due_date',
         lookup_expr='lte',
@@ -75,12 +75,12 @@ class TaskFilter(django_filters.FilterSet):
 class TaskCompletionFilter(django_filters.FilterSet):
     """
     Filter for TaskCompletion model.
-    
+
     Allows filtering by:
     - task: exact match
     - completed_at: range (before/after)
     """
-    
+
     completed_after = django_filters.DateTimeFilter(
         field_name='completed_at',
         lookup_expr='gte',

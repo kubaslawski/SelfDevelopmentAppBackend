@@ -16,3 +16,6 @@ python-decouple==3.8
 pytz==2024.2
 python-dateutil==2.9.0
 
+# API Documentation
+drf-spectacular==0.28.0
+

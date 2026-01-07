@@ -82,3 +82,4 @@ class TestTaskModel:
         assert task.created_at is not None
         assert task.updated_at is not None
 
+

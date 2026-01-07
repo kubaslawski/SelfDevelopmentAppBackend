@@ -15,7 +15,3 @@ django-redis==5.4.0
 
 # Static files
 whitenoise==6.8.2
-
-# Documentation
-drf-spectacular==0.28.0
-

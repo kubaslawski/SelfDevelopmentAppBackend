@@ -11,7 +11,7 @@ class TaskCompletionSerializer(serializers.ModelSerializer):
     Serializer for TaskCompletion model.
     """
     task_title = serializers.CharField(source='task.title', read_only=True)
-    
+
     class Meta:
         model = TaskCompletion
         fields = [
@@ -51,7 +51,7 @@ class TaskSerializer(serializers.ModelSerializer):
     current_period_start = serializers.ReadOnlyField()
     current_period_end = serializers.ReadOnlyField()
     total_completions = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Task
         fields = [
@@ -107,17 +107,17 @@ class TaskSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Validate recurrence fields."""
         is_recurring = data.get('is_recurring', getattr(self.instance, 'is_recurring', False))
-        
+
         if is_recurring:
             recurrence_period = data.get(
-                'recurrence_period', 
+                'recurrence_period',
                 getattr(self.instance, 'recurrence_period', None)
             )
             if not recurrence_period:
                 raise serializers.ValidationError({
                     'recurrence_period': 'Recurrence period is required for recurring tasks.'
                 })
-        
+
         return data
 
 

@@ -1,0 +1,20 @@
+{
+    "include": [
+        "apps",
+        "config"
+    ],
+    "exclude": [
+        "venv",
+        "**/node_modules",
+        "**/__pycache__",
+        "**/migrations"
+    ],
+    "venvPath": ".",
+    "venv": "venv",
+    "pythonVersion": "3.13",
+    "pythonPlatform": "Darwin",
+    "typeCheckingMode": "basic",
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": false,
+    "extraPaths": ["."]
+}

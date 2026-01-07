@@ -1,6 +1,8 @@
 """
 Local development settings for SelfDevelopmentAppBackend project.
 """
+from decouple import config
+
 from .base import *  # noqa: F401, F403
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -8,11 +10,15 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
-# Database - SQLite for local development
+# Database - PostgreSQL in Docker
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',  # noqa: F405
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('POSTGRES_DB', default='selfdevelopmentapp'),
+        'USER': config('POSTGRES_USER', default='postgres'),
+        'PASSWORD': config('POSTGRES_PASSWORD', default='postgres'),
+        'HOST': config('POSTGRES_HOST', default='localhost'),
+        'PORT': config('POSTGRES_PORT', default='5432'),
     }
 }
 
@@ -66,4 +72,3 @@ LOGGING = {
         },
     },
 }
-

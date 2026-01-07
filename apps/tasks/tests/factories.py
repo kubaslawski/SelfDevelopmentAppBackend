@@ -11,7 +11,7 @@ from apps.tasks.models import Task, TaskCompletion
 
 class TaskFactory(factory.django.DjangoModelFactory):
     """Factory for creating Task instances."""
-    
+
     class Meta:
         model = Task
 
@@ -29,9 +29,9 @@ class TaskFactory(factory.django.DjangoModelFactory):
 
 class CompletedTaskFactory(TaskFactory):
     """Factory for creating completed Task instances."""
-    
+
     status = Task.Status.COMPLETED
-    
+
     @factory.lazy_attribute
     def completed_at(self):
         """Set completed_at to now."""
@@ -40,7 +40,7 @@ class CompletedTaskFactory(TaskFactory):
 
 class OverdueTaskFactory(TaskFactory):
     """Factory for creating overdue Task instances."""
-    
+
     @factory.lazy_attribute
     def due_date(self):
         """Set due date to 1 day ago."""
@@ -49,7 +49,7 @@ class OverdueTaskFactory(TaskFactory):
 
 class RecurringTaskFactory(TaskFactory):
     """Factory for creating recurring Task instances."""
-    
+
     is_recurring = True
     recurrence_period = Task.RecurrencePeriod.WEEKLY
     recurrence_target_count = 3
@@ -57,7 +57,7 @@ class RecurringTaskFactory(TaskFactory):
 
 class TaskCompletionFactory(factory.django.DjangoModelFactory):
     """Factory for creating TaskCompletion instances."""
-    
+
     class Meta:
         model = TaskCompletion
 

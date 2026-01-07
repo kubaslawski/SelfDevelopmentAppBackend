@@ -12,3 +12,4 @@ class TasksConfig(AppConfig):
         except ImportError:
             pass
 
+
