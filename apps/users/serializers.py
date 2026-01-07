@@ -3,8 +3,63 @@
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
+
+
+class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Custom JWT serializer that uses email instead of username."""
+
+    username_field = "email"
+
+    def validate(self, attrs):
+        # Use email for authentication
+        email = attrs.get("email")
+        password = attrs.get("password")
+
+        if email and password:
+            # Authenticate using email (passed as username to backend)
+            user = authenticate(
+                request=self.context.get("request"),
+                username=email,
+                password=password,
+            )
+
+            if not user:
+                raise serializers.ValidationError(
+                    "No active account found with the given credentials.",
+                    code="no_active_account",
+                )
+
+            if not user.is_active:
+                raise serializers.ValidationError(
+                    "User account is disabled.",
+                    code="no_active_account",
+                )
+        else:
+            raise serializers.ValidationError(
+                'Must include "email" and "password".',
+                code="authorization",
+            )
+
+        refresh = self.get_token(user)
+
+        data = {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        }
+
+        return data
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        # Add custom claims
+        token["email"] = user.email
+        token["first_name"] = user.first_name
+        token["last_name"] = user.last_name
+        return token
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,9 +92,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs["password"] != attrs["password_confirm"]:
-            raise serializers.ValidationError(
-                {"password_confirm": "Password fields didn't match."}
-            )
+            raise serializers.ValidationError({"password_confirm": "Password fields didn't match."})
         return attrs
 
     def create(self, validated_data):
