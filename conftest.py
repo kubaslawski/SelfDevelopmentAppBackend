@@ -1,6 +1,7 @@
 """
 Pytest configuration for the project.
 """
+
 import pytest
 from rest_framework.test import APIClient
 
@@ -11,9 +12,7 @@ def api_client():
     return APIClient()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def django_db_setup():
     """Configure Django DB for pytest."""
     pass
-
-

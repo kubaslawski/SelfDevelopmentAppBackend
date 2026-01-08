@@ -14,19 +14,21 @@ class CustomOAuth2Validator(OAuth2Validator):
 
     # Define OIDC claims
     oidc_claim_scope = OAuth2Validator.oidc_claim_scope
-    oidc_claim_scope.update({
-        "profile": [
-            "name",
-            "given_name",
-            "family_name",
-            "preferred_username",
-            "updated_at",
-        ],
-        "email": [
-            "email",
-            "email_verified",
-        ],
-    })
+    oidc_claim_scope.update(
+        {
+            "profile": [
+                "name",
+                "given_name",
+                "family_name",
+                "preferred_username",
+                "updated_at",
+            ],
+            "email": [
+                "email",
+                "email_verified",
+            ],
+        }
+    )
 
     def get_additional_claims(self, request):
         """
@@ -37,19 +39,23 @@ class CustomOAuth2Validator(OAuth2Validator):
         claims = {}
 
         if "profile" in request.scopes:
-            claims.update({
-                "name": user.get_full_name() or user.email,
-                "given_name": user.first_name,
-                "family_name": user.last_name,
-                "preferred_username": user.email,
-                "updated_at": int(user.date_joined.timestamp()) if user.date_joined else None,
-            })
+            claims.update(
+                {
+                    "name": user.get_full_name() or user.email,
+                    "given_name": user.first_name,
+                    "family_name": user.last_name,
+                    "preferred_username": user.email,
+                    "updated_at": int(user.date_joined.timestamp()) if user.date_joined else None,
+                }
+            )
 
         if "email" in request.scopes:
-            claims.update({
-                "email": user.email,
-                "email_verified": user.is_active,  # Treat active as verified
-            })
+            claims.update(
+                {
+                    "email": user.email,
+                    "email_verified": user.is_active,  # Treat active as verified
+                }
+            )
 
         return claims
 
@@ -60,15 +66,17 @@ class CustomOAuth2Validator(OAuth2Validator):
         claims = super().get_userinfo_claims(request)
 
         user = request.user
-        claims.update({
-            "sub": str(user.id),
-            "name": user.get_full_name() or user.email,
-            "given_name": user.first_name,
-            "family_name": user.last_name,
-            "preferred_username": user.email,
-            "email": user.email,
-            "email_verified": user.is_active,
-        })
+        claims.update(
+            {
+                "sub": str(user.id),
+                "name": user.get_full_name() or user.email,
+                "given_name": user.first_name,
+                "family_name": user.last_name,
+                "preferred_username": user.email,
+                "email": user.email,
+                "email_verified": user.is_active,
+            }
+        )
 
         return claims
 
@@ -87,4 +95,3 @@ class CustomOAuth2Validator(OAuth2Validator):
             return True
 
         return False
-

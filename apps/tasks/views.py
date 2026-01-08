@@ -1,6 +1,7 @@
 """
 Views for the Tasks app.
 """
+from django.db.models import Case, When, Value, IntegerField
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
@@ -16,6 +17,44 @@ from .serializers import (
     TaskStatusUpdateSerializer,
     TaskWithCompletionsSerializer,
 )
+
+# Priority ordering: low=1, medium=2, high=3, urgent=4
+PRIORITY_ORDER = Case(
+    When(priority='low', then=Value(1)),
+    When(priority='medium', then=Value(2)),
+    When(priority='high', then=Value(3)),
+    When(priority='urgent', then=Value(4)),
+    default=Value(0),
+    output_field=IntegerField(),
+)
+
+
+class TaskOrderingFilter(filters.OrderingFilter):
+    """
+    Custom ordering filter that handles priority field specially.
+    Maps 'priority' to numeric ordering instead of alphabetical.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        ordering = self.get_ordering(request, queryset, view)
+
+        if ordering:
+            # Annotate with priority_order for proper sorting
+            queryset = queryset.annotate(priority_order=PRIORITY_ORDER)
+
+            # Replace priority with priority_order in ordering
+            new_ordering = []
+            for field in ordering:
+                if field == 'priority':
+                    new_ordering.append('priority_order')
+                elif field == '-priority':
+                    new_ordering.append('-priority_order')
+                else:
+                    new_ordering.append(field)
+
+            return queryset.order_by(*new_ordering)
+
+        return queryset
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -45,7 +84,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     """
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, TaskOrderingFilter]
     filterset_class = TaskFilter
     search_fields = ['title', 'description', 'tags']
     ordering_fields = ['created_at', 'updated_at', 'due_date', 'priority', 'status']

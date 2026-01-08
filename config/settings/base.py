@@ -209,5 +209,6 @@ OAUTH2_PROVIDER = {
     # Application model
     "APPLICATION_MODEL": "oauth2_provider.Application",
     # Allow confidential applications to use authorization code flow
-    "ALLOWED_REDIRECT_URI_SCHEMES": ["selfdevelopmentapp", "http", "https"],
+    # Note: "exp" scheme is needed for Expo Go development environment
+    "ALLOWED_REDIRECT_URI_SCHEMES": ["selfdevelopmentapp", "exp", "http", "https"],
 }

@@ -72,4 +72,3 @@ class Command(BaseCommand):
                 "(Proof Key for Code Exchange) for security."
             )
         )
-
