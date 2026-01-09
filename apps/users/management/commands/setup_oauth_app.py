@@ -29,7 +29,7 @@ class Command(BaseCommand):
             "authorization_grant_type": Application.GRANT_AUTHORIZATION_CODE,
             # Redirect URI for mobile app (custom scheme)
             "redirect_uris": "selfdevelopmentapp://oauth/callback",
-            "skip_authorization": True,  # Don't ask user to authorize (it's our own app)
+            "skip_authorization": False,  # Show authorization screen to confirm user identity
             # No client_secret for public clients (PKCE provides security)
             "client_secret": "",
             "algorithm": Application.NO_ALGORITHM,  # Using PKCE instead

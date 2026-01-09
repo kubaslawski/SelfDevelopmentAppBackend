@@ -1,6 +1,10 @@
 """Custom User model with email-based authentication."""
 
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -46,6 +50,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         error_messages={
             "unique": _("A user with that email already exists."),
         },
+    )
+    username = models.CharField(
+        _("username"),
+        max_length=50,
+        blank=True,
+        help_text=_("Display name shown in the app."),
     )
     first_name = models.CharField(_("first name"), max_length=150, blank=True)
     last_name = models.CharField(_("last name"), max_length=150, blank=True)

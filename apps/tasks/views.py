@@ -105,12 +105,14 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Optionally filter tasks by user if authenticated.
+        Filter tasks by authenticated user.
         """
         queryset = super().get_queryset()
-        # Uncomment below to filter by authenticated user
-        # if self.request.user.is_authenticated:
-        #     queryset = queryset.filter(user=self.request.user)
+        if self.request.user.is_authenticated:
+            queryset = queryset.filter(user=self.request.user)
+        else:
+            # Return empty queryset for unauthenticated users
+            queryset = queryset.none()
         return queryset
 
     def perform_create(self, serializer):
@@ -308,8 +310,16 @@ class TaskCompletionViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['-completed_at']
 
     def get_queryset(self):
-        """Filter completions by task if specified."""
+        """Filter completions by user and optionally by task."""
         queryset = super().get_queryset()
+
+        # Filter by authenticated user
+        if self.request.user.is_authenticated:
+            queryset = queryset.filter(task__user=self.request.user)
+        else:
+            queryset = queryset.none()
+
+        # Additional filter by task_id if specified
         task_id = self.request.query_params.get('task_id')
         if task_id:
             queryset = queryset.filter(task_id=task_id)

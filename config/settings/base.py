@@ -188,18 +188,16 @@ SIMPLE_JWT = {
 OAUTH2_PROVIDER = {
     # PKCE is required for mobile apps (Authorization Code + PKCE)
     "PKCE_REQUIRED": True,
-    # OpenID Connect support
-    "OIDC_ENABLED": True,
-    "OIDC_ISS_ENDPOINT": config("OIDC_ISS_ENDPOINT", default="http://localhost:8000"),
+    # OpenID Connect support - DISABLED (requires JWK key configuration)
+    "OIDC_ENABLED": False,
     # Scopes
     "SCOPES": {
-        "openid": "OpenID Connect scope",
         "profile": "Access to user profile",
         "email": "Access to user email",
         "read": "Read access to resources",
         "write": "Write access to resources",
     },
-    "DEFAULT_SCOPES": ["openid", "profile", "email", "read"],
+    "DEFAULT_SCOPES": ["profile", "email", "read"],
     # Token settings
     "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,  # 1 hour
     "REFRESH_TOKEN_EXPIRE_SECONDS": 604800,  # 7 days
