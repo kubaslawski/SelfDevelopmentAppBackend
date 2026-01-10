@@ -19,6 +19,7 @@ class TaskCompletionSerializer(serializers.ModelSerializer):
             'task',
             'task_title',
             'completed_at',
+            'completed_value',
             'notes',
             'duration_minutes',
         ]
@@ -45,6 +46,7 @@ class TaskSerializer(serializers.ModelSerializer):
     tags_list = serializers.ReadOnlyField()
     recurrence_display = serializers.ReadOnlyField()
     goal_display = serializers.ReadOnlyField()
+    unit_display_name = serializers.ReadOnlyField()
     target_in_minutes = serializers.ReadOnlyField()
     completions_in_current_period = serializers.ReadOnlyField()
     is_period_complete = serializers.ReadOnlyField()
@@ -80,8 +82,10 @@ class TaskSerializer(serializers.ModelSerializer):
             'total_completions',
             # Goal/target fields
             'unit_type',
+            'custom_unit_name',
             'target_value',
             'goal_display',
+            'unit_display_name',
             'target_in_minutes',
             # Other fields
             'estimated_duration',
@@ -136,6 +140,7 @@ class TaskListSerializer(serializers.ModelSerializer):
     is_period_complete = serializers.ReadOnlyField()
     remaining_completions_in_period = serializers.ReadOnlyField()
     goal_display = serializers.ReadOnlyField()
+    unit_display_name = serializers.ReadOnlyField()
 
     class Meta:
         model = Task
@@ -152,8 +157,10 @@ class TaskListSerializer(serializers.ModelSerializer):
             'remaining_completions_in_period',
             # Goal/target fields
             'unit_type',
+            'custom_unit_name',
             'target_value',
             'goal_display',
+            'unit_display_name',
             'created_at',
         ]
 

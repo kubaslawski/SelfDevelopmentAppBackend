@@ -13,7 +13,7 @@ class TaskCompletionInline(admin.TabularInline):
     model = TaskCompletion
     extra = 0
     readonly_fields = ['completed_at']
-    fields = ['completed_at', 'notes', 'duration_minutes']
+    fields = ['completed_at', 'completed_value', 'notes', 'duration_minutes']
     ordering = ['-completed_at']
 
     def has_add_permission(self, request, obj=None):
@@ -64,8 +64,8 @@ class TaskAdmin(admin.ModelAdmin):
             'fields': ('status', 'priority')
         }),
         ('Goal / Target', {
-            'fields': ('unit_type', 'target_value'),
-            'description': 'Set a measurable goal for this task (e.g., 30 minutes, 2 hours, 50 repetitions).'
+            'fields': ('unit_type', 'custom_unit_name', 'target_value'),
+            'description': 'Set a measurable goal. Use "Custom unit" and fill custom_unit_name for your own units (e.g., pages, liters).'
         }),
         ('Recurrence Settings', {
             'fields': (
@@ -254,6 +254,7 @@ class TaskCompletionAdmin(admin.ModelAdmin):
         'id',
         'task_link',
         'completed_at',
+        'completed_value',
         'duration_minutes',
         'notes_preview',
     ]
@@ -264,18 +265,19 @@ class TaskCompletionAdmin(admin.ModelAdmin):
     search_fields = ['task__title', 'notes']
     ordering = ['-completed_at']
     readonly_fields = ['completed_at']
-    date_hierarchy = 'completed_at'
-    list_per_page = 50
-    raw_id_fields = ['task']
 
     fieldsets = (
         ('Completion Info', {
             'fields': ('task', 'completed_at')
         }),
         ('Details', {
-            'fields': ('duration_minutes', 'notes')
+            'fields': ('completed_value', 'duration_minutes', 'notes'),
+            'description': 'completed_value stores the numeric value in the task\'s unit type'
         }),
     )
+    date_hierarchy = 'completed_at'
+    list_per_page = 50
+    raw_id_fields = ['task']
 
     def task_link(self, obj):
         """Display task as a link."""

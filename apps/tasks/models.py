@@ -1,6 +1,7 @@
 """
 Task models for the Self Development App.
 """
+
 from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
@@ -15,8 +16,9 @@ class TimeStampedModel(models.Model):
     """
     Abstract base model with created and modified timestamps.
     """
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
         abstract = True
@@ -33,53 +35,58 @@ class Task(TimeStampedModel):
     """
 
     class Priority(models.TextChoices):
-        LOW = 'low', _('Low')
-        MEDIUM = 'medium', _('Medium')
-        HIGH = 'high', _('High')
-        URGENT = 'urgent', _('Urgent')
+        LOW = "low", _("Low")
+        MEDIUM = "medium", _("Medium")
+        HIGH = "high", _("High")
+        URGENT = "urgent", _("Urgent")
 
     class Status(models.TextChoices):
-        TODO = 'todo', _('To Do')
-        IN_PROGRESS = 'in_progress', _('In Progress')
-        COMPLETED = 'completed', _('Completed')
-        ARCHIVED = 'archived', _('Archived')
+        TODO = "todo", _("To Do")
+        IN_PROGRESS = "in_progress", _("In Progress")
+        COMPLETED = "completed", _("Completed")
+        ARCHIVED = "archived", _("Archived")
 
     class RecurrencePeriod(models.TextChoices):
-        DAILY = 'daily', _('Daily')
-        WEEKLY = 'weekly', _('Weekly')
-        BIWEEKLY = 'biweekly', _('Every 2 Weeks')
-        MONTHLY = 'monthly', _('Monthly')
-        QUARTERLY = 'quarterly', _('Quarterly')
-        YEARLY = 'yearly', _('Yearly')
+        DAILY = "daily", _("Daily")
+        WEEKLY = "weekly", _("Weekly")
+        BIWEEKLY = "biweekly", _("Every 2 Weeks")
+        MONTHLY = "monthly", _("Monthly")
+        QUARTERLY = "quarterly", _("Quarterly")
+        YEARLY = "yearly", _("Yearly")
 
     class UnitType(models.TextChoices):
         """Unit type for measuring task goals/progress."""
-        MINUTES = 'minutes', _('Minutes')
-        HOURS = 'hours', _('Hours')
-        COUNT = 'count', _('Count (repetitions)')
+
+        # Time-based
+        MINUTES = "minutes", _("Minutes")
+        HOURS = "hours", _("Hours")
+        # Count-based
+        COUNT = "count", _("Count/Repetitions")
+        PAGES = "pages", _("Pages")
+        # Distance
+        KILOMETERS = "kilometers", _("Kilometers")
+        METERS = "meters", _("Meters")
+        # Health
+        CALORIES = "calories", _("Calories")
+        STEPS = "steps", _("Steps")
+        # Custom
+        CUSTOM = "custom", _("Custom unit")
 
     # Basic fields
-    title = models.CharField(
-        _('title'),
-        max_length=255,
-        help_text=_('Task title')
-    )
+    title = models.CharField(_("title"), max_length=255, help_text=_("Task title"))
     description = models.TextField(
-        _('description'),
-        blank=True,
-        default='',
-        help_text=_('Detailed description of the task')
+        _("description"), blank=True, default="", help_text=_("Detailed description of the task")
     )
 
     # Status and priority
     status = models.CharField(
-        _('status'),
+        _("status"),
         max_length=20,
         choices=Status.choices,
         default=Status.TODO,
     )
     priority = models.CharField(
-        _('priority'),
+        _("priority"),
         max_length=20,
         choices=Priority.choices,
         default=Priority.MEDIUM,
@@ -87,13 +94,10 @@ class Task(TimeStampedModel):
 
     # Dates
     due_date = models.DateTimeField(
-        _('due date'),
-        null=True,
-        blank=True,
-        help_text=_('Deadline for completing the task')
+        _("due date"), null=True, blank=True, help_text=_("Deadline for completing the task")
     )
     completed_at = models.DateTimeField(
-        _('completed at'),
+        _("completed at"),
         null=True,
         blank=True,
     )
@@ -102,81 +106,86 @@ class Task(TimeStampedModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='tasks',
-        verbose_name=_('user'),
+        related_name="tasks",
+        verbose_name=_("user"),
         null=True,
         blank=True,
     )
 
     # Recurrence settings
     is_recurring = models.BooleanField(
-        _('is recurring'),
-        default=False,
-        help_text=_('Whether this task repeats on a schedule')
+        _("is recurring"), default=False, help_text=_("Whether this task repeats on a schedule")
     )
     recurrence_period = models.CharField(
-        _('recurrence period'),
+        _("recurrence period"),
         max_length=20,
         choices=RecurrencePeriod.choices,
         null=True,
         blank=True,
-        help_text=_('How often the task should be completed (always starts from calendar boundaries)')
+        help_text=_(
+            "How often the task should be completed (always starts from calendar boundaries)"
+        ),
     )
     recurrence_target_count = models.PositiveIntegerField(
-        _('target completions per period'),
+        _("target completions per period"),
         null=True,
         blank=True,
         default=1,
-        help_text=_('How many times the task should be completed per period (e.g., 3 times per week)')
+        help_text=_(
+            "How many times the task should be completed per period (e.g., 3 times per week)"
+        ),
     )
     recurrence_end_date = models.DateField(
-        _('recurrence end date'),
+        _("recurrence end date"),
         null=True,
         blank=True,
-        help_text=_('When the recurring schedule ends (optional)')
+        help_text=_("When the recurring schedule ends (optional)"),
     )
 
     # Additional metadata
     estimated_duration = models.PositiveIntegerField(
-        _('estimated duration (minutes)'),
+        _("estimated duration (minutes)"),
         null=True,
         blank=True,
-        help_text=_('Estimated time to complete the task in minutes')
+        help_text=_("Estimated time to complete the task in minutes"),
     )
     tags = models.CharField(
-        _('tags'),
-        max_length=500,
-        blank=True,
-        default='',
-        help_text=_('Comma-separated tags')
+        _("tags"), max_length=500, blank=True, default="", help_text=_("Comma-separated tags")
     )
 
     # Goal/target with unit
     unit_type = models.CharField(
-        _('unit type'),
+        _("unit type"),
         max_length=20,
         choices=UnitType.choices,
         null=True,
         blank=True,
-        help_text=_('Type of unit for measuring the goal (time or count)')
+        help_text=_("Type of unit for measuring the goal"),
+    )
+    custom_unit_name = models.CharField(
+        _("custom unit name"),
+        max_length=50,
+        blank=True,
+        default="",
+        help_text=_("Name for custom unit (used when unit_type is 'custom')"),
     )
     target_value = models.PositiveIntegerField(
-        _('target value'),
+        _("target value"),
         null=True,
         blank=True,
-        help_text=_('Target value in the specified unit (e.g., 30 minutes, 2 hours, 50 reps)')
+        help_text=_("Target value in the specified unit (e.g., 30 minutes, 50 pages)"),
     )
 
     class Meta:
-        verbose_name = _('task')
-        verbose_name_plural = _('tasks')
-        ordering = ['-created_at']
+        verbose_name = _("task")
+        verbose_name_plural = _("tasks")
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['status']),
-            models.Index(fields=['priority']),
-            models.Index(fields=['due_date']),
-            models.Index(fields=['user', 'status']),
-            models.Index(fields=['is_recurring']),
+            models.Index(fields=["status"]),
+            models.Index(fields=["priority"]),
+            models.Index(fields=["due_date"]),
+            models.Index(fields=["user", "status"]),
+            models.Index(fields=["is_recurring"]),
         ]
 
     def __str__(self):
@@ -196,7 +205,7 @@ class Task(TimeStampedModel):
             # For non-recurring tasks, mark as completed
             self.status = self.Status.COMPLETED
             self.completed_at = timezone.now()
-            self.save(update_fields=['status', 'completed_at', 'updated_at'])
+            self.save(update_fields=["status", "completed_at", "updated_at"])
 
     def get_completions_in_period(self, start_date=None, end_date=None):
         """
@@ -215,10 +224,7 @@ class Task(TimeStampedModel):
         if end_date is None:
             end_date = self._get_current_period_end()
 
-        return self.completions.filter(
-            completed_at__gte=start_date,
-            completed_at__lt=end_date
-        )
+        return self.completions.filter(completed_at__gte=start_date, completed_at__lt=end_date)
 
     def _get_current_period_start(self):
         """
@@ -259,7 +265,9 @@ class Task(TimeStampedModel):
         elif self.recurrence_period == self.RecurrencePeriod.QUARTERLY:
             # 1st of current quarter (Jan=1, Apr=4, Jul=7, Oct=10)
             quarter_month = ((now.month - 1) // 3) * 3 + 1
-            return now.replace(month=quarter_month, day=1, hour=0, minute=0, second=0, microsecond=0)
+            return now.replace(
+                month=quarter_month, day=1, hour=0, minute=0, second=0, microsecond=0
+            )
 
         elif self.recurrence_period == self.RecurrencePeriod.YEARLY:
             # January 1st of current year
@@ -339,7 +347,7 @@ class Task(TimeStampedModel):
     def last_completion(self):
         """Get the most recent completion timestamp."""
         if self.is_recurring:
-            last = self.completions.order_by('-completed_at').first()
+            last = self.completions.order_by("-completed_at").first()
             return last.completed_at if last else None
         return self.completed_at
 
@@ -354,7 +362,7 @@ class Task(TimeStampedModel):
     def tags_list(self):
         """Return tags as a list."""
         if self.tags:
-            return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
+            return [tag.strip() for tag in self.tags.split(",") if tag.strip()]
         return []
 
     @property
@@ -364,11 +372,33 @@ class Task(TimeStampedModel):
             return None
 
         target = self.recurrence_target_count or 1
-        period = self.get_recurrence_period_display() if self.recurrence_period else 'period'
+        period = self.get_recurrence_period_display() if self.recurrence_period else "period"
 
         if target == 1:
             return f"Once {period.lower()}"
         return f"{target} times {period.lower()}"
+
+    @property
+    def unit_display_name(self):
+        """Get the display name for the unit (for chart Y-axis, etc.)."""
+        if not self.unit_type:
+            return None
+
+        if self.unit_type == self.UnitType.CUSTOM:
+            return self.custom_unit_name or "units"
+
+        # Map unit types to short display names
+        unit_names = {
+            self.UnitType.MINUTES: "min",
+            self.UnitType.HOURS: "h",
+            self.UnitType.COUNT: "x",
+            self.UnitType.PAGES: "pages",
+            self.UnitType.KILOMETERS: "km",
+            self.UnitType.METERS: "m",
+            self.UnitType.CALORIES: "kcal",
+            self.UnitType.STEPS: "steps",
+        }
+        return unit_names.get(self.unit_type, self.unit_type)
 
     @property
     def goal_display(self):
@@ -376,6 +406,9 @@ class Task(TimeStampedModel):
         if not self.target_value or not self.unit_type:
             return None
 
+        unit = self.unit_display_name
+
+        # Special formatting for time
         if self.unit_type == self.UnitType.MINUTES:
             if self.target_value >= 60:
                 hours = self.target_value // 60
@@ -388,10 +421,7 @@ class Task(TimeStampedModel):
         elif self.unit_type == self.UnitType.HOURS:
             return f"{self.target_value}h"
 
-        elif self.unit_type == self.UnitType.COUNT:
-            return f"{self.target_value}x"
-
-        return f"{self.target_value}"
+        return f"{self.target_value} {unit}"
 
     @property
     def target_in_minutes(self):
@@ -412,9 +442,9 @@ class Task(TimeStampedModel):
 
         if self.is_recurring:
             if not self.recurrence_period:
-                raise ValidationError({
-                    'recurrence_period': _('Recurrence period is required for recurring tasks.')
-                })
+                raise ValidationError(
+                    {"recurrence_period": _("Recurrence period is required for recurring tasks.")}
+                )
 
 
 class TaskCompletion(models.Model):
@@ -429,34 +459,37 @@ class TaskCompletion(models.Model):
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
-        related_name='completions',
-        verbose_name=_('task'),
+        related_name="completions",
+        verbose_name=_("task"),
     )
     completed_at = models.DateTimeField(
-        _('completed at'),
-        auto_now_add=True,
+        _("completed at"),
+        default=timezone.now,  # Use default instead of auto_now_add to allow custom values
         db_index=True,
     )
-    notes = models.TextField(
-        _('notes'),
-        blank=True,
-        default='',
-        help_text=_('Optional notes about this completion')
-    )
-    duration_minutes = models.PositiveIntegerField(
-        _('actual duration (minutes)'),
+    completed_value = models.PositiveIntegerField(
+        _("completed value"),
         null=True,
         blank=True,
-        help_text=_('How long it actually took to complete')
+        help_text=_("Completed amount in the task's unit (minutes, hours, or count)"),
+    )
+    notes = models.TextField(
+        _("notes"), blank=True, default="", help_text=_("Optional notes about this completion")
+    )
+    duration_minutes = models.PositiveIntegerField(
+        _("actual duration (minutes)"),
+        null=True,
+        blank=True,
+        help_text=_("How long it actually took to complete (legacy, use completed_value)"),
     )
 
     class Meta:
-        verbose_name = _('task completion')
-        verbose_name_plural = _('task completions')
-        ordering = ['-completed_at']
+        verbose_name = _("task completion")
+        verbose_name_plural = _("task completions")
+        ordering = ["-completed_at"]
         indexes = [
-            models.Index(fields=['task', 'completed_at']),
-            models.Index(fields=['completed_at']),
+            models.Index(fields=["task", "completed_at"]),
+            models.Index(fields=["completed_at"]),
         ]
 
     def __str__(self):
