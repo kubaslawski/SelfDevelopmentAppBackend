@@ -44,6 +44,8 @@ class TaskSerializer(serializers.ModelSerializer):
     is_overdue = serializers.ReadOnlyField()
     tags_list = serializers.ReadOnlyField()
     recurrence_display = serializers.ReadOnlyField()
+    goal_display = serializers.ReadOnlyField()
+    target_in_minutes = serializers.ReadOnlyField()
     completions_in_current_period = serializers.ReadOnlyField()
     is_period_complete = serializers.ReadOnlyField()
     remaining_completions_in_period = serializers.ReadOnlyField()
@@ -76,6 +78,11 @@ class TaskSerializer(serializers.ModelSerializer):
             'remaining_completions_in_period',
             'last_completion',
             'total_completions',
+            # Goal/target fields
+            'unit_type',
+            'target_value',
+            'goal_display',
+            'target_in_minutes',
             # Other fields
             'estimated_duration',
             'tags',
@@ -128,6 +135,7 @@ class TaskListSerializer(serializers.ModelSerializer):
     is_overdue = serializers.ReadOnlyField()
     is_period_complete = serializers.ReadOnlyField()
     remaining_completions_in_period = serializers.ReadOnlyField()
+    goal_display = serializers.ReadOnlyField()
 
     class Meta:
         model = Task
@@ -142,6 +150,10 @@ class TaskListSerializer(serializers.ModelSerializer):
             'is_overdue',
             'is_period_complete',
             'remaining_completions_in_period',
+            # Goal/target fields
+            'unit_type',
+            'target_value',
+            'goal_display',
             'created_at',
         ]
 

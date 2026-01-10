@@ -25,13 +25,13 @@ class TimeStampedModel(models.Model):
 class Task(TimeStampedModel):
     """
     Task model representing a self-development task or goal.
-    
+
     Supports recurring tasks with configurable frequency:
     - N times per period (day, week, month, quarter, year)
     - Periods always start from calendar boundaries (1st of month, Monday, Jan 1, etc.)
     - Task completions are tracked in TaskCompletion model
     """
-    
+
     class Priority(models.TextChoices):
         LOW = 'low', _('Low')
         MEDIUM = 'medium', _('Medium')
@@ -52,6 +52,12 @@ class Task(TimeStampedModel):
         QUARTERLY = 'quarterly', _('Quarterly')
         YEARLY = 'yearly', _('Yearly')
 
+    class UnitType(models.TextChoices):
+        """Unit type for measuring task goals/progress."""
+        MINUTES = 'minutes', _('Minutes')
+        HOURS = 'hours', _('Hours')
+        COUNT = 'count', _('Count (repetitions)')
+
     # Basic fields
     title = models.CharField(
         _('title'),
@@ -64,7 +70,7 @@ class Task(TimeStampedModel):
         default='',
         help_text=_('Detailed description of the task')
     )
-    
+
     # Status and priority
     status = models.CharField(
         _('status'),
@@ -78,7 +84,7 @@ class Task(TimeStampedModel):
         choices=Priority.choices,
         default=Priority.MEDIUM,
     )
-    
+
     # Dates
     due_date = models.DateTimeField(
         _('due date'),
@@ -91,7 +97,7 @@ class Task(TimeStampedModel):
         null=True,
         blank=True,
     )
-    
+
     # Relations
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -101,7 +107,7 @@ class Task(TimeStampedModel):
         null=True,
         blank=True,
     )
-    
+
     # Recurrence settings
     is_recurring = models.BooleanField(
         _('is recurring'),
@@ -129,7 +135,7 @@ class Task(TimeStampedModel):
         blank=True,
         help_text=_('When the recurring schedule ends (optional)')
     )
-    
+
     # Additional metadata
     estimated_duration = models.PositiveIntegerField(
         _('estimated duration (minutes)'),
@@ -143,6 +149,22 @@ class Task(TimeStampedModel):
         blank=True,
         default='',
         help_text=_('Comma-separated tags')
+    )
+
+    # Goal/target with unit
+    unit_type = models.CharField(
+        _('unit type'),
+        max_length=20,
+        choices=UnitType.choices,
+        null=True,
+        blank=True,
+        help_text=_('Type of unit for measuring the goal (time or count)')
+    )
+    target_value = models.PositiveIntegerField(
+        _('target value'),
+        null=True,
+        blank=True,
+        help_text=_('Target value in the specified unit (e.g., 30 minutes, 2 hours, 50 reps)')
     )
 
     class Meta:
@@ -163,7 +185,7 @@ class Task(TimeStampedModel):
     def mark_completed(self):
         """
         Mark the task as completed.
-        
+
         For recurring tasks, this creates a TaskCompletion record
         instead of marking the task itself as completed.
         """
@@ -179,20 +201,20 @@ class Task(TimeStampedModel):
     def get_completions_in_period(self, start_date=None, end_date=None):
         """
         Get all completions within a date range.
-        
+
         Args:
             start_date: Start of the period (defaults to current period start)
             end_date: End of the period (defaults to current period end)
-            
+
         Returns:
             QuerySet of TaskCompletion objects
         """
         if start_date is None:
             start_date = self._get_current_period_start()
-        
+
         if end_date is None:
             end_date = self._get_current_period_end()
-        
+
         return self.completions.filter(
             completed_at__gte=start_date,
             completed_at__lt=end_date
@@ -201,7 +223,7 @@ class Task(TimeStampedModel):
     def _get_current_period_start(self):
         """
         Calculate the start of the current recurrence period.
-        
+
         Always uses calendar boundaries:
         - Daily: 00:00 of current day
         - Weekly: Monday 00:00 of current week
@@ -211,16 +233,16 @@ class Task(TimeStampedModel):
         - Yearly: January 1st 00:00 of current year
         """
         now = timezone.now()
-        
+
         if self.recurrence_period == self.RecurrencePeriod.DAILY:
             return now.replace(hour=0, minute=0, second=0, microsecond=0)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.WEEKLY:
             # Monday of current week
             days_since_monday = now.weekday()
             period_start = now - timedelta(days=days_since_monday)
             return period_start.replace(hour=0, minute=0, second=0, microsecond=0)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.BIWEEKLY:
             # Use ISO week number to determine which 2-week period we're in
             # Even weeks start a new period
@@ -229,48 +251,48 @@ class Task(TimeStampedModel):
             days_since_monday = now.weekday()
             period_start = now - timedelta(days=days_since_monday + (weeks_offset * 7))
             return period_start.replace(hour=0, minute=0, second=0, microsecond=0)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.MONTHLY:
             # 1st of current month
             return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.QUARTERLY:
             # 1st of current quarter (Jan=1, Apr=4, Jul=7, Oct=10)
             quarter_month = ((now.month - 1) // 3) * 3 + 1
             return now.replace(month=quarter_month, day=1, hour=0, minute=0, second=0, microsecond=0)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.YEARLY:
             # January 1st of current year
             return now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        
+
         return now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     def _get_current_period_end(self):
         """
         Calculate the end of the current recurrence period.
-        
+
         Returns the start of the next period (exclusive boundary).
         """
         period_start = self._get_current_period_start()
-        
+
         if self.recurrence_period == self.RecurrencePeriod.DAILY:
             return period_start + timedelta(days=1)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.WEEKLY:
             return period_start + timedelta(weeks=1)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.BIWEEKLY:
             return period_start + timedelta(weeks=2)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.MONTHLY:
             return period_start + relativedelta(months=1)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.QUARTERLY:
             return period_start + relativedelta(months=3)
-        
+
         elif self.recurrence_period == self.RecurrencePeriod.YEARLY:
             return period_start + relativedelta(years=1)
-        
+
         return period_start + timedelta(days=1)
 
     @property
@@ -299,7 +321,7 @@ class Task(TimeStampedModel):
         """Check if the recurring task has been completed enough times this period."""
         if not self.is_recurring:
             return self.status == self.Status.COMPLETED
-        
+
         target = self.recurrence_target_count or 1
         return self.completions_in_current_period >= target
 
@@ -308,7 +330,7 @@ class Task(TimeStampedModel):
         """Get the number of remaining completions needed in the current period."""
         if not self.is_recurring:
             return 0 if self.status == self.Status.COMPLETED else 1
-        
+
         target = self.recurrence_target_count or 1
         completed = self.completions_in_current_period
         return max(0, target - completed)
@@ -340,18 +362,54 @@ class Task(TimeStampedModel):
         """Human-readable recurrence description."""
         if not self.is_recurring:
             return None
-        
+
         target = self.recurrence_target_count or 1
         period = self.get_recurrence_period_display() if self.recurrence_period else 'period'
-        
+
         if target == 1:
             return f"Once {period.lower()}"
         return f"{target} times {period.lower()}"
 
+    @property
+    def goal_display(self):
+        """Human-readable goal description with unit."""
+        if not self.target_value or not self.unit_type:
+            return None
+
+        if self.unit_type == self.UnitType.MINUTES:
+            if self.target_value >= 60:
+                hours = self.target_value // 60
+                minutes = self.target_value % 60
+                if minutes:
+                    return f"{hours}h {minutes}min"
+                return f"{hours}h"
+            return f"{self.target_value} min"
+
+        elif self.unit_type == self.UnitType.HOURS:
+            return f"{self.target_value}h"
+
+        elif self.unit_type == self.UnitType.COUNT:
+            return f"{self.target_value}x"
+
+        return f"{self.target_value}"
+
+    @property
+    def target_in_minutes(self):
+        """Get target value converted to minutes (for time units)."""
+        if not self.target_value or not self.unit_type:
+            return None
+
+        if self.unit_type == self.UnitType.MINUTES:
+            return self.target_value
+        elif self.unit_type == self.UnitType.HOURS:
+            return self.target_value * 60
+
+        return None  # COUNT type doesn't convert to minutes
+
     def clean(self):
         """Validate the model."""
         super().clean()
-        
+
         if self.is_recurring:
             if not self.recurrence_period:
                 raise ValidationError({
@@ -362,12 +420,12 @@ class Task(TimeStampedModel):
 class TaskCompletion(models.Model):
     """
     Records individual completions of recurring tasks.
-    
+
     Each time a recurring task is completed, a new record is created here.
     This allows tracking of completion history and calculating progress
     towards recurring goals.
     """
-    
+
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,

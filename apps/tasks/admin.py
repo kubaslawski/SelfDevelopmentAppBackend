@@ -32,6 +32,7 @@ class TaskAdmin(admin.ModelAdmin):
         'title',
         'status_badge',
         'priority_badge',
+        'goal_badge',
         'recurrence_badge',
         'due_date',
         'is_overdue_display',
@@ -42,6 +43,7 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = [
         'status',
         'priority',
+        'unit_type',
         'is_recurring',
         'recurrence_period',
         'created_at',
@@ -60,6 +62,10 @@ class TaskAdmin(admin.ModelAdmin):
         }),
         ('Status & Priority', {
             'fields': ('status', 'priority')
+        }),
+        ('Goal / Target', {
+            'fields': ('unit_type', 'target_value'),
+            'description': 'Set a measurable goal for this task (e.g., 30 minutes, 2 hours, 50 repetitions).'
         }),
         ('Recurrence Settings', {
             'fields': (
@@ -119,6 +125,32 @@ class TaskAdmin(admin.ModelAdmin):
         )
     priority_badge.short_description = 'Priority'
     priority_badge.admin_order_field = 'priority'
+
+    def goal_badge(self, obj):
+        """Display goal/target as a badge."""
+        if not obj.goal_display:
+            return '-'
+
+        # Different colors for different unit types
+        colors = {
+            'minutes': '#6f42c1',  # Purple for time
+            'hours': '#6f42c1',    # Purple for time
+            'count': '#20c997',    # Teal for count
+        }
+        icons = {
+            'minutes': '⏱',
+            'hours': '⏱',
+            'count': '🔢',
+        }
+        color = colors.get(obj.unit_type, '#6c757d')
+        icon = icons.get(obj.unit_type, '🎯')
+
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 8px; '
+            'border-radius: 3px; font-size: 11px;">{} {}</span>',
+            color, icon, obj.goal_display
+        )
+    goal_badge.short_description = 'Goal'
 
     def recurrence_badge(self, obj):
         """Display recurrence info as a badge."""
