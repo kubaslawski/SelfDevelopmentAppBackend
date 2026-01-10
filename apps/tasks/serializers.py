@@ -30,9 +30,19 @@ class TaskCompletionCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for creating a TaskCompletion.
     """
+    completed_at = serializers.DateTimeField(required=False, allow_null=True)
+    completed_value = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True
+    )
+
     class Meta:
         model = TaskCompletion
         fields = [
+            'completed_at',
+            'completed_value',
             'notes',
             'duration_minutes',
         ]

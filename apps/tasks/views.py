@@ -296,11 +296,11 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class TaskCompletionViewSet(viewsets.ReadOnlyModelViewSet):
+class TaskCompletionViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for viewing task completions.
+    ViewSet for managing task completions.
 
-    Provides read-only access to completion records.
+    Provides full CRUD access to completion records.
     """
     queryset = TaskCompletion.objects.all()
     serializer_class = TaskCompletionSerializer
@@ -308,6 +308,12 @@ class TaskCompletionViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = TaskCompletionFilter
     ordering_fields = ['completed_at']
     ordering = ['-completed_at']
+
+    def get_serializer_class(self):
+        """Use different serializer for create/update."""
+        if self.action in ['create', 'update', 'partial_update']:
+            return TaskCompletionCreateSerializer
+        return TaskCompletionSerializer
 
     def get_queryset(self):
         """Filter completions by user and optionally by task."""
