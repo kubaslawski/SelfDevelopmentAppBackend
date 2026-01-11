@@ -13,6 +13,17 @@ from django.utils.translation import gettext_lazy as _
 class UserManager(BaseUserManager):
     """Custom user manager for email-based authentication."""
 
+    @staticmethod
+    def normalize_email(email):
+        """
+        Normalize email to lowercase.
+        Django's default normalize_email only lowercases the domain part,
+        but we want the entire email to be case-insensitive.
+        """
+        if email:
+            email = email.lower().strip()
+        return email
+
     def create_user(self, email, password=None, **extra_fields):
         """Create and save a regular user with the given email and password."""
         if not email:
@@ -96,3 +107,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         """Return the short name for the user."""
         return self.first_name if self.first_name else self.email.split("@")[0]
+
+    def save(self, *args, **kwargs):
+        """Normalize email to lowercase before saving."""
+        if self.email:
+            self.email = self.email.lower().strip()
+        super().save(*args, **kwargs)

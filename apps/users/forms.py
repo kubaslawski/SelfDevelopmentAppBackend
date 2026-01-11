@@ -38,8 +38,7 @@ class EmailAuthenticationForm(AuthenticationForm):
     )
 
     error_messages = {
-        "invalid_login": "Please enter a correct email and password. "
-        "Note that both fields may be case-sensitive.",
+        "invalid_login": "Please enter a correct email and password.",
         "inactive": "This account is inactive.",
     }
 
@@ -48,6 +47,8 @@ class EmailAuthenticationForm(AuthenticationForm):
         password = self.cleaned_data.get("password")
 
         if email is not None and password:
+            # Normalize email to lowercase for case-insensitive comparison
+            email = email.lower().strip()
             self.user_cache = authenticate(self.request, username=email, password=password)
             if self.user_cache is None:
                 raise self.get_invalid_login_error()

@@ -19,6 +19,9 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         password = attrs.get("password")
 
         if email and password:
+            # Normalize email to lowercase for case-insensitive comparison
+            email = email.lower().strip()
+
             # Authenticate using email (passed as username to backend)
             user = authenticate(
                 request=self.context.get("request"),

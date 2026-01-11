@@ -17,14 +17,19 @@ class EmailBackend(ModelBackend):
 
         Note: Django's authenticate() passes email as 'username' parameter,
         so we accept it as username but treat it as email.
+        Email comparison is case-insensitive.
         """
         email = kwargs.get("email") or username
 
         if email is None or password is None:
             return None
 
+        # Normalize email to lowercase for case-insensitive comparison
+        email = email.lower().strip()
+
         try:
-            user = User.objects.get(email=email)
+            # Use iexact for case-insensitive email lookup
+            user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
             # Run the default password hasher once to reduce the timing
             # difference between an existing and a nonexistent user
