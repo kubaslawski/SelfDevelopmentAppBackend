@@ -325,20 +325,41 @@ class Task(TimeStampedModel):
         return self.get_completions_in_period().count()
 
     @property
+    def completed_value_in_current_period(self):
+        """Get the sum of completed_value in the current period."""
+        if not self.is_recurring:
+            return 0
+        from django.db.models import Sum
+
+        result = self.get_completions_in_period().aggregate(total=Sum("completed_value"))
+        return result["total"] or 0
+
+    @property
     def is_period_complete(self):
-        """Check if the recurring task has been completed enough times this period."""
+        """Check if the recurring task has been completed enough times/value this period."""
         if not self.is_recurring:
             return self.status == self.Status.COMPLETED
 
+        # If target_value is set, check sum of completed_value vs target_value
+        if self.target_value:
+            return self.completed_value_in_current_period >= self.target_value
+
+        # Otherwise check count of completions vs recurrence_target_count
         target = self.recurrence_target_count or 1
         return self.completions_in_current_period >= target
 
     @property
     def remaining_completions_in_period(self):
-        """Get the number of remaining completions needed in the current period."""
+        """Get the number of remaining completions/value needed in the current period."""
         if not self.is_recurring:
             return 0 if self.status == self.Status.COMPLETED else 1
 
+        # If target_value is set, return remaining value
+        if self.target_value:
+            completed = self.completed_value_in_current_period
+            return max(0, self.target_value - completed)
+
+        # Otherwise return remaining count
         target = self.recurrence_target_count or 1
         completed = self.completions_in_current_period
         return max(0, target - completed)
