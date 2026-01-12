@@ -35,6 +35,7 @@ LOCAL_APPS = [
     "apps.users",
     "apps.tasks",
     "apps.feedback",
+    "apps.goals",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -169,6 +170,9 @@ SPECTACULAR_SETTINGS = {
         "FeedbackTypeEnum": "apps.feedback.models.Feedback.FeedbackType",
         "RecurrencePeriodEnum": "apps.tasks.models.Task.RecurrencePeriod",
         "UnitTypeEnum": "apps.tasks.models.Task.UnitType",
+        "GoalStatusEnum": "apps.goals.models.Goal.Status",
+        "GoalCategoryEnum": "apps.goals.models.Goal.Category",
+        "MilestoneStatusEnum": "apps.goals.models.Milestone.Status",
     },
 }
 

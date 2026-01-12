@@ -2,6 +2,7 @@
 URL configuration for SelfDevelopmentAppBackend project.
 """
 
+from apps.users.auth_views import EmailLoginView, EmailLogoutView
 from apps.users.serializers import EmailTokenObtainPairSerializer
 from django.conf import settings
 from django.conf.urls.static import static
@@ -24,8 +25,6 @@ class EmailTokenObtainPairView(TokenObtainPairView):
 
     serializer_class = EmailTokenObtainPairSerializer
 
-
-from apps.users.auth_views import EmailLoginView, EmailLogoutView
 
 urlpatterns = [
     # Admin
@@ -56,6 +55,8 @@ urlpatterns = [
     path("api/v1/", include("apps.tasks.urls")),
     # API v1 - Feedback
     path("api/v1/", include("apps.feedback.urls")),
+    # API v1 - Goals
+    path("api/v1/", include("apps.goals.urls")),
     # API Documentation
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

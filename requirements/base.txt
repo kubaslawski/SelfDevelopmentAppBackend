@@ -23,3 +23,8 @@ python-dateutil==2.9.0
 # API Documentation
 drf-spectacular==0.28.0
 
+# AI / LLM
+google-generativeai==0.8.4
+
+# Validation / DTO
+pydantic==2.10.3
