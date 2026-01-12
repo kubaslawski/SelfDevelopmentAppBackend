@@ -34,6 +34,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "apps.users",
     "apps.tasks",
+    "apps.feedback",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -159,6 +160,16 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API for Self Development Application",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    # Fix enum naming collisions
+    "ENUM_NAME_OVERRIDES": {
+        "TaskStatusEnum": "apps.tasks.models.Task.Status",
+        "TaskPriorityEnum": "apps.tasks.models.Task.Priority",
+        "FeedbackStatusEnum": "apps.feedback.models.Feedback.Status",
+        "FeedbackPriorityEnum": "apps.feedback.models.Feedback.Priority",
+        "FeedbackTypeEnum": "apps.feedback.models.Feedback.FeedbackType",
+        "RecurrencePeriodEnum": "apps.tasks.models.Task.RecurrencePeriod",
+        "UnitTypeEnum": "apps.tasks.models.Task.UnitType",
+    },
 }
 
 # CORS settings

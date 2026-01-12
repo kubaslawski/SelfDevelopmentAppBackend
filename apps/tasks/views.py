@@ -3,6 +3,7 @@ Views for the Tasks app.
 """
 from django.db.models import Case, When, Value, IntegerField
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -10,6 +11,8 @@ from rest_framework.response import Response
 from .filters import TaskFilter, TaskCompletionFilter
 from .models import Task, TaskCompletion
 from .serializers import (
+    SyncCompletionsResponseSerializer,
+    SyncCompletionsSerializer,
     TaskCompletionCreateSerializer,
     TaskCompletionSerializer,
     TaskListSerializer,
@@ -57,6 +60,22 @@ class TaskOrderingFilter(filters.OrderingFilter):
         return queryset
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Tasks"]),
+    create=extend_schema(tags=["Tasks"]),
+    retrieve=extend_schema(tags=["Tasks"]),
+    update=extend_schema(tags=["Tasks"]),
+    partial_update=extend_schema(tags=["Tasks"]),
+    destroy=extend_schema(tags=["Tasks"]),
+    update_status=extend_schema(tags=["Tasks"]),
+    complete=extend_schema(tags=["Tasks"]),
+    record_completion=extend_schema(tags=["Tasks"]),
+    completions=extend_schema(tags=["Tasks"]),
+    stats=extend_schema(tags=["Tasks"]),
+    bulk_update_status=extend_schema(tags=["Tasks"]),
+    recurring=extend_schema(tags=["Tasks"]),
+    sync_completions=extend_schema(tags=["Tasks"]),
+)
 class TaskViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing tasks.
@@ -295,7 +314,86 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = TaskListSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    @extend_schema(
+        request=SyncCompletionsSerializer,
+        responses={200: SyncCompletionsResponseSerializer},
+    )
+    @action(detail=True, methods=['post'])
+    def sync_completions(self, request, pk=None):
+        """
+        Synchronize completions for a recurring task.
 
+        Accepts a list of dates. Compares with existing completions:
+        - Adds new completions for dates not in DB
+        - Removes completions for dates not in the list
+        """
+        from datetime import datetime as dt
+
+        task = self.get_object()
+
+        if not task.is_recurring:
+            return Response(
+                {'error': 'This action is only available for recurring tasks'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = SyncCompletionsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        dates = serializer.validated_data['dates']
+        completed_value = serializer.validated_data.get('completed_value')
+
+        incoming_dates = set(dates)
+
+        # Get existing completion dates
+        existing_completions = task.completions.all()
+        existing_dates = {}
+        for completion in existing_completions:
+            date = completion.completed_at.date()
+            existing_dates[date] = completion
+
+        existing_date_set = set(existing_dates.keys())
+
+        # Dates to add (in incoming but not existing)
+        dates_to_add = incoming_dates - existing_date_set
+
+        # Dates to remove (in existing but not incoming)
+        dates_to_remove = existing_date_set - incoming_dates
+
+        added_count = 0
+        removed_count = 0
+
+        # Add new completions
+        for date in dates_to_add:
+            TaskCompletion.objects.create(
+                task=task,
+                completed_at=dt.combine(date, dt.min.time().replace(hour=12)),
+                completed_value=completed_value,
+                notes='',
+            )
+            added_count += 1
+
+        # Remove completions
+        for date in dates_to_remove:
+            existing_dates[date].delete()
+            removed_count += 1
+
+        return Response({
+            'added': added_count,
+            'removed': removed_count,
+            'total': len(incoming_dates),
+            'task': TaskWithCompletionsSerializer(task).data,
+        })
+
+
+@extend_schema_view(
+    list=extend_schema(tags=["Completions"]),
+    create=extend_schema(tags=["Completions"]),
+    retrieve=extend_schema(tags=["Completions"]),
+    update=extend_schema(tags=["Completions"]),
+    partial_update=extend_schema(tags=["Completions"]),
+    destroy=extend_schema(tags=["Completions"]),
+)
 class TaskCompletionViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing task completions.

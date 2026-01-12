@@ -1,0 +1,3165 @@
+openapi: 3.0.3
+info:
+  title: Self Development App API
+  version: 1.0.0
+  description: API for Self Development Application
+paths:
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/token/:
+    post:
+      operationId: token_create
+      description: Token view that uses email instead of username.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailTokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTokenObtainPair'
+          description: ''
+  /api/token/refresh/:
+    post:
+      operationId: token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/token/verify/:
+    post:
+      operationId: token_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerify'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenVerify'
+          description: ''
+  /api/v1/admin/feedback/:
+    get:
+      operationId: v1_admin_feedback_list
+      description: |-
+        Admin ViewSet for managing all feedback.
+        Only accessible by staff users.
+      parameters:
+      - in: query
+        name: feedback_type
+        schema:
+          type: string
+          enum:
+          - bug_report
+          - comment
+          - question
+          - suggestion
+        description: |-
+          Type of feedback
+
+          * `bug_report` - Bug Report
+          * `suggestion` - Suggestion
+          * `comment` - General Comment
+          * `question` - Question
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: priority
+        schema:
+          type: string
+          nullable: true
+          enum:
+          - critical
+          - high
+          - low
+          - medium
+        description: |-
+          Priority level (set by admin)
+
+          * `low` - Low
+          * `medium` - Medium
+          * `high` - High
+          * `critical` - Critical
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - closed
+          - in_progress
+          - in_review
+          - new
+          - resolved
+          - wont_fix
+        description: |-
+          Current status of this feedback
+
+          * `new` - New
+          * `in_review` - In Review
+          * `in_progress` - In Progress
+          * `resolved` - Resolved
+          * `closed` - Closed
+          * `wont_fix` - Won't Fix
+      - in: query
+        name: user
+        schema:
+          type: integer
+      tags:
+      - Admin Feedback
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFeedbackAdminList'
+          description: ''
+    post:
+      operationId: v1_admin_feedback_create
+      description: |-
+        Admin ViewSet for managing all feedback.
+        Only accessible by staff users.
+      tags:
+      - Admin Feedback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackAdmin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FeedbackAdmin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FeedbackAdmin'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackAdmin'
+          description: ''
+  /api/v1/admin/feedback/{id}/:
+    get:
+      operationId: v1_admin_feedback_retrieve
+      description: |-
+        Admin ViewSet for managing all feedback.
+        Only accessible by staff users.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Feedback.
+        required: true
+      tags:
+      - Admin Feedback
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackAdmin'
+          description: ''
+    put:
+      operationId: v1_admin_feedback_update
+      description: |-
+        Admin ViewSet for managing all feedback.
+        Only accessible by staff users.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Feedback.
+        required: true
+      tags:
+      - Admin Feedback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackAdmin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FeedbackAdmin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FeedbackAdmin'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackAdmin'
+          description: ''
+    patch:
+      operationId: v1_admin_feedback_partial_update
+      description: |-
+        Admin ViewSet for managing all feedback.
+        Only accessible by staff users.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Feedback.
+        required: true
+      tags:
+      - Admin Feedback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedbackAdmin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedbackAdmin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFeedbackAdmin'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackAdmin'
+          description: ''
+    delete:
+      operationId: v1_admin_feedback_destroy
+      description: |-
+        Admin ViewSet for managing all feedback.
+        Only accessible by staff users.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Feedback.
+        required: true
+      tags:
+      - Admin Feedback
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/admin/feedback/{id}/resolve/:
+    post:
+      operationId: v1_admin_feedback_resolve_create
+      description: Mark feedback as resolved.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Feedback.
+        required: true
+      tags:
+      - Admin Feedback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackAdmin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FeedbackAdmin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FeedbackAdmin'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackAdmin'
+          description: ''
+  /api/v1/auth/login/:
+    post:
+      operationId: v1_auth_login_create
+      description: Authenticate user with email and password. Creates a session.
+      summary: Login with email and password
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: v1_auth_logout_create
+      description: Logout the current user and destroy the session.
+      summary: Logout
+      tags:
+      - Authentication
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/register/:
+    post:
+      operationId: v1_auth_register_create
+      description: Create a new user account with email and password.
+      summary: Register new user
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+          description: ''
+  /api/v1/completions/:
+    get:
+      operationId: v1_completions_list
+      description: |-
+        ViewSet for managing task completions.
+
+        Provides full CRUD access to completion records.
+      parameters:
+      - in: query
+        name: completed_after
+        schema:
+          type: string
+          format: date-time
+        description: Completed after
+      - in: query
+        name: completed_before
+        schema:
+          type: string
+          format: date-time
+        description: Completed before
+      - in: query
+        name: completed_on
+        schema:
+          type: string
+          format: date
+        description: Completed on date
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: task
+        schema:
+          type: integer
+      tags:
+      - Completions
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskCompletionList'
+          description: ''
+    post:
+      operationId: v1_completions_create
+      description: |-
+        ViewSet for managing task completions.
+
+        Provides full CRUD access to completion records.
+      tags:
+      - Completions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionCreate'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCompletionCreate'
+          description: ''
+  /api/v1/completions/{id}/:
+    get:
+      operationId: v1_completions_retrieve
+      description: |-
+        ViewSet for managing task completions.
+
+        Provides full CRUD access to completion records.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task completion.
+        required: true
+      tags:
+      - Completions
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCompletion'
+          description: ''
+    put:
+      operationId: v1_completions_update
+      description: |-
+        ViewSet for managing task completions.
+
+        Provides full CRUD access to completion records.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task completion.
+        required: true
+      tags:
+      - Completions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionCreate'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCompletionCreate'
+          description: ''
+    patch:
+      operationId: v1_completions_partial_update
+      description: |-
+        ViewSet for managing task completions.
+
+        Provides full CRUD access to completion records.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task completion.
+        required: true
+      tags:
+      - Completions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskCompletionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskCompletionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskCompletionCreate'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCompletionCreate'
+          description: ''
+    delete:
+      operationId: v1_completions_destroy
+      description: |-
+        ViewSet for managing task completions.
+
+        Provides full CRUD access to completion records.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task completion.
+        required: true
+      tags:
+      - Completions
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/feedback/:
+    get:
+      operationId: v1_feedback_list
+      description: |-
+        ViewSet for user feedback.
+
+        Users can:
+        - Create new feedback (POST /feedback/)
+        - List their own feedback (GET /feedback/)
+        - View details of their own feedback (GET /feedback/{id}/)
+
+        Admin can access all feedback via Django admin panel.
+      parameters:
+      - in: query
+        name: feedback_type
+        schema:
+          type: string
+          enum:
+          - bug_report
+          - comment
+          - question
+          - suggestion
+        description: |-
+          Type of feedback
+
+          * `bug_report` - Bug Report
+          * `suggestion` - Suggestion
+          * `comment` - General Comment
+          * `question` - Question
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - closed
+          - in_progress
+          - in_review
+          - new
+          - resolved
+          - wont_fix
+        description: |-
+          Current status of this feedback
+
+          * `new` - New
+          * `in_review` - In Review
+          * `in_progress` - In Progress
+          * `resolved` - Resolved
+          * `closed` - Closed
+          * `wont_fix` - Won't Fix
+      tags:
+      - Feedback
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFeedbackListList'
+          description: ''
+    post:
+      operationId: v1_feedback_create
+      description: |-
+        ViewSet for user feedback.
+
+        Users can:
+        - Create new feedback (POST /feedback/)
+        - List their own feedback (GET /feedback/)
+        - View details of their own feedback (GET /feedback/{id}/)
+
+        Admin can access all feedback via Django admin panel.
+      tags:
+      - Feedback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FeedbackCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FeedbackCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackCreate'
+          description: ''
+  /api/v1/feedback/{id}/:
+    get:
+      operationId: v1_feedback_retrieve
+      description: |-
+        ViewSet for user feedback.
+
+        Users can:
+        - Create new feedback (POST /feedback/)
+        - List their own feedback (GET /feedback/)
+        - View details of their own feedback (GET /feedback/{id}/)
+
+        Admin can access all feedback via Django admin panel.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - Feedback
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+          description: ''
+  /api/v1/feedback/types/:
+    get:
+      operationId: v1_feedback_types_retrieve
+      description: |-
+        Get available feedback types.
+        Useful for populating dropdown/picker in the app.
+      tags:
+      - Feedback
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Feedback'
+          description: ''
+  /api/v1/tasks/:
+    get:
+      operationId: v1_tasks_list
+      description: |-
+        ViewSet for managing tasks.
+
+        Provides CRUD operations for tasks with filtering, searching, and ordering.
+        Supports recurring tasks with completion tracking.
+
+        list:
+            Return a list of all tasks.
+
+        create:
+            Create a new task.
+
+        retrieve:
+            Return a specific task by ID.
+
+        update:
+            Update a task.
+
+        partial_update:
+            Partially update a task.
+
+        destroy:
+            Delete a task.
+      parameters:
+      - in: query
+        name: created_after
+        schema:
+          type: string
+          format: date-time
+        description: Created after
+      - in: query
+        name: created_before
+        schema:
+          type: string
+          format: date-time
+        description: Created before
+      - in: query
+        name: due_date_after
+        schema:
+          type: string
+          format: date-time
+        description: Due after
+      - in: query
+        name: due_date_before
+        schema:
+          type: string
+          format: date-time
+        description: Due before
+      - in: query
+        name: has_due_date
+        schema:
+          type: boolean
+        description: Has due date
+      - in: query
+        name: is_recurring
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: priority
+        schema:
+          type: string
+          enum:
+          - high
+          - low
+          - medium
+          - urgent
+        description: |-
+          * `low` - Low
+          * `medium` - Medium
+          * `high` - High
+          * `urgent` - Urgent
+      - in: query
+        name: priority__in
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: recurrence_end_after
+        schema:
+          type: string
+          format: date
+        description: Recurrence ends after
+      - in: query
+        name: recurrence_end_before
+        schema:
+          type: string
+          format: date
+        description: Recurrence ends before
+      - in: query
+        name: recurrence_period
+        schema:
+          type: string
+          nullable: true
+          enum:
+          - biweekly
+          - daily
+          - monthly
+          - quarterly
+          - weekly
+          - yearly
+        description: |-
+          How often the task should be completed (always starts from calendar boundaries)
+
+          * `daily` - Daily
+          * `weekly` - Weekly
+          * `biweekly` - Every 2 Weeks
+          * `monthly` - Monthly
+          * `quarterly` - Quarterly
+          * `yearly` - Yearly
+      - in: query
+        name: recurrence_period__in
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - archived
+          - completed
+          - in_progress
+          - todo
+        description: |-
+          * `todo` - To Do
+          * `in_progress` - In Progress
+          * `completed` - Completed
+          * `archived` - Archived
+      - in: query
+        name: status__in
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: tags_contains
+        schema:
+          type: string
+        description: Tags contain
+      tags:
+      - Tasks
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskListList'
+          description: ''
+    post:
+      operationId: v1_tasks_create
+      description: |-
+        ViewSet for managing tasks.
+
+        Provides CRUD operations for tasks with filtering, searching, and ordering.
+        Supports recurring tasks with completion tracking.
+
+        list:
+            Return a list of all tasks.
+
+        create:
+            Create a new task.
+
+        retrieve:
+            Return a specific task by ID.
+
+        update:
+            Update a task.
+
+        partial_update:
+            Partially update a task.
+
+        destroy:
+            Delete a task.
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Task'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Task'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/v1/tasks/{id}/:
+    get:
+      operationId: v1_tasks_retrieve
+      description: |-
+        ViewSet for managing tasks.
+
+        Provides CRUD operations for tasks with filtering, searching, and ordering.
+        Supports recurring tasks with completion tracking.
+
+        list:
+            Return a list of all tasks.
+
+        create:
+            Create a new task.
+
+        retrieve:
+            Return a specific task by ID.
+
+        update:
+            Update a task.
+
+        partial_update:
+            Partially update a task.
+
+        destroy:
+            Delete a task.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskWithCompletions'
+          description: ''
+    put:
+      operationId: v1_tasks_update
+      description: |-
+        ViewSet for managing tasks.
+
+        Provides CRUD operations for tasks with filtering, searching, and ordering.
+        Supports recurring tasks with completion tracking.
+
+        list:
+            Return a list of all tasks.
+
+        create:
+            Create a new task.
+
+        retrieve:
+            Return a specific task by ID.
+
+        update:
+            Update a task.
+
+        partial_update:
+            Partially update a task.
+
+        destroy:
+            Delete a task.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Task'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Task'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    patch:
+      operationId: v1_tasks_partial_update
+      description: |-
+        ViewSet for managing tasks.
+
+        Provides CRUD operations for tasks with filtering, searching, and ordering.
+        Supports recurring tasks with completion tracking.
+
+        list:
+            Return a list of all tasks.
+
+        create:
+            Create a new task.
+
+        retrieve:
+            Return a specific task by ID.
+
+        update:
+            Update a task.
+
+        partial_update:
+            Partially update a task.
+
+        destroy:
+            Delete a task.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTask'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTask'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTask'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    delete:
+      operationId: v1_tasks_destroy
+      description: |-
+        ViewSet for managing tasks.
+
+        Provides CRUD operations for tasks with filtering, searching, and ordering.
+        Supports recurring tasks with completion tracking.
+
+        list:
+            Return a list of all tasks.
+
+        create:
+            Create a new task.
+
+        retrieve:
+            Return a specific task by ID.
+
+        update:
+            Update a task.
+
+        partial_update:
+            Partially update a task.
+
+        destroy:
+            Delete a task.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/tasks/{id}/complete/:
+    post:
+      operationId: v1_tasks_complete_create
+      description: |-
+        Mark a task as completed.
+
+        For recurring tasks, this creates a completion record.
+        For non-recurring tasks, this marks the task as completed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Task'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Task'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/v1/tasks/{id}/completions/:
+    get:
+      operationId: v1_tasks_completions_retrieve
+      description: |-
+        Get all completions for a recurring task.
+
+        Supports pagination and filtering by date range.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/v1/tasks/{id}/record_completion/:
+    post:
+      operationId: v1_tasks_record_completion_create
+      description: |-
+        Record a completion for a recurring task.
+
+        This allows recording completions with optional notes and duration.
+
+        Expected payload:
+        {
+            "notes": "Optional notes about this completion",
+            "duration_minutes": 30
+        }
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCompletionCreate'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCompletionCreate'
+          description: ''
+  /api/v1/tasks/{id}/update_status/:
+    post:
+      operationId: v1_tasks_update_status_create
+      description: |-
+        Update only the status of a task.
+
+        This is a convenience endpoint for quick status updates.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskStatusUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskStatusUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskStatusUpdate'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatusUpdate'
+          description: ''
+  /api/v1/tasks/bulk_update_status/:
+    post:
+      operationId: v1_tasks_bulk_update_status_create
+      description: |-
+        Bulk update status for multiple tasks.
+
+        Expected payload:
+        {
+            "task_ids": [1, 2, 3],
+            "status": "completed"
+        }
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Task'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Task'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/v1/tasks/recurring/:
+    get:
+      operationId: v1_tasks_recurring_retrieve
+      description: Get only recurring tasks.
+      tags:
+      - Tasks
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/v1/tasks/stats/:
+    get:
+      operationId: v1_tasks_stats_retrieve
+      description: Get task statistics including recurring task stats.
+      tags:
+      - Tasks
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/v1/users/me/:
+    get:
+      operationId: v1_users_me_retrieve
+      description: Returns the authenticated user's profile information.
+      summary: Get current user profile
+      tags:
+      - User Profile
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: v1_users_me_update
+      description: Update the authenticated user's profile information.
+      summary: Update user profile
+      tags:
+      - User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: v1_users_me_partial_update
+      description: Partially update the authenticated user's profile information.
+      summary: Partially update user profile
+      tags:
+      - User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/users/me/change-password/:
+    post:
+      operationId: v1_users_me_change_password_create
+      description: Change the authenticated user's password.
+      summary: Change password
+      tags:
+      - User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePassword'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangePassword'
+          description: ''
+components:
+  schemas:
+    BlankEnum:
+      enum:
+      - ''
+    ChangePassword:
+      type: object
+      description: Serializer for password change.
+      properties:
+        old_password:
+          type: string
+        new_password:
+          type: string
+        new_password_confirm:
+          type: string
+      required:
+      - new_password
+      - new_password_confirm
+      - old_password
+    EmailTokenObtainPair:
+      type: object
+      description: Custom JWT serializer that uses email instead of username.
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    Feedback:
+      type: object
+      description: Serializer for viewing feedback (user's own feedback).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        feedback_type:
+          allOf:
+          - $ref: '#/components/schemas/FeedbackTypeEnum'
+          description: |-
+            Type of feedback
+
+            * `bug_report` - Bug Report
+            * `suggestion` - Suggestion
+            * `comment` - General Comment
+            * `question` - Question
+        feedback_type_display:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          description: Brief title/summary of the feedback
+          maxLength: 200
+        message:
+          type: string
+          description: Detailed description of the feedback
+        app_version:
+          type: string
+          nullable: true
+          description: App version when feedback was submitted
+          maxLength: 50
+        device_info:
+          type: string
+          nullable: true
+          description: Device/OS information
+          maxLength: 200
+        screen_name:
+          type: string
+          nullable: true
+          description: Screen/route where user was when submitting feedback
+          maxLength: 100
+        status:
+          allOf:
+          - $ref: '#/components/schemas/FeedbackStatusEnum'
+          readOnly: true
+          description: |-
+            Current status of this feedback
+
+            * `new` - New
+            * `in_review` - In Review
+            * `in_progress` - In Progress
+            * `resolved` - Resolved
+            * `closed` - Closed
+            * `wont_fix` - Won't Fix
+        status_display:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - feedback_type_display
+      - id
+      - message
+      - status
+      - status_display
+      - title
+      - updated_at
+    FeedbackAdmin:
+      type: object
+      description: Full serializer for admin use - includes all fields.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+          description: User who submitted this feedback
+        user_email:
+          type: string
+          format: email
+          readOnly: true
+        feedback_type:
+          allOf:
+          - $ref: '#/components/schemas/FeedbackTypeEnum'
+          description: |-
+            Type of feedback
+
+            * `bug_report` - Bug Report
+            * `suggestion` - Suggestion
+            * `comment` - General Comment
+            * `question` - Question
+        feedback_type_display:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          description: Brief title/summary of the feedback
+          maxLength: 200
+        message:
+          type: string
+          description: Detailed description of the feedback
+        app_version:
+          type: string
+          nullable: true
+          description: App version when feedback was submitted
+          maxLength: 50
+        device_info:
+          type: string
+          nullable: true
+          description: Device/OS information
+          maxLength: 200
+        screen_name:
+          type: string
+          nullable: true
+          description: Screen/route where user was when submitting feedback
+          maxLength: 100
+        status:
+          allOf:
+          - $ref: '#/components/schemas/FeedbackStatusEnum'
+          description: |-
+            Current status of this feedback
+
+            * `new` - New
+            * `in_review` - In Review
+            * `in_progress` - In Progress
+            * `resolved` - Resolved
+            * `closed` - Closed
+            * `wont_fix` - Won't Fix
+        status_display:
+          type: string
+          readOnly: true
+        priority:
+          nullable: true
+          description: |-
+            Priority level (set by admin)
+
+            * `low` - Low
+            * `medium` - Medium
+            * `high` - High
+            * `critical` - Critical
+          oneOf:
+          - $ref: '#/components/schemas/FeedbackPriorityEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        priority_display:
+          type: string
+          readOnly: true
+        admin_notes:
+          type: string
+          nullable: true
+          description: Internal notes from admin/developers
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When this feedback was resolved
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - feedback_type_display
+      - id
+      - message
+      - priority_display
+      - status_display
+      - title
+      - updated_at
+      - user
+      - user_email
+    FeedbackCreate:
+      type: object
+      description: |-
+        Serializer for creating new feedback.
+        Users can only set: feedback_type, title, message, app_version, device_info, screen_name
+      properties:
+        feedback_type:
+          allOf:
+          - $ref: '#/components/schemas/FeedbackTypeEnum'
+          description: |-
+            Type of feedback
+
+            * `bug_report` - Bug Report
+            * `suggestion` - Suggestion
+            * `comment` - General Comment
+            * `question` - Question
+        title:
+          type: string
+          description: Brief title/summary of the feedback
+          maxLength: 200
+        message:
+          type: string
+          description: Detailed description of the feedback
+        app_version:
+          type: string
+          nullable: true
+          description: App version when feedback was submitted
+          maxLength: 50
+        device_info:
+          type: string
+          nullable: true
+          description: Device/OS information
+          maxLength: 200
+        screen_name:
+          type: string
+          nullable: true
+          description: Screen/route where user was when submitting feedback
+          maxLength: 100
+      required:
+      - message
+      - title
+    FeedbackList:
+      type: object
+      description: Lightweight serializer for listing user's feedback.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        feedback_type:
+          allOf:
+          - $ref: '#/components/schemas/FeedbackTypeEnum'
+          description: |-
+            Type of feedback
+
+            * `bug_report` - Bug Report
+            * `suggestion` - Suggestion
+            * `comment` - General Comment
+            * `question` - Question
+        feedback_type_display:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          description: Brief title/summary of the feedback
+          maxLength: 200
+        status:
+          allOf:
+          - $ref: '#/components/schemas/FeedbackStatusEnum'
+          description: |-
+            Current status of this feedback
+
+            * `new` - New
+            * `in_review` - In Review
+            * `in_progress` - In Progress
+            * `resolved` - Resolved
+            * `closed` - Closed
+            * `wont_fix` - Won't Fix
+        status_display:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - feedback_type_display
+      - id
+      - status_display
+      - title
+    FeedbackPriorityEnum:
+      enum:
+      - low
+      - medium
+      - high
+      - critical
+      type: string
+      description: |-
+        * `low` - Low
+        * `medium` - Medium
+        * `high` - High
+        * `critical` - Critical
+    FeedbackStatusEnum:
+      enum:
+      - new
+      - in_review
+      - in_progress
+      - resolved
+      - closed
+      - wont_fix
+      type: string
+      description: |-
+        * `new` - New
+        * `in_review` - In Review
+        * `in_progress` - In Progress
+        * `resolved` - Resolved
+        * `closed` - Closed
+        * `wont_fix` - Won't Fix
+    FeedbackTypeEnum:
+      enum:
+      - bug_report
+      - suggestion
+      - comment
+      - question
+      type: string
+      description: |-
+        * `bug_report` - Bug Report
+        * `suggestion` - Suggestion
+        * `comment` - General Comment
+        * `question` - Question
+    Login:
+      type: object
+      description: Serializer for user login with email and password.
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    NullEnum:
+      enum:
+      - null
+    PaginatedFeedbackAdminList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedbackAdmin'
+    PaginatedFeedbackListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedbackList'
+    PaginatedTaskCompletionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskCompletion'
+    PaginatedTaskListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskList'
+    PatchedFeedbackAdmin:
+      type: object
+      description: Full serializer for admin use - includes all fields.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+          description: User who submitted this feedback
+        user_email:
+          type: string
+          format: email
+          readOnly: true
+        feedback_type:
+          allOf:
+          - $ref: '#/components/schemas/FeedbackTypeEnum'
+          description: |-
+            Type of feedback
+
+            * `bug_report` - Bug Report
+            * `suggestion` - Suggestion
+            * `comment` - General Comment
+            * `question` - Question
+        feedback_type_display:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          description: Brief title/summary of the feedback
+          maxLength: 200
+        message:
+          type: string
+          description: Detailed description of the feedback
+        app_version:
+          type: string
+          nullable: true
+          description: App version when feedback was submitted
+          maxLength: 50
+        device_info:
+          type: string
+          nullable: true
+          description: Device/OS information
+          maxLength: 200
+        screen_name:
+          type: string
+          nullable: true
+          description: Screen/route where user was when submitting feedback
+          maxLength: 100
+        status:
+          allOf:
+          - $ref: '#/components/schemas/FeedbackStatusEnum'
+          description: |-
+            Current status of this feedback
+
+            * `new` - New
+            * `in_review` - In Review
+            * `in_progress` - In Progress
+            * `resolved` - Resolved
+            * `closed` - Closed
+            * `wont_fix` - Won't Fix
+        status_display:
+          type: string
+          readOnly: true
+        priority:
+          nullable: true
+          description: |-
+            Priority level (set by admin)
+
+            * `low` - Low
+            * `medium` - Medium
+            * `high` - High
+            * `critical` - Critical
+          oneOf:
+          - $ref: '#/components/schemas/FeedbackPriorityEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        priority_display:
+          type: string
+          readOnly: true
+        admin_notes:
+          type: string
+          nullable: true
+          description: Internal notes from admin/developers
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When this feedback was resolved
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedTask:
+      type: object
+      description: Serializer for Task model - full CRUD operations.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: Task title
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed description of the task
+        status:
+          type: string
+          nullable: true
+          readOnly: true
+        priority:
+          $ref: '#/components/schemas/TaskPriorityEnum'
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Deadline for completing the task
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        is_recurring:
+          type: boolean
+          description: Whether this task repeats on a schedule
+        recurrence_period:
+          nullable: true
+          description: |-
+            How often the task should be completed (always starts from calendar boundaries)
+
+            * `daily` - Daily
+            * `weekly` - Weekly
+            * `biweekly` - Every 2 Weeks
+            * `monthly` - Monthly
+            * `quarterly` - Quarterly
+            * `yearly` - Yearly
+          oneOf:
+          - $ref: '#/components/schemas/RecurrencePeriodEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        recurrence_target_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Target completions per period
+          description: How many times the task should be completed per period (e.g.,
+            3 times per week)
+        recurrence_end_date:
+          type: string
+          format: date
+          nullable: true
+          description: When the recurring schedule ends (optional)
+        recurrence_display:
+          type: string
+          readOnly: true
+          nullable: true
+        current_period_start:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        current_period_end:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        completions_in_current_period:
+          type: integer
+          readOnly: true
+        completed_value_in_current_period:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        is_period_complete:
+          type: boolean
+          readOnly: true
+        remaining_completions_in_period:
+          type: integer
+          readOnly: true
+        last_completion:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        total_completions:
+          type: integer
+          readOnly: true
+        unit_type:
+          nullable: true
+          description: |-
+            Type of unit for measuring the goal
+
+            * `minutes` - Minutes
+            * `hours` - Hours
+            * `count` - Count/Repetitions
+            * `pages` - Pages
+            * `kilometers` - Kilometers
+            * `meters` - Meters
+            * `calories` - Calories
+            * `steps` - Steps
+            * `custom` - Custom unit
+          oneOf:
+          - $ref: '#/components/schemas/UnitTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        custom_unit_name:
+          type: string
+          description: Name for custom unit (used when unit_type is 'custom')
+          maxLength: 50
+        target_value:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Target value in the specified unit (e.g., 30 minutes, 50 pages)
+        goal_display:
+          type: string
+          readOnly: true
+          nullable: true
+        unit_display_name:
+          type: string
+          readOnly: true
+          nullable: true
+        target_in_minutes:
+          type: integer
+          readOnly: true
+          nullable: true
+        estimated_duration:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Estimated duration (minutes)
+          description: Estimated time to complete the task in minutes
+        tags:
+          type: string
+          description: Comma-separated tags
+          maxLength: 500
+        tags_list:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedTaskCompletionCreate:
+      type: object
+      description: Serializer for creating a TaskCompletion.
+      properties:
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        notes:
+          type: string
+          description: Optional notes about this completion
+        duration_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Actual duration (minutes)
+          description: How long it actually took to complete (legacy, use completed_value)
+    PatchedUser:
+      type: object
+      description: Serializer for user profile.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+          description: Required. A valid email address.
+        username:
+          type: string
+          description: Display name shown in the app.
+          maxLength: 50
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+    RecurrencePeriodEnum:
+      enum:
+      - daily
+      - weekly
+      - biweekly
+      - monthly
+      - quarterly
+      - yearly
+      type: string
+      description: |-
+        * `daily` - Daily
+        * `weekly` - Weekly
+        * `biweekly` - Every 2 Weeks
+        * `monthly` - Monthly
+        * `quarterly` - Quarterly
+        * `yearly` - Yearly
+    Task:
+      type: object
+      description: Serializer for Task model - full CRUD operations.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: Task title
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed description of the task
+        status:
+          type: string
+          nullable: true
+          readOnly: true
+        priority:
+          $ref: '#/components/schemas/TaskPriorityEnum'
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Deadline for completing the task
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        is_recurring:
+          type: boolean
+          description: Whether this task repeats on a schedule
+        recurrence_period:
+          nullable: true
+          description: |-
+            How often the task should be completed (always starts from calendar boundaries)
+
+            * `daily` - Daily
+            * `weekly` - Weekly
+            * `biweekly` - Every 2 Weeks
+            * `monthly` - Monthly
+            * `quarterly` - Quarterly
+            * `yearly` - Yearly
+          oneOf:
+          - $ref: '#/components/schemas/RecurrencePeriodEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        recurrence_target_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Target completions per period
+          description: How many times the task should be completed per period (e.g.,
+            3 times per week)
+        recurrence_end_date:
+          type: string
+          format: date
+          nullable: true
+          description: When the recurring schedule ends (optional)
+        recurrence_display:
+          type: string
+          readOnly: true
+          nullable: true
+        current_period_start:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        current_period_end:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        completions_in_current_period:
+          type: integer
+          readOnly: true
+        completed_value_in_current_period:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        is_period_complete:
+          type: boolean
+          readOnly: true
+        remaining_completions_in_period:
+          type: integer
+          readOnly: true
+        last_completion:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        total_completions:
+          type: integer
+          readOnly: true
+        unit_type:
+          nullable: true
+          description: |-
+            Type of unit for measuring the goal
+
+            * `minutes` - Minutes
+            * `hours` - Hours
+            * `count` - Count/Repetitions
+            * `pages` - Pages
+            * `kilometers` - Kilometers
+            * `meters` - Meters
+            * `calories` - Calories
+            * `steps` - Steps
+            * `custom` - Custom unit
+          oneOf:
+          - $ref: '#/components/schemas/UnitTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        custom_unit_name:
+          type: string
+          description: Name for custom unit (used when unit_type is 'custom')
+          maxLength: 50
+        target_value:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Target value in the specified unit (e.g., 30 minutes, 50 pages)
+        goal_display:
+          type: string
+          readOnly: true
+          nullable: true
+        unit_display_name:
+          type: string
+          readOnly: true
+          nullable: true
+        target_in_minutes:
+          type: integer
+          readOnly: true
+          nullable: true
+        estimated_duration:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Estimated duration (minutes)
+          description: Estimated time to complete the task in minutes
+        tags:
+          type: string
+          description: Comma-separated tags
+          maxLength: 500
+        tags_list:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completed_at
+      - completed_value_in_current_period
+      - completions_in_current_period
+      - created_at
+      - current_period_end
+      - current_period_start
+      - goal_display
+      - id
+      - is_overdue
+      - is_period_complete
+      - last_completion
+      - recurrence_display
+      - remaining_completions_in_period
+      - status
+      - tags_list
+      - target_in_minutes
+      - title
+      - total_completions
+      - unit_display_name
+      - updated_at
+    TaskCompletion:
+      type: object
+      description: Serializer for TaskCompletion model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        task:
+          type: integer
+        task_title:
+          type: string
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_value:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Completed amount in the task's unit (minutes, hours, or count)
+        notes:
+          type: string
+          description: Optional notes about this completion
+        duration_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Actual duration (minutes)
+          description: How long it actually took to complete (legacy, use completed_value)
+      required:
+      - completed_at
+      - id
+      - task
+      - task_title
+    TaskCompletionCreate:
+      type: object
+      description: Serializer for creating a TaskCompletion.
+      properties:
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+        notes:
+          type: string
+          description: Optional notes about this completion
+        duration_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Actual duration (minutes)
+          description: How long it actually took to complete (legacy, use completed_value)
+    TaskList:
+      type: object
+      description: Lightweight serializer for listing tasks.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: Task title
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed description of the task
+        status:
+          type: string
+          nullable: true
+          readOnly: true
+        priority:
+          $ref: '#/components/schemas/TaskPriorityEnum'
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Deadline for completing the task
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_recurring:
+          type: boolean
+          description: Whether this task repeats on a schedule
+        recurrence_period:
+          nullable: true
+          description: |-
+            How often the task should be completed (always starts from calendar boundaries)
+
+            * `daily` - Daily
+            * `weekly` - Weekly
+            * `biweekly` - Every 2 Weeks
+            * `monthly` - Monthly
+            * `quarterly` - Quarterly
+            * `yearly` - Yearly
+          oneOf:
+          - $ref: '#/components/schemas/RecurrencePeriodEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        recurrence_target_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Target completions per period
+          description: How many times the task should be completed per period (e.g.,
+            3 times per week)
+        is_overdue:
+          type: boolean
+          readOnly: true
+        is_period_complete:
+          type: boolean
+          readOnly: true
+        unit_type:
+          nullable: true
+          description: |-
+            Type of unit for measuring the goal
+
+            * `minutes` - Minutes
+            * `hours` - Hours
+            * `count` - Count/Repetitions
+            * `pages` - Pages
+            * `kilometers` - Kilometers
+            * `meters` - Meters
+            * `calories` - Calories
+            * `steps` - Steps
+            * `custom` - Custom unit
+          oneOf:
+          - $ref: '#/components/schemas/UnitTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        custom_unit_name:
+          type: string
+          description: Name for custom unit (used when unit_type is 'custom')
+          maxLength: 50
+        target_value:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Target value in the specified unit (e.g., 30 minutes, 50 pages)
+        goal_display:
+          type: string
+          readOnly: true
+          nullable: true
+        unit_display_name:
+          type: string
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - goal_display
+      - id
+      - is_overdue
+      - is_period_complete
+      - status
+      - title
+      - unit_display_name
+    TaskPriorityEnum:
+      enum:
+      - low
+      - medium
+      - high
+      - urgent
+      type: string
+      description: |-
+        * `low` - Low
+        * `medium` - Medium
+        * `high` - High
+        * `urgent` - Urgent
+    TaskStatusEnum:
+      enum:
+      - todo
+      - in_progress
+      - completed
+      - archived
+      type: string
+      description: |-
+        * `todo` - To Do
+        * `in_progress` - In Progress
+        * `completed` - Completed
+        * `archived` - Archived
+    TaskStatusUpdate:
+      type: object
+      description: |-
+        Serializer for updating task status.
+        Only for non-recurring tasks - recurring tasks don't have status.
+      properties:
+        status:
+          $ref: '#/components/schemas/TaskStatusEnum'
+      required:
+      - status
+    TaskWithCompletions:
+      type: object
+      description: Task serializer that includes recent completions.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: Task title
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed description of the task
+        status:
+          type: string
+          nullable: true
+          readOnly: true
+        priority:
+          $ref: '#/components/schemas/TaskPriorityEnum'
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Deadline for completing the task
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        is_recurring:
+          type: boolean
+          description: Whether this task repeats on a schedule
+        recurrence_period:
+          nullable: true
+          description: |-
+            How often the task should be completed (always starts from calendar boundaries)
+
+            * `daily` - Daily
+            * `weekly` - Weekly
+            * `biweekly` - Every 2 Weeks
+            * `monthly` - Monthly
+            * `quarterly` - Quarterly
+            * `yearly` - Yearly
+          oneOf:
+          - $ref: '#/components/schemas/RecurrencePeriodEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        recurrence_target_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Target completions per period
+          description: How many times the task should be completed per period (e.g.,
+            3 times per week)
+        recurrence_end_date:
+          type: string
+          format: date
+          nullable: true
+          description: When the recurring schedule ends (optional)
+        recurrence_display:
+          type: string
+          readOnly: true
+          nullable: true
+        current_period_start:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        current_period_end:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        completions_in_current_period:
+          type: integer
+          readOnly: true
+        completed_value_in_current_period:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          readOnly: true
+        is_period_complete:
+          type: boolean
+          readOnly: true
+        remaining_completions_in_period:
+          type: integer
+          readOnly: true
+        last_completion:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        total_completions:
+          type: integer
+          readOnly: true
+        unit_type:
+          nullable: true
+          description: |-
+            Type of unit for measuring the goal
+
+            * `minutes` - Minutes
+            * `hours` - Hours
+            * `count` - Count/Repetitions
+            * `pages` - Pages
+            * `kilometers` - Kilometers
+            * `meters` - Meters
+            * `calories` - Calories
+            * `steps` - Steps
+            * `custom` - Custom unit
+          oneOf:
+          - $ref: '#/components/schemas/UnitTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        custom_unit_name:
+          type: string
+          description: Name for custom unit (used when unit_type is 'custom')
+          maxLength: 50
+        target_value:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Target value in the specified unit (e.g., 30 minutes, 50 pages)
+        goal_display:
+          type: string
+          readOnly: true
+          nullable: true
+        unit_display_name:
+          type: string
+          readOnly: true
+          nullable: true
+        target_in_minutes:
+          type: integer
+          readOnly: true
+          nullable: true
+        estimated_duration:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Estimated duration (minutes)
+          description: Estimated time to complete the task in minutes
+        tags:
+          type: string
+          description: Comma-separated tags
+          maxLength: 500
+        tags_list:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        recent_completions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskCompletion'
+          readOnly: true
+      required:
+      - completed_at
+      - completed_value_in_current_period
+      - completions_in_current_period
+      - created_at
+      - current_period_end
+      - current_period_start
+      - goal_display
+      - id
+      - is_overdue
+      - is_period_complete
+      - last_completion
+      - recent_completions
+      - recurrence_display
+      - remaining_completions_in_period
+      - status
+      - tags_list
+      - target_in_minutes
+      - title
+      - total_completions
+      - unit_display_name
+      - updated_at
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenVerify:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+      required:
+      - token
+    UnitTypeEnum:
+      enum:
+      - minutes
+      - hours
+      - count
+      - pages
+      - kilometers
+      - meters
+      - calories
+      - steps
+      - custom
+      type: string
+      description: |-
+        * `minutes` - Minutes
+        * `hours` - Hours
+        * `count` - Count/Repetitions
+        * `pages` - Pages
+        * `kilometers` - Kilometers
+        * `meters` - Meters
+        * `calories` - Calories
+        * `steps` - Steps
+        * `custom` - Custom unit
+    User:
+      type: object
+      description: Serializer for user profile.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+          description: Required. A valid email address.
+        username:
+          type: string
+          description: Display name shown in the app.
+          maxLength: 50
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+      required:
+      - date_joined
+      - email
+      - id
+      - is_active
+    UserRegistration:
+      type: object
+      description: Serializer for user registration.
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email address
+          description: Required. A valid email address.
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+        password_confirm:
+          type: string
+          writeOnly: true
+        first_name:
+          type: string
+          maxLength: 150
+        username:
+          type: string
+          description: Display name shown in the app.
+          maxLength: 50
+      required:
+      - email
+      - password
+      - password_confirm
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    oauth2:
+      type: oauth2
+      flows: {}

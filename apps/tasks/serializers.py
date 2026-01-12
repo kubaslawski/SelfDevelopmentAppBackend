@@ -1,7 +1,11 @@
 """
 Serializers for the Tasks app.
 """
+from datetime import datetime
+from decimal import Decimal
+from typing import Optional
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import Task, TaskCompletion
@@ -55,19 +59,21 @@ class TaskSerializer(serializers.ModelSerializer):
 
     # Override status to return None for recurring tasks (their status is determined by completions)
     status = serializers.SerializerMethodField()
-    is_overdue = serializers.ReadOnlyField()
-    tags_list = serializers.ReadOnlyField()
-    recurrence_display = serializers.ReadOnlyField()
-    goal_display = serializers.ReadOnlyField()
-    unit_display_name = serializers.ReadOnlyField()
-    target_in_minutes = serializers.ReadOnlyField()
-    completions_in_current_period = serializers.ReadOnlyField()
-    completed_value_in_current_period = serializers.ReadOnlyField()
-    is_period_complete = serializers.ReadOnlyField()
-    remaining_completions_in_period = serializers.ReadOnlyField()
-    last_completion = serializers.ReadOnlyField()
-    current_period_start = serializers.ReadOnlyField()
-    current_period_end = serializers.ReadOnlyField()
+    is_overdue = serializers.BooleanField(read_only=True)
+    tags_list = serializers.ListField(child=serializers.CharField(), read_only=True)
+    recurrence_display = serializers.CharField(read_only=True, allow_null=True)
+    goal_display = serializers.CharField(read_only=True, allow_null=True)
+    unit_display_name = serializers.CharField(read_only=True, allow_null=True)
+    target_in_minutes = serializers.IntegerField(read_only=True, allow_null=True)
+    completions_in_current_period = serializers.IntegerField(read_only=True)
+    completed_value_in_current_period = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
+    is_period_complete = serializers.BooleanField(read_only=True)
+    remaining_completions_in_period = serializers.IntegerField(read_only=True)
+    last_completion = serializers.DateTimeField(read_only=True, allow_null=True)
+    current_period_start = serializers.DateTimeField(read_only=True, allow_null=True)
+    current_period_end = serializers.DateTimeField(read_only=True, allow_null=True)
     total_completions = serializers.SerializerMethodField()
 
     class Meta:
@@ -112,13 +118,15 @@ class TaskSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "completed_at", "created_at", "updated_at"]
 
-    def get_status(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_status(self, obj) -> Optional[str]:
         """Return status for non-recurring tasks, None for recurring tasks."""
         if obj.is_recurring:
             return None
         return obj.status
 
-    def get_total_completions(self, obj):
+    @extend_schema_field(serializers.IntegerField())
+    def get_total_completions(self, obj) -> int:
         """Get total number of completions for recurring tasks."""
         if obj.is_recurring:
             return obj.completions.count()
@@ -159,10 +167,10 @@ class TaskListSerializer(serializers.ModelSerializer):
 
     # Override status to return None for recurring tasks (their status is determined by completions)
     status = serializers.SerializerMethodField()
-    is_overdue = serializers.ReadOnlyField()
-    is_period_complete = serializers.ReadOnlyField()
-    goal_display = serializers.ReadOnlyField()
-    unit_display_name = serializers.ReadOnlyField()
+    is_overdue = serializers.BooleanField(read_only=True)
+    is_period_complete = serializers.BooleanField(read_only=True)
+    goal_display = serializers.CharField(read_only=True, allow_null=True)
+    unit_display_name = serializers.CharField(read_only=True, allow_null=True)
 
     class Meta:
         model = Task
@@ -188,7 +196,8 @@ class TaskListSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
-    def get_status(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_status(self, obj) -> Optional[str]:
         """Return status for non-recurring tasks, None for recurring tasks."""
         if obj.is_recurring:
             return None
@@ -205,7 +214,8 @@ class TaskWithCompletionsSerializer(TaskSerializer):
     class Meta(TaskSerializer.Meta):
         fields = TaskSerializer.Meta.fields + ["recent_completions"]
 
-    def get_recent_completions(self, obj):
+    @extend_schema_field(TaskCompletionSerializer(many=True))
+    def get_recent_completions(self, obj) -> list:
         """Get the 10 most recent completions."""
         if not obj.is_recurring:
             return []
@@ -237,3 +247,33 @@ class TaskStatusUpdateSerializer(serializers.Serializer):
         else:
             instance.save(update_fields=["status", "updated_at"])
         return instance
+
+
+class SyncCompletionsSerializer(serializers.Serializer):
+    """
+    Serializer for syncing completions.
+    Accepts a list of dates and an optional completed_value.
+    """
+
+    dates = serializers.ListField(
+        child=serializers.DateField(),
+        help_text="List of dates (YYYY-MM-DD) for completions",
+    )
+    completed_value = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        help_text="Default completed value for new completions",
+    )
+
+
+class SyncCompletionsResponseSerializer(serializers.Serializer):
+    """
+    Response serializer for sync_completions endpoint.
+    """
+
+    added = serializers.IntegerField(help_text="Number of completions added")
+    removed = serializers.IntegerField(help_text="Number of completions removed")
+    total = serializers.IntegerField(help_text="Total completions after sync")
+    task = TaskWithCompletionsSerializer()

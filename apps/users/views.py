@@ -79,6 +79,7 @@ class LoginView(APIView):
         summary="Logout",
         description="Logout the current user and destroy the session.",
         tags=["Authentication"],
+        request=None,  # No request body needed
     )
 )
 class LogoutView(APIView):
@@ -126,12 +127,14 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         summary="Change password",
         description="Change the authenticated user's password.",
         tags=["User Profile"],
+        request=ChangePasswordSerializer,
     )
 )
 class ChangePasswordView(APIView):
     """Change password for the authenticated user."""
 
     permission_classes = [IsAuthenticated]
+    serializer_class = ChangePasswordSerializer
 
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
