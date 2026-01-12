@@ -29,3 +29,4 @@ class EmailLogoutView(LogoutView):
     """
 
     next_page = reverse_lazy("email_login")
+

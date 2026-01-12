@@ -80,3 +80,4 @@ class TestTaskModel:
         task = Task.objects.create(title="Test Task")
         assert task.created_at is not None
         assert task.updated_at is not None
+

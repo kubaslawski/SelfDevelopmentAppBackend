@@ -374,3 +374,4 @@ class Command(BaseCommand):
                 due_date=now + timezone.timedelta(days=(i + 1) * 7),
             )
         self.stdout.write(f"  Created {len(tasks_data)} tasks for {user.email}")
+

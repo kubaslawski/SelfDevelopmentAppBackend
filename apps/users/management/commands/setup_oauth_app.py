@@ -3,6 +3,8 @@ Management command to create OAuth2 application for the mobile app.
 """
 
 from django.core.management.base import BaseCommand
+
+# type: ignore
 from oauth2_provider.models import Application
 
 
@@ -27,8 +29,12 @@ class Command(BaseCommand):
             "name": "Self Development App Mobile",
             "client_type": Application.CLIENT_PUBLIC,  # Public client (mobile apps)
             "authorization_grant_type": Application.GRANT_AUTHORIZATION_CODE,
-            # Redirect URI for mobile app (custom scheme)
-            "redirect_uris": "selfdevelopmentapp://oauth/callback",
+            # Redirect URIs for mobile app (space or newline separated)
+            # - Production: custom scheme
+            # - Development: Expo Go
+            "redirect_uris": (
+                "selfdevelopmentapp://oauth/callback " "exp://192.168.33.6:8081/--/oauth/callback"
+            ),
             "skip_authorization": False,  # Show authorization screen to confirm user identity
             # No client_secret for public clients (PKCE provides security)
             "client_secret": "",

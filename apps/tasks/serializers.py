@@ -173,6 +173,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             "status",
             "priority",
             "due_date",
+            "completed_at",
             "is_recurring",
             "recurrence_period",
             "recurrence_target_count",

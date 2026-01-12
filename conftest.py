@@ -16,3 +16,4 @@ def api_client():
 def django_db_setup():
     """Configure Django DB for pytest."""
     pass
+
