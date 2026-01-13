@@ -111,6 +111,15 @@ class Task(TimeStampedModel):
         null=True,
         blank=True,
     )
+    goal = models.ForeignKey(
+        "goals.Goal",
+        on_delete=models.CASCADE,
+        related_name="tasks",
+        verbose_name=_("goal"),
+        null=True,
+        blank=True,
+        help_text=_("Goal this task belongs to (auto-deleted with goal)"),
+    )
 
     # Recurrence settings
     is_recurring = models.BooleanField(

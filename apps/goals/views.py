@@ -9,6 +9,8 @@ Flow for creating a goal with AI-generated plan:
 """
 
 import logging
+from datetime import date, timedelta
+from typing import List, Optional
 
 from core.llm import RateLimitExceeded
 from django.utils import timezone
@@ -44,6 +46,81 @@ from .services import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# Priority weights for due date distribution (higher = gets more time earlier)
+PRIORITY_WEIGHTS = {
+    "high": 1,  # First in the milestone
+    "medium": 2,  # Middle
+    "low": 3,  # Later
+}
+
+
+def calculate_task_due_dates(
+    tasks: List,
+    milestone_start: date,
+    milestone_end: date,
+) -> List[Optional[date]]:
+    """
+    Calculate due dates for tasks within a milestone timeframe.
+
+    Tasks are distributed across the milestone period based on priority:
+    - High priority tasks get earlier due dates
+    - Medium priority tasks get middle due dates
+    - Low priority tasks get later due dates
+
+    Recurring tasks don't get due dates (they repeat throughout).
+
+    Args:
+        tasks: List of task DTOs with priority and is_recurring attributes
+        milestone_start: Start date of the milestone
+        milestone_end: End date (target_date) of the milestone
+
+    Returns:
+        List of due dates (or None for recurring tasks) in the same order as input
+    """
+    if not tasks:
+        return []
+
+    # Filter out recurring tasks for due date calculation
+    non_recurring_indices = [
+        i for i, t in enumerate(tasks) if not getattr(t, "is_recurring", False)
+    ]
+
+    if not non_recurring_indices:
+        # All tasks are recurring, no due dates needed
+        return [None] * len(tasks)
+
+    # Calculate available days
+    total_days = (milestone_end - milestone_start).days
+    if total_days <= 0:
+        total_days = 7  # Default to 7 days if dates are invalid
+
+    # Sort non-recurring tasks by priority (high first)
+    sorted_indices = sorted(
+        non_recurring_indices,
+        key=lambda i: PRIORITY_WEIGHTS.get(getattr(tasks[i], "priority", "medium"), 2),
+    )
+
+    # Calculate due dates - distribute evenly across the milestone period
+    num_tasks = len(sorted_indices)
+    days_per_task = max(1, total_days // num_tasks)
+
+    # Create result list with None for recurring tasks
+    due_dates: List[Optional[date]] = [None] * len(tasks)
+
+    for position, task_idx in enumerate(sorted_indices):
+        # Calculate the day offset based on position
+        day_offset = min((position + 1) * days_per_task, total_days)
+        due_date = milestone_start + timedelta(days=day_offset)
+
+        # Don't exceed milestone end date
+        if due_date > milestone_end:
+            due_date = milestone_end
+
+        due_dates[task_idx] = due_date
+
+    return due_dates
 
 
 @extend_schema_view(
@@ -292,13 +369,28 @@ class GoalViewSet(viewsets.ModelViewSet):
         created_milestones = []
         total_tasks_created = 0
 
+        # Calculate milestone start dates for due date distribution
+        goal_start = goal.start_date or timezone.now().date()
+        previous_milestone_end: Optional[date] = None
+
         for idx, milestone_dto in enumerate(milestones_dtos):
+            # Parse milestone target date
+            milestone_target = milestone_dto.target_date
+            if isinstance(milestone_target, str):
+                milestone_target = date.fromisoformat(milestone_target)
+
+            # Determine milestone start date
+            if previous_milestone_end:
+                milestone_start = previous_milestone_end + timedelta(days=1)
+            else:
+                milestone_start = goal_start
+
             milestone = Milestone.objects.create(
                 goal=goal,
                 title=milestone_dto.title,
                 description=milestone_dto.description,
                 order=idx,
-                target_date=milestone_dto.target_date,
+                target_date=milestone_target,
                 requirements=milestone_dto.requirements,
                 success_criteria=milestone_dto.success_criteria,
                 suggested_tasks=[task.model_dump() for task in milestone_dto.tasks],
@@ -306,16 +398,27 @@ class GoalViewSet(viewsets.ModelViewSet):
             )
             created_milestones.append(milestone)
 
-            # Auto-create Task objects from tasks DTOs
-            for task_dto in milestone_dto.tasks:
+            # Calculate due dates for tasks in this milestone
+            task_due_dates = calculate_task_due_dates(
+                tasks=milestone_dto.tasks,
+                milestone_start=milestone_start,
+                milestone_end=milestone_target,
+            )
+
+            # Auto-create Task objects from tasks DTOs with calculated due dates
+            for task_idx, task_dto in enumerate(milestone_dto.tasks):
+                task_due_date = task_due_dates[task_idx] if task_idx < len(task_due_dates) else None
+
                 task = Task.objects.create(
                     user=request.user,
+                    goal=goal,  # Link to goal for CASCADE delete
                     title=task_dto.title,
                     description=task_dto.description,
                     priority=task_dto.priority,
                     is_recurring=task_dto.is_recurring,
                     recurrence_period=task_dto.recurrence_period,
                     recurrence_target_count=1 if task_dto.is_recurring else None,
+                    due_date=task_due_date,  # Set calculated due date
                     status=Task.Status.TODO,
                 )
                 MilestoneTaskLink.objects.create(
@@ -323,6 +426,9 @@ class GoalViewSet(viewsets.ModelViewSet):
                     task=task,
                 )
                 total_tasks_created += 1
+
+            # Update for next iteration
+            previous_milestone_end = milestone_target
 
         # Activate the goal
         goal.status = Goal.Status.ACTIVE
@@ -507,13 +613,42 @@ class MilestoneViewSet(viewsets.ModelViewSet):
         # Parse suggested_tasks through DTO
         tasks_dtos = [TaskInputDTO.model_validate(t) for t in milestone.suggested_tasks]
 
+        # Calculate milestone start date (previous milestone's end or goal start)
+        goal = milestone.goal
+        previous_milestone = (
+            Milestone.objects.filter(goal=goal, order__lt=milestone.order)
+            .order_by("-order")
+            .first()
+        )
+
+        if previous_milestone and previous_milestone.target_date:
+            milestone_start = previous_milestone.target_date + timedelta(days=1)
+        else:
+            milestone_start = goal.start_date or timezone.now().date()
+
+        milestone_end = milestone.target_date or (milestone_start + timedelta(days=7))
+
+        # Calculate due dates for tasks
+        task_due_dates = calculate_task_due_dates(
+            tasks=tasks_dtos,
+            milestone_start=milestone_start,
+            milestone_end=milestone_end,
+        )
+
         created_tasks = []
-        for task_dto in tasks_dtos:
+        for task_idx, task_dto in enumerate(tasks_dtos):
+            task_due_date = task_due_dates[task_idx] if task_idx < len(task_due_dates) else None
+
             task = Task.objects.create(
                 user=request.user,
+                goal=goal,  # Link to goal for CASCADE delete
                 title=task_dto.title,
                 description=task_dto.description,
                 priority=task_dto.priority,
+                is_recurring=task_dto.is_recurring,
+                recurrence_period=task_dto.recurrence_period,
+                recurrence_target_count=1 if task_dto.is_recurring else None,
+                due_date=task_due_date,  # Set calculated due date
                 status=Task.Status.TODO,
             )
             MilestoneTaskLink.objects.create(

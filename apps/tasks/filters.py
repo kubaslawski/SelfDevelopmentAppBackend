@@ -71,6 +71,10 @@ class TaskFilter(django_filters.FilterSet):
         method="filter_goal_none",
         label="Without goal (no milestone link)",
     )
+    milestone = django_filters.NumberFilter(
+        method="filter_milestone",
+        label="Filter by milestone id",
+    )
 
     class Meta:
         model = Task
@@ -92,6 +96,13 @@ class TaskFilter(django_filters.FilterSet):
         if value:
             return queryset.filter(milestone_links__isnull=True).distinct()
         return queryset
+
+    def filter_milestone(self, queryset, name, value):
+        if value is None:
+            return queryset
+        return queryset.filter(
+            milestone_links__milestone_id=value
+        ).distinct()
 
 
 class TaskCompletionFilter(django_filters.FilterSet):
