@@ -140,6 +140,19 @@ class Goal(TimeStampedModel):
         blank=True,
         help_text=_("Tips and advice for achieving the goal"),
     )
+    final_achievement = models.TextField(
+        _("final achievement"),
+        blank=True,
+        default="",
+        help_text=_("Concrete description of what 'success' looks like"),
+    )
+    icon = models.CharField(
+        _("icon"),
+        max_length=64,
+        blank=True,
+        default="",
+        help_text=_("Optional icon name for the goal (e.g., material-community icon key)"),
+    )
 
     class Meta:
         verbose_name = _("goal")
@@ -252,7 +265,13 @@ class Milestone(TimeStampedModel):
         _("requirements"),
         blank=True,
         default="",
-        help_text=_("What's needed to complete this milestone?"),
+        help_text=_("What's needed before starting this milestone?"),
+    )
+    success_criteria = models.TextField(
+        _("success criteria"),
+        blank=True,
+        default="",
+        help_text=_("How to know this milestone is complete"),
     )
     notes = models.TextField(
         _("notes"),

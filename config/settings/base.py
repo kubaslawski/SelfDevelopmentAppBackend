@@ -187,7 +187,7 @@ CORS_ALLOWED_ORIGINS = config(
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": False,
@@ -214,7 +214,7 @@ OAUTH2_PROVIDER = {
     },
     "DEFAULT_SCOPES": ["profile", "email", "read"],
     # Token settings
-    "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,  # 1 hour
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 86400,  # 24 hours
     "REFRESH_TOKEN_EXPIRE_SECONDS": 604800,  # 7 days
     "ROTATE_REFRESH_TOKEN": True,
     # Use custom user model

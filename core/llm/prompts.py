@@ -12,11 +12,22 @@ GOAL_PLANNER_SYSTEM = """You are an expert life coach and goal planning assistan
 Your role is to help users create actionable, realistic plans to achieve their goals.
 
 When creating plans:
-- Break down large goals into smaller, manageable milestones
+- Break down large goals into weekly/bi-weekly milestones that build progressively
+- Start from the absolute basics (buying materials, finding resources, setting up environment)
+- End with a concrete achievement (exam, public performance, measurable outcome)
+- Each milestone should be a logical progression from the previous one
 - Set realistic timeframes based on the user's availability
 - Consider potential obstacles and suggest mitigation strategies
-- Make tasks specific and measurable
+- Make tasks specific, measurable and immediately actionable
+- Tasks should be small enough to complete in 1-2 hours maximum
 - Encourage but don't overwhelm
+
+Key principles:
+1. PROGRESSIVE: Each milestone builds on the previous one
+2. GRANULAR: Weekly or bi-weekly milestones, not monthly
+3. REALISTIC: Account for user's time constraints and starting point
+4. COMPLETE: From preparation to final achievement
+5. ACTIONABLE: Every task should be something the user can do TODAY
 
 Always respond in the same language the user uses."""
 
@@ -69,7 +80,7 @@ Do NOT ask generic questions. Tailor each question to this specific goal."""
 # PLAN GENERATION (Step 2: Generate plan based on answers)
 # =============================================================================
 
-GOAL_PLAN_TEMPLATE = """Based on the following information, create a detailed plan to achieve this goal.
+GOAL_PLAN_TEMPLATE = """Based on the following information, create a detailed, granular plan to achieve this goal.
 
 ## Goal
 {goal_title}
@@ -81,48 +92,131 @@ GOAL_PLAN_TEMPLATE = """Based on the following information, create a detailed pl
 ## Target Date
 {target_date}
 
-## Instructions
-Create a structured plan with:
-1. **Milestones**: Key checkpoints on the way to the goal (3-5 milestones)
-2. **Tasks**: Specific actions for each milestone (2-4 tasks per milestone)
-3. **Timeline**: Suggested dates for each milestone (spread evenly until target date)
-4. **Tips**: Practical advice for staying on track
+## CRITICAL: Milestone Duration Rules
 
-Important:
-- Make milestones achievable and measurable
-- Tasks should be specific actions, not vague goals
-- Consider the user's available time and resources from their answers
-- Be encouraging but realistic
+**EVERY milestone MUST be exactly 1 week (7 days) or less.**
 
-Respond ONLY with valid JSON in the following format:
+Calculate the total weeks from today to target_date and create that many weekly milestones:
+- 1 month goal = 4 weekly milestones
+- 2 months = 8 weekly milestones
+- 3 months = 12 weekly milestones
+- 6 months = 24 weekly milestones
+- 12 months = 52 weekly milestones
+
+DO NOT create monthly milestones. Always break down into weeks.
+
+## Progressive Learning Structure
+
+Each week should have a SPECIFIC, MEASURABLE focus:
+
+### Week 1: Foundation & Setup
+- Research best learning methods/resources
+- Purchase/acquire necessary materials
+- Set up learning environment
+- Find mentor/teacher/community if needed
+- Create learning schedule
+
+### Week 2-3: Absolute Basics
+- Learn the most fundamental concepts
+- Start with easiest exercises
+- Build daily habit (even 15 min/day)
+- Track progress from day 1
+
+### Week 4-8: Building Blocks
+- Progressively harder concepts
+- Regular practice sessions
+- First small achievements
+- Identify weaknesses early
+
+### Remaining weeks until 80%: Skill Development
+- Each week focuses on ONE specific skill/topic
+- Week N: "Master [specific topic]"
+- Include practice, review, and application
+- Mini-milestones and checkpoints
+
+### Final 20% of time: Achievement Preparation
+- Review all material
+- Mock tests/practice runs
+- Final polishing
+- The actual achievement
+
+## Task Requirements
+
+Each weekly milestone should have 4-8 tasks:
+- Daily practice task (recurring, 15-60 min)
+- 2-3 learning tasks (new material)
+- 1-2 review tasks (consolidation)
+- 1 assessment task (end of week check)
+
+Tasks should be completable in 30 minutes to 2 hours maximum.
+
+## Response Format
+
+Respond ONLY with valid JSON:
 {{
-    "summary": "Brief summary of the plan approach (2-3 sentences)",
+    "icon": "material-community icon name that best represents the goal (snake_case, e.g., 'brain', 'dumbbell', 'rocket-outline')",
+    "summary": "2-3 sentence overview of the complete journey",
     "milestones": [
         {{
-            "title": "Milestone title",
-            "description": "What achieving this milestone means",
+            "title": "Week 1: [Specific Focus]",
+            "description": "By end of this week, you will have: [concrete outcomes]",
             "target_date": "YYYY-MM-DD",
+            "requirements": "Prerequisites for this week",
+            "success_criteria": "Checklist of what 'done' looks like",
             "tasks": [
                 {{
                     "title": "Specific task title",
-                    "description": "What to do and how",
-                    "estimated_duration": "e.g., 30 minutes, 2 hours",
+                    "description": "Step-by-step instructions",
+                    "estimated_duration": "30 minutes|1 hour|2 hours",
                     "priority": "high|medium|low",
                     "is_recurring": false,
-                    "recurrence_period": null
+                    "recurrence_period": null,
+                    "category": "preparation|learning|practice|review|achievement"
                 }}
             ]
         }}
     ],
-    "tips": ["Practical tip 1", "Practical tip 2", "Practical tip 3"],
-    "potential_obstacles": ["Obstacle 1 and how to overcome it", "Obstacle 2 and solution"],
-    "motivation": "An encouraging, personalized message for the user based on their goal"
-}}"""
+    "tips": ["4-5 specific, actionable tips"],
+    "potential_obstacles": ["Obstacle → Solution pairs"],
+    "motivation": "Personalized encouragement",
+    "final_achievement": "Concrete success definition"
+}}
+
+## Example: Learning German to B2 (6 months)
+
+Week 1: Setup & Fundamentals
+- Task: Download Duolingo + Anki
+- Task: Order German textbook (Menschen A1)
+- Task: Find online tutor on iTalki
+- Task: Create study schedule (1hr/day)
+- Task: Learn alphabet & pronunciation rules
+
+Week 2: First Words & Phrases
+- Task: Learn 100 most common words
+- Task: Master greetings & introductions
+- Task: Daily: Duolingo 15 min
+- Task: Daily: Anki flashcards 15 min
+- Task: Watch 1 German video for beginners
+
+Week 3: Basic Grammar
+- Task: Learn present tense conjugation
+- Task: Master articles (der/die/das)
+- Task: Practice 20 basic sentences
+- Task: First conversation with tutor
+
+... and so on for ALL 24 weeks!
+
+REMEMBER:
+- NEVER skip weeks or combine them
+- Each week = 7 days maximum
+- Be SPECIFIC about what to learn each week
+- Include the EXACT resources/apps to use"""
 
 
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+
 
 def format_generate_questions_prompt(goal_description: str) -> str:
     """
@@ -159,9 +253,7 @@ def format_goal_plan_prompt(
     """
     # Format answers as readable text
     if isinstance(answers, dict):
-        formatted_answers = "\n".join(
-            f"- **{key}**: {value}" for key, value in answers.items()
-        )
+        formatted_answers = "\n".join(f"- **{key}**: {value}" for key, value in answers.items())
     elif isinstance(answers, list):
         # List of {question, answer} objects
         formatted_answers = "\n".join(

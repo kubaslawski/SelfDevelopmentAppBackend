@@ -25,6 +25,7 @@ drf-spectacular==0.28.0
 
 # AI / LLM
 google-generativeai==0.8.4
+pydantic-ai==0.0.39
 
 # Validation / DTO
 pydantic==2.10.3

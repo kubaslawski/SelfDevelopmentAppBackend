@@ -10,31 +10,57 @@ Flow for creating a goal with AI-generated plan:
 
 import logging
 
+from core.llm import RateLimitExceeded
 from django.utils import timezone
-from rest_framework import viewsets, status
+from drf_spectacular.utils import extend_schema, extend_schema_view
+from pydantic import ValidationError as PydanticValidationError
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.tasks.models import Task
+
+from .domain.dto import (
+    ApplyPlanRequestDTO,
+    GenerateQuestionsRequestDTO,
+    LLMGeneratedPlanDTO,
+    TaskInputDTO,
+)
 from .domain.entities import QuestionAnswer
-from .models import Goal, Milestone
+from .models import Goal, Milestone, MilestoneTaskLink
 from .serializers import (
-    GoalListSerializer,
-    GoalDetailSerializer,
     GoalCreateSerializer,
-    SubmitAnswersSerializer,
+    GoalDetailSerializer,
+    GoalListSerializer,
     MilestoneSerializer,
+    SubmitAnswersSerializer,
 )
 from .services import (
-    generate_questions,
     generate_plan,
-    save_questions,
+    generate_questions,
     save_plan,
+    save_questions,
 )
 
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Goals"]),
+    create=extend_schema(tags=["Goals"]),
+    retrieve=extend_schema(tags=["Goals"]),
+    update=extend_schema(tags=["Goals"]),
+    partial_update=extend_schema(tags=["Goals"]),
+    destroy=extend_schema(tags=["Goals"]),
+    generate_questions=extend_schema(tags=["Goals"]),
+    submit_answers=extend_schema(tags=["Goals"]),
+    apply_plan=extend_schema(tags=["Goals"]),
+    complete=extend_schema(tags=["Goals"]),
+    pause=extend_schema(tags=["Goals"]),
+    resume=extend_schema(tags=["Goals"]),
+    abandon=extend_schema(tags=["Goals"]),
+)
 class GoalViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing Goals.
@@ -77,31 +103,39 @@ class GoalViewSet(viewsets.ModelViewSet):
         """
         goal = self.get_object()
 
-        # Don't regenerate if already has questions and user didn't force
-        if goal.planning_questions and not request.data.get("force", False):
-            return Response({
-                "success": True,
-                "questions": goal.planning_questions,
-                "cached": True,
-            })
+        # Parse request
+        request_dto = GenerateQuestionsRequestDTO.model_validate(request.data or {})
 
-        questions = generate_questions(goal=goal, user_id=request.user.id)
+        # Don't regenerate if already has questions and user didn't force
+        if goal.planning_questions and not request_dto.force:
+            return Response(
+                {
+                    "success": True,
+                    "questions": goal.planning_questions,
+                    "cached": True,
+                }
+            )
+
+        questions, is_fallback = generate_questions(goal=goal, user_id=request.user.id)
         save_questions(goal, questions)
 
-        return Response({
-            "success": True,
-            "questions": [
-                {
-                    "id": q.id,
-                    "question": q.question,
-                    "type": q.type,
-                    "placeholder": q.placeholder,
-                    "options": q.options,
-                }
-                for q in questions
-            ],
-            "cached": False,
-        })
+        return Response(
+            {
+                "success": True,
+                "questions": [
+                    {
+                        "id": q.id,
+                        "question": q.question,
+                        "type": q.type,
+                        "placeholder": q.placeholder,
+                        "options": q.options,
+                    }
+                    for q in questions
+                ],
+                "cached": False,
+                "fallback": is_fallback,
+            }
+        )
 
     # =========================================================================
     # Step 3: Submit answers and generate plan
@@ -152,31 +186,39 @@ class GoalViewSet(viewsets.ModelViewSet):
             plan = generate_plan(goal=goal, answers=answer_entities, user_id=request.user.id)
             save_plan(goal, plan)
 
-            return Response({
-                "success": True,
-                "plan": goal.llm_generated_plan,
-                "message": "Plan generated successfully. Review and apply when ready.",
-            })
+            return Response(
+                {
+                    "success": True,
+                    "plan": goal.llm_generated_plan,
+                    "message": "Plan generated successfully. Review and apply when ready.",
+                }
+            )
 
         except RateLimitExceeded as e:
             goal.status = Goal.Status.DRAFT
             goal.save(update_fields=["status", "updated_at"])
-            return Response({
-                "success": False,
-                "error": "rate_limit_exceeded",
-                "message": str(e),
-                "retry_after": e.retry_after,
-            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return Response(
+                {
+                    "success": False,
+                    "error": "rate_limit_exceeded",
+                    "message": str(e),
+                    "retry_after": e.retry_after,
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
 
         except Exception as e:
             logger.error("Error generating plan for goal %s: %s", goal.id, e)
             goal.status = Goal.Status.DRAFT
             goal.save(update_fields=["status", "updated_at"])
-            return Response({
-                "success": False,
-                "error": "llm_error",
-                "message": "Failed to generate plan. Please try again later.",
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response(
+                {
+                    "success": False,
+                    "error": "llm_error",
+                    "message": "Failed to generate plan. Please try again later.",
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
     # =========================================================================
     # Step 4: Apply the plan
@@ -202,38 +244,85 @@ class GoalViewSet(viewsets.ModelViewSet):
         goal = self.get_object()
 
         if not goal.llm_generated_plan:
-            return Response({
-                "success": False,
-                "error": "no_plan",
-                "message": "No plan has been generated yet. Generate a plan first.",
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "success": False,
+                    "error": "no_plan",
+                    "message": "No plan has been generated yet. Generate a plan first.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Parse and validate request using Pydantic DTO
+        try:
+            request_dto = ApplyPlanRequestDTO.model_validate(request.data)
+        except PydanticValidationError as e:
+            return Response(
+                {
+                    "success": False,
+                    "error": "validation_error",
+                    "message": "Invalid request data",
+                    "details": e.errors(),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Use provided milestones or fall back to LLM-generated ones
-        milestones_data = request.data.get("milestones") or goal.llm_generated_plan.get("milestones", [])
+        if request_dto.milestones:
+            milestones_dtos = request_dto.milestones
+        else:
+            # Parse LLM-generated plan into DTO
+            plan_dto = LLMGeneratedPlanDTO.model_validate(goal.llm_generated_plan)
+            milestones_dtos = plan_dto.milestones
 
-        if not milestones_data:
-            return Response({
-                "success": False,
-                "error": "no_milestones",
-                "message": "No milestones in the plan.",
-            }, status=status.HTTP_400_BAD_REQUEST)
+        if not milestones_dtos:
+            return Response(
+                {
+                    "success": False,
+                    "error": "no_milestones",
+                    "message": "No milestones in the plan.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        # Delete existing milestones if any
+        # Delete existing milestones (and their task links) if any
         goal.milestones.all().delete()
 
-        # Create milestones from plan
+        # Create milestones and tasks from plan using DTOs
         created_milestones = []
-        for idx, milestone_data in enumerate(milestones_data):
+        total_tasks_created = 0
+
+        for idx, milestone_dto in enumerate(milestones_dtos):
             milestone = Milestone.objects.create(
                 goal=goal,
-                title=milestone_data.get("title", f"Milestone {idx + 1}"),
-                description=milestone_data.get("description", ""),
+                title=milestone_dto.title,
+                description=milestone_dto.description,
                 order=idx,
-                target_date=milestone_data.get("target_date"),
-                suggested_tasks=milestone_data.get("tasks", []),
+                target_date=milestone_dto.target_date,
+                requirements=milestone_dto.requirements,
+                success_criteria=milestone_dto.success_criteria,
+                suggested_tasks=[task.model_dump() for task in milestone_dto.tasks],
                 status=Milestone.Status.PENDING,
             )
             created_milestones.append(milestone)
+
+            # Auto-create Task objects from tasks DTOs
+            for task_dto in milestone_dto.tasks:
+                task = Task.objects.create(
+                    user=request.user,
+                    title=task_dto.title,
+                    description=task_dto.description,
+                    priority=task_dto.priority,
+                    is_recurring=task_dto.is_recurring,
+                    recurrence_period=task_dto.recurrence_period,
+                    recurrence_target_count=1 if task_dto.is_recurring else None,
+                    status=Task.Status.TODO,
+                )
+                MilestoneTaskLink.objects.create(
+                    milestone=milestone,
+                    task=task,
+                )
+                total_tasks_created += 1
 
         # Activate the goal
         goal.status = Goal.Status.ACTIVE
@@ -241,11 +330,13 @@ class GoalViewSet(viewsets.ModelViewSet):
             goal.start_date = timezone.now().date()
         goal.save(update_fields=["status", "start_date", "updated_at"])
 
-        return Response({
-            "success": True,
-            "message": f"Plan applied with {len(created_milestones)} milestones.",
-            "goal": GoalDetailSerializer(goal).data,
-        })
+        return Response(
+            {
+                "success": True,
+                "message": f"Plan applied with {len(created_milestones)} milestones and {total_tasks_created} tasks.",
+                "goal": GoalDetailSerializer(goal).data,
+            }
+        )
 
     # =========================================================================
     # Goal lifecycle actions
@@ -259,11 +350,13 @@ class GoalViewSet(viewsets.ModelViewSet):
         goal.completed_at = timezone.now()
         goal.save(update_fields=["status", "completed_at", "updated_at"])
 
-        return Response({
-            "success": True,
-            "message": "Congratulations! Goal marked as completed.",
-            "goal": GoalDetailSerializer(goal).data,
-        })
+        return Response(
+            {
+                "success": True,
+                "message": "Congratulations! Goal marked as completed.",
+                "goal": GoalDetailSerializer(goal).data,
+            }
+        )
 
     @action(detail=True, methods=["post"])
     def pause(self, request, pk=None):
@@ -272,10 +365,12 @@ class GoalViewSet(viewsets.ModelViewSet):
         goal.status = Goal.Status.PAUSED
         goal.save(update_fields=["status", "updated_at"])
 
-        return Response({
-            "success": True,
-            "goal": GoalDetailSerializer(goal).data,
-        })
+        return Response(
+            {
+                "success": True,
+                "goal": GoalDetailSerializer(goal).data,
+            }
+        )
 
     @action(detail=True, methods=["post"])
     def resume(self, request, pk=None):
@@ -284,10 +379,12 @@ class GoalViewSet(viewsets.ModelViewSet):
         goal.status = Goal.Status.ACTIVE
         goal.save(update_fields=["status", "updated_at"])
 
-        return Response({
-            "success": True,
-            "goal": GoalDetailSerializer(goal).data,
-        })
+        return Response(
+            {
+                "success": True,
+                "goal": GoalDetailSerializer(goal).data,
+            }
+        )
 
     @action(detail=True, methods=["post"])
     def abandon(self, request, pk=None):
@@ -296,12 +393,27 @@ class GoalViewSet(viewsets.ModelViewSet):
         goal.status = Goal.Status.ABANDONED
         goal.save(update_fields=["status", "updated_at"])
 
-        return Response({
-            "success": True,
-            "goal": GoalDetailSerializer(goal).data,
-        })
+        return Response(
+            {
+                "success": True,
+                "goal": GoalDetailSerializer(goal).data,
+            }
+        )
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Goals"]),
+    create=extend_schema(tags=["Goals"]),
+    retrieve=extend_schema(tags=["Goals"]),
+    update=extend_schema(tags=["Goals"]),
+    partial_update=extend_schema(tags=["Goals"]),
+    destroy=extend_schema(tags=["Goals"]),
+    complete=extend_schema(tags=["Goals"]),
+    start=extend_schema(tags=["Goals"]),
+    skip=extend_schema(tags=["Goals"]),
+    uncomplete=extend_schema(tags=["Goals"]),
+    create_tasks=extend_schema(tags=["Goals"]),
+)
 class MilestoneViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing Milestones.
@@ -314,9 +426,7 @@ class MilestoneViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Filter milestones to current user's goals only."""
-        return Milestone.objects.filter(
-            goal__user=self.request.user
-        ).select_related("goal")
+        return Milestone.objects.filter(goal__user=self.request.user).select_related("goal")
 
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
@@ -324,10 +434,12 @@ class MilestoneViewSet(viewsets.ModelViewSet):
         milestone = self.get_object()
         milestone.mark_completed()
 
-        return Response({
-            "success": True,
-            "milestone": MilestoneSerializer(milestone).data,
-        })
+        return Response(
+            {
+                "success": True,
+                "milestone": MilestoneSerializer(milestone).data,
+            }
+        )
 
     @action(detail=True, methods=["post"])
     def start(self, request, pk=None):
@@ -336,10 +448,12 @@ class MilestoneViewSet(viewsets.ModelViewSet):
         milestone.status = Milestone.Status.IN_PROGRESS
         milestone.save(update_fields=["status", "updated_at"])
 
-        return Response({
-            "success": True,
-            "milestone": MilestoneSerializer(milestone).data,
-        })
+        return Response(
+            {
+                "success": True,
+                "milestone": MilestoneSerializer(milestone).data,
+            }
+        )
 
     @action(detail=True, methods=["post"])
     def skip(self, request, pk=None):
@@ -348,10 +462,27 @@ class MilestoneViewSet(viewsets.ModelViewSet):
         milestone.status = Milestone.Status.SKIPPED
         milestone.save(update_fields=["status", "updated_at"])
 
-        return Response({
-            "success": True,
-            "milestone": MilestoneSerializer(milestone).data,
-        })
+        return Response(
+            {
+                "success": True,
+                "milestone": MilestoneSerializer(milestone).data,
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    def uncomplete(self, request, pk=None):
+        """Reopen a completed milestone back to pending."""
+        milestone = self.get_object()
+        milestone.status = Milestone.Status.PENDING
+        milestone.completed_at = None
+        milestone.save(update_fields=["status", "completed_at", "updated_at"])
+
+        return Response(
+            {
+                "success": True,
+                "milestone": MilestoneSerializer(milestone).data,
+            }
+        )
 
     @action(detail=True, methods=["post"])
     def create_tasks(self, request, pk=None):
@@ -361,38 +492,45 @@ class MilestoneViewSet(viewsets.ModelViewSet):
         This converts the LLM-suggested tasks into real Task objects
         that the user can track and complete.
         """
-        from apps.tasks.models import Task
-        from .models import MilestoneTaskLink
-
         milestone = self.get_object()
 
         if not milestone.suggested_tasks:
-            return Response({
-                "success": False,
-                "error": "no_suggested_tasks",
-                "message": "No suggested tasks to create.",
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "success": False,
+                    "error": "no_suggested_tasks",
+                    "message": "No suggested tasks to create.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Parse suggested_tasks through DTO
+        tasks_dtos = [TaskInputDTO.model_validate(t) for t in milestone.suggested_tasks]
 
         created_tasks = []
-        for task_data in milestone.suggested_tasks:
+        for task_dto in tasks_dtos:
             task = Task.objects.create(
                 user=request.user,
-                title=task_data.get("title", "Task"),
-                description=task_data.get("description", ""),
-                priority=task_data.get("priority", "medium"),
+                title=task_dto.title,
+                description=task_dto.description,
+                priority=task_dto.priority,
                 status=Task.Status.TODO,
             )
             MilestoneTaskLink.objects.create(
                 milestone=milestone,
                 task=task,
             )
-            created_tasks.append({
-                "id": task.id,
-                "title": task.title,
-            })
+            created_tasks.append(
+                {
+                    "id": task.id,
+                    "title": task.title,
+                }
+            )
 
-        return Response({
-            "success": True,
-            "message": f"Created {len(created_tasks)} tasks.",
-            "tasks": created_tasks,
-        })
+        return Response(
+            {
+                "success": True,
+                "message": f"Created {len(created_tasks)} tasks.",
+                "tasks": created_tasks,
+            }
+        )

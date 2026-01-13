@@ -28,6 +28,7 @@ class MilestoneSerializer(serializers.ModelSerializer):
             "target_date",
             "completed_at",
             "requirements",
+            "success_criteria",
             "notes",
             "suggested_tasks",
             "progress_percentage",
@@ -52,6 +53,7 @@ class MilestoneCreateSerializer(serializers.ModelSerializer):
             "order",
             "target_date",
             "requirements",
+            "success_criteria",
             "suggested_tasks",
         ]
 
@@ -71,6 +73,7 @@ class GoalListSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "category",
+            "icon",
             "status",
             "start_date",
             "target_date",
@@ -81,7 +84,7 @@ class GoalListSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "icon", "created_at", "updated_at"]
 
     def get_milestone_count(self, obj) -> int:
         return obj.milestones.count()
@@ -113,6 +116,8 @@ class GoalDetailSerializer(serializers.ModelSerializer):
             "motivation",
             "potential_obstacles",
             "tips",
+            "final_achievement",
+            "icon",
             "milestones",
             "progress_percentage",
             "days_remaining",
@@ -141,11 +146,16 @@ class GoalCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Goal
         fields = [
+            "id",
             "title",
             "description",
             "category",
             "target_date",
+            "icon",
+            "status",
+            "created_at",
         ]
+        read_only_fields = ["id", "status", "created_at"]
 
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user
@@ -238,6 +248,10 @@ class GeneratedTaskSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
     )
+    category = serializers.ChoiceField(
+        choices=["preparation", "learning", "practice", "review", "achievement"],
+        default="learning",
+    )
 
 
 class GeneratedMilestoneSerializer(serializers.Serializer):
@@ -246,6 +260,8 @@ class GeneratedMilestoneSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField()
     target_date = serializers.DateField()
+    requirements = serializers.CharField(required=False, allow_blank=True)
+    success_criteria = serializers.CharField(required=False, allow_blank=True)
     tasks = GeneratedTaskSerializer(many=True)
 
 
@@ -257,3 +273,4 @@ class GeneratedPlanSerializer(serializers.Serializer):
     tips = serializers.ListField(child=serializers.CharField())
     potential_obstacles = serializers.ListField(child=serializers.CharField())
     motivation = serializers.CharField()
+    final_achievement = serializers.CharField(required=False, allow_blank=True)

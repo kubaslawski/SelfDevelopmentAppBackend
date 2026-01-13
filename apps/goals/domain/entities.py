@@ -40,6 +40,7 @@ class GeneratedTask:
     priority: str  # high | medium | low
     is_recurring: bool = False
     recurrence_period: Optional[str] = None
+    category: str = "learning"  # preparation | learning | practice | review | achievement
 
 
 @dataclass
@@ -50,6 +51,8 @@ class GeneratedMilestone:
     description: str
     target_date: date
     tasks: List[GeneratedTask] = field(default_factory=list)
+    requirements: str = ""
+    success_criteria: str = ""
 
 
 @dataclass
@@ -61,3 +64,5 @@ class GeneratedPlan:
     tips: List[str] = field(default_factory=list)
     potential_obstacles: List[str] = field(default_factory=list)
     motivation: str = ""
+    final_achievement: str = ""
+    icon: str = ""

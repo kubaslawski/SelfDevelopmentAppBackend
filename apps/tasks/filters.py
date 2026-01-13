@@ -18,6 +18,8 @@ class TaskFilter(django_filters.FilterSet):
     - due_date: range (before/after)
     - created_at: range (before/after)
     - tags: contains
+    - goal: filter tasks linked to a given goal (via milestone links)
+    - goal_none: tasks without any milestone/goal link
     """
 
     due_date_before = django_filters.DateTimeFilter(
@@ -61,6 +63,14 @@ class TaskFilter(django_filters.FilterSet):
         lookup_expr='gte',
         label='Recurrence ends after'
     )
+    goal = django_filters.NumberFilter(
+        method="filter_goal",
+        label="Filter by goal id",
+    )
+    goal_none = django_filters.BooleanFilter(
+        method="filter_goal_none",
+        label="Without goal (no milestone link)",
+    )
 
     class Meta:
         model = Task
@@ -70,6 +80,18 @@ class TaskFilter(django_filters.FilterSet):
             'is_recurring': ['exact'],
             'recurrence_period': ['exact', 'in'],
         }
+
+    def filter_goal(self, queryset, name, value):
+        if value is None:
+            return queryset
+        return queryset.filter(
+            milestone_links__milestone__goal_id=value
+        ).distinct()
+
+    def filter_goal_none(self, queryset, name, value):
+        if value:
+            return queryset.filter(milestone_links__isnull=True).distinct()
+        return queryset
 
 
 class TaskCompletionFilter(django_filters.FilterSet):

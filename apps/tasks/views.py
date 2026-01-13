@@ -126,12 +126,13 @@ class TaskViewSet(viewsets.ModelViewSet):
         """
         Filter tasks by authenticated user.
         """
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().prefetch_related("milestone_links__milestone__goal")
         if self.request.user.is_authenticated:
             queryset = queryset.filter(user=self.request.user)
         else:
             # Return empty queryset for unauthenticated users
             queryset = queryset.none()
+
         return queryset
 
     def perform_create(self, serializer):

@@ -8,6 +8,8 @@ from typing import Optional
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from apps.goals.models import MilestoneTaskLink
+
 from .models import Task, TaskCompletion
 
 
@@ -75,6 +77,7 @@ class TaskSerializer(serializers.ModelSerializer):
     current_period_start = serializers.DateTimeField(read_only=True, allow_null=True)
     current_period_end = serializers.DateTimeField(read_only=True, allow_null=True)
     total_completions = serializers.SerializerMethodField()
+    milestone_ids = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -113,6 +116,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "tags",
             "tags_list",
             "is_overdue",
+            "milestone_ids",
             "created_at",
             "updated_at",
         ]
@@ -131,6 +135,12 @@ class TaskSerializer(serializers.ModelSerializer):
         if obj.is_recurring:
             return obj.completions.count()
         return 1 if obj.status == Task.Status.COMPLETED else 0
+
+    @extend_schema_field(serializers.ListField(child=serializers.IntegerField()))
+    def get_milestone_ids(self, obj) -> list[int]:
+        return list(
+            MilestoneTaskLink.objects.filter(task=obj).values_list("milestone_id", flat=True)
+        )
 
     def validate_title(self, value):
         """Validate that title is not empty."""
@@ -171,6 +181,8 @@ class TaskListSerializer(serializers.ModelSerializer):
     is_period_complete = serializers.BooleanField(read_only=True)
     goal_display = serializers.CharField(read_only=True, allow_null=True)
     unit_display_name = serializers.CharField(read_only=True, allow_null=True)
+    milestone_ids = serializers.SerializerMethodField()
+    goal_icon = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -193,6 +205,8 @@ class TaskListSerializer(serializers.ModelSerializer):
             "target_value",
             "goal_display",
             "unit_display_name",
+            "milestone_ids",
+            "goal_icon",
             "created_at",
         ]
 
@@ -202,6 +216,21 @@ class TaskListSerializer(serializers.ModelSerializer):
         if obj.is_recurring:
             return None
         return obj.status
+
+    @extend_schema_field(serializers.ListField(child=serializers.IntegerField()))
+    def get_milestone_ids(self, obj) -> list[int]:
+        return list(
+            MilestoneTaskLink.objects.filter(task=obj).values_list("milestone_id", flat=True)
+        )
+
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_goal_icon(self, obj) -> Optional[str]:
+        link = (
+            MilestoneTaskLink.objects.filter(task=obj)
+            .select_related("milestone__goal")
+            .first()
+        )
+        return link.milestone.goal.icon if link and link.milestone and link.milestone.goal else None
 
 
 class TaskWithCompletionsSerializer(TaskSerializer):
