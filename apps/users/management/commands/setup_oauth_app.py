@@ -20,21 +20,37 @@ class Command(BaseCommand):
             default="sda-mobile-app",
             help="Client ID for the application",
         )
+        parser.add_argument(
+            "--expo-ip",
+            type=str,
+            help="Your local IP for Expo development (e.g., 192.168.33.11)",
+        )
 
     def handle(self, *args, **options):
         client_id = options["client_id"]
+        expo_ip = options.get("expo_ip")
+
+        # Base redirect URIs
+        redirect_uris = [
+            # Production: custom scheme
+            "selfdevelopmentapp://oauth/callback",
+            # Development: Expo Go
+            "exp://localhost:8081/--/oauth/callback",
+            "exp://127.0.0.1:8081/--/oauth/callback",
+        ]
+
+        # Add custom Expo IP if provided
+        if expo_ip:
+            redirect_uris.append(f"exp://{expo_ip}:8081/--/oauth/callback")
+            self.stdout.write(f"Adding Expo IP: {expo_ip}")
 
         # OAuth2 application settings for mobile app with PKCE
         app_defaults = {
             "name": "Self Development App Mobile",
             "client_type": Application.CLIENT_PUBLIC,  # Public client (mobile apps)
             "authorization_grant_type": Application.GRANT_AUTHORIZATION_CODE,
-            # Redirect URIs for mobile app (space or newline separated)
-            # - Production: custom scheme
-            # - Development: Expo Go
-            "redirect_uris": (
-                "selfdevelopmentapp://oauth/callback " "exp://192.168.33.6:8081/--/oauth/callback"
-            ),
+            # Redirect URIs for mobile app (space separated)
+            "redirect_uris": " ".join(redirect_uris),
             "skip_authorization": False,  # Show authorization screen to confirm user identity
             # No client_secret for public clients (PKCE provides security)
             "client_secret": "",

@@ -4,12 +4,15 @@ Notification services for scheduling and sending reminders.
 Handles:
 - Regular tasks: reminders at 6h/3h/1h before due_date
 - Recurring daily tasks: reminder 6h before end of day
+- Sending push notifications via Expo Push API
 """
 
 import logging
 from datetime import datetime, time, timedelta
 from typing import Optional
 
+import requests
+from django.conf import settings
 from django.db.models import QuerySet
 from django.utils import timezone
 
@@ -212,6 +215,48 @@ def reschedule_task_reminders(task: Task) -> list[Notification]:
 
 
 # =============================================================================
+# Notification Type Styling
+# =============================================================================
+
+# Emoji prefixes for each notification type
+NOTIFICATION_STYLE = {
+    # Reminders
+    "task_reminder": {"emoji": "⏰", "category": "reminder"},
+    "daily_reminder": {"emoji": "📅", "category": "reminder"},
+    "weekly_reminder": {"emoji": "📆", "category": "reminder"},
+    "goal_reminder": {"emoji": "🎯", "category": "reminder"},
+    
+    # Warnings
+    "warning": {"emoji": "⚠️", "category": "warning"},
+    "deadline_warning": {"emoji": "🚨", "category": "warning"},
+    
+    # Suggestions
+    "suggestion": {"emoji": "💡", "category": "suggestion"},
+    "tip": {"emoji": "✨", "category": "suggestion"},
+    
+    # Congratulations
+    "congratulations": {"emoji": "🎉", "category": "congratulations"},
+    "achievement": {"emoji": "🏆", "category": "congratulations"},
+    "streak": {"emoji": "🔥", "category": "congratulations"},
+    
+    # Info
+    "info": {"emoji": "ℹ️", "category": "info"},
+}
+
+
+def get_notification_emoji(notification_type: str) -> str:
+    """Get emoji for notification type."""
+    style = NOTIFICATION_STYLE.get(notification_type, {})
+    return style.get("emoji", "📬")
+
+
+def get_notification_category(notification_type: str) -> str:
+    """Get category for notification type."""
+    style = NOTIFICATION_STYLE.get(notification_type, {})
+    return style.get("category", "info")
+
+
+# =============================================================================
 # Helper functions for building notification content
 # =============================================================================
 
@@ -243,4 +288,346 @@ def _build_daily_reminder_body(task: Task) -> str:
     elif remaining > 1:
         return f"Pozostało {remaining} wykonań na dzisiaj. Nie zapomnij!"
     return "Wykonaj zadanie przed końcem dnia."
+
+
+# =============================================================================
+# Expo Push Notification Sending
+# =============================================================================
+
+
+def send_push_notification(notification: Notification) -> bool:
+    """
+    Send a single push notification via Expo Push API.
+
+    Returns True if sent successfully, False otherwise.
+    """
+    prefs = get_or_create_preferences(notification.user)
+
+    # Check if push is enabled and token exists
+    if not prefs.push_enabled or not prefs.push_token:
+        logger.info(f"Push disabled or no token for notification {notification.id}")
+        notification.mark_failed("Push disabled or no token")
+        return False
+
+    # Check quiet hours
+    if is_in_quiet_hours(prefs, timezone.now()):
+        logger.info(f"In quiet hours, skipping notification {notification.id}")
+        return False  # Will be retried later
+
+    # Build payload
+    payload = _build_expo_payload(notification, prefs.push_token)
+
+    try:
+        response = requests.post(
+            settings.EXPO_PUSH_API_URL,
+            json=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        return _handle_expo_response(notification, prefs, result)
+
+    except requests.exceptions.Timeout:
+        logger.error(f"Timeout sending notification {notification.id}")
+        notification.mark_failed("Timeout")
+        return False
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error sending notification {notification.id}: {e}")
+        notification.mark_failed(str(e))
+        return False
+
+
+def send_push_notifications_batch(notifications: list[Notification]) -> dict:
+    """
+    Send multiple push notifications in a single batch request.
+
+    Expo allows up to 100 notifications per request.
+    Returns dict with counts: {"sent": X, "failed": Y, "skipped": Z}
+    """
+    results = {"sent": 0, "failed": 0, "skipped": 0}
+
+    if not notifications:
+        return results
+
+    # Group notifications by user and build payloads
+    payloads = []
+    notification_map = {}  # Map payload index to notification
+
+    for notification in notifications:
+        prefs = get_or_create_preferences(notification.user)
+
+        # Skip if push disabled or no token
+        if not prefs.push_enabled or not prefs.push_token:
+            notification.mark_failed("Push disabled or no token")
+            results["skipped"] += 1
+            continue
+
+        # Skip if in quiet hours
+        if is_in_quiet_hours(prefs, timezone.now()):
+            results["skipped"] += 1
+            continue
+
+        payload = _build_expo_payload(notification, prefs.push_token)
+        notification_map[len(payloads)] = (notification, prefs)
+        payloads.append(payload)
+
+    if not payloads:
+        return results
+
+    # Send batch request
+    try:
+        response = requests.post(
+            settings.EXPO_PUSH_API_URL,
+            json=payloads,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        data = result.get("data", [])
+
+        # Process each response
+        for idx, ticket in enumerate(data):
+            if idx not in notification_map:
+                continue
+
+            notification, prefs = notification_map[idx]
+
+            if ticket.get("status") == "ok":
+                notification.mark_sent(via_push=True)
+                results["sent"] += 1
+                logger.info(f"Sent notification {notification.id}")
+            else:
+                error = ticket.get("message", "Unknown error")
+                details = ticket.get("details", {})
+
+                # Handle specific errors
+                if details.get("error") == "DeviceNotRegistered":
+                    # Token is invalid, remove it
+                    prefs.push_token = ""
+                    prefs.save(update_fields=["push_token", "updated_at"])
+                    logger.warning(
+                        f"Removed invalid token for user {notification.user_id}"
+                    )
+
+                notification.mark_failed(error)
+                results["failed"] += 1
+                logger.error(f"Failed notification {notification.id}: {error}")
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Batch request failed: {e}")
+        # Mark all as failed
+        for notification, _ in notification_map.values():
+            notification.mark_failed(str(e))
+            results["failed"] += 1
+
+    return results
+
+
+def _build_expo_payload(notification: Notification, push_token: str) -> dict:
+    """Build Expo Push API payload for a notification."""
+    emoji = get_notification_emoji(notification.notification_type)
+    category = get_notification_category(notification.notification_type)
+    
+    # Add emoji to title if not already present
+    title = notification.title
+    if not any(title.startswith(e) for e in ["⏰", "📅", "📆", "🎯", "⚠️", "🚨", "💡", "✨", "🎉", "🏆", "🔥", "ℹ️", "📬", "🧪"]):
+        title = f"{emoji} {title}"
+    
+    payload = {
+        "to": push_token,
+        "title": title,
+        "body": notification.body,
+        "sound": "default",
+        "priority": "high",
+        # Badge count (number on app icon)
+        "badge": 1,
+        # Android specific
+        "channelId": "default",
+        # Subtitle (iOS only) - shows category
+        "subtitle": _get_category_label(category),
+        # Custom data passed to app
+        "data": {
+            "notification_id": notification.id,
+            "notification_type": notification.notification_type,
+            "category": category,
+        },
+    }
+
+    # Add task data if available
+    if notification.task:
+        payload["data"]["task_id"] = notification.task_id
+        payload["data"]["task_title"] = notification.task.title
+
+    return payload
+
+
+def _get_category_label(category: str) -> str:
+    """Get human-readable label for category."""
+    labels = {
+        "reminder": "Przypomnienie",
+        "warning": "Ostrzeżenie",
+        "suggestion": "Sugestia",
+        "congratulations": "Gratulacje",
+        "info": "Informacja",
+    }
+    return labels.get(category, "")
+
+
+# =============================================================================
+# Quick notification creators
+# =============================================================================
+
+
+def create_notification(
+    user,
+    notification_type: str,
+    title: str,
+    body: str,
+    task=None,
+    scheduled_for=None,
+) -> Notification:
+    """
+    Create a notification of any type.
+    
+    Args:
+        user: User to notify
+        notification_type: One of Notification.NotificationType choices
+        title: Notification title (emoji will be added automatically)
+        body: Notification body text
+        task: Optional related task
+        scheduled_for: When to send (default: now)
+    
+    Returns:
+        Created Notification object
+    """
+    if scheduled_for is None:
+        scheduled_for = timezone.now()
+    
+    return Notification.objects.create(
+        user=user,
+        task=task,
+        notification_type=notification_type,
+        title=title,
+        body=body,
+        scheduled_for=scheduled_for,
+        reminder_key=f"{notification_type}_{timezone.now().timestamp()}",
+        status=Notification.Status.PENDING,
+    )
+
+
+def notify_warning(user, title: str, body: str, task=None) -> Notification:
+    """Create a warning notification."""
+    return create_notification(
+        user=user,
+        notification_type=Notification.NotificationType.WARNING,
+        title=title,
+        body=body,
+        task=task,
+    )
+
+
+def notify_congratulations(user, title: str, body: str, task=None) -> Notification:
+    """Create a congratulations notification."""
+    return create_notification(
+        user=user,
+        notification_type=Notification.NotificationType.CONGRATULATIONS,
+        title=title,
+        body=body,
+        task=task,
+    )
+
+
+def notify_achievement(user, title: str, body: str, task=None) -> Notification:
+    """Create an achievement notification."""
+    return create_notification(
+        user=user,
+        notification_type=Notification.NotificationType.ACHIEVEMENT,
+        title=title,
+        body=body,
+        task=task,
+    )
+
+
+def notify_streak(user, title: str, body: str, task=None) -> Notification:
+    """Create a streak notification."""
+    return create_notification(
+        user=user,
+        notification_type=Notification.NotificationType.STREAK,
+        title=title,
+        body=body,
+        task=task,
+    )
+
+
+def notify_suggestion(user, title: str, body: str, task=None) -> Notification:
+    """Create a suggestion notification."""
+    return create_notification(
+        user=user,
+        notification_type=Notification.NotificationType.SUGGESTION,
+        title=title,
+        body=body,
+        task=task,
+    )
+
+
+def notify_tip(user, title: str, body: str) -> Notification:
+    """Create a tip notification."""
+    return create_notification(
+        user=user,
+        notification_type=Notification.NotificationType.TIP,
+        title=title,
+        body=body,
+    )
+
+
+def notify_info(user, title: str, body: str) -> Notification:
+    """Create an info notification."""
+    return create_notification(
+        user=user,
+        notification_type=Notification.NotificationType.INFO,
+        title=title,
+        body=body,
+    )
+
+
+def _handle_expo_response(
+    notification: Notification, prefs: NotificationPreference, result: dict
+) -> bool:
+    """Handle Expo Push API response for a single notification."""
+    data = result.get("data", [])
+
+    if not data:
+        notification.mark_failed("Empty response from Expo")
+        return False
+
+    # Handle both single object and list responses
+    ticket = data[0] if isinstance(data, list) else data
+
+    if ticket.get("status") == "ok":
+        notification.mark_sent(via_push=True)
+        logger.info(f"Sent notification {notification.id}")
+        return True
+    else:
+        error = ticket.get("message", "Unknown error")
+        details = ticket.get("details", {})
+
+        # Handle DeviceNotRegistered - remove invalid token
+        if details.get("error") == "DeviceNotRegistered":
+            prefs.push_token = ""
+            prefs.save(update_fields=["push_token", "updated_at"])
+            logger.warning(f"Removed invalid token for user {notification.user_id}")
+
+        notification.mark_failed(error)
+        logger.error(f"Failed notification {notification.id}: {error}")
+        return False
 

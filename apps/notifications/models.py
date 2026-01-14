@@ -131,10 +131,27 @@ class Notification(TimeStampedModel):
     class NotificationType(models.TextChoices):
         """Type of notification."""
 
+        # Reminders (⏰)
         TASK_REMINDER = "task_reminder", _("Task Reminder")
         DAILY_REMINDER = "daily_reminder", _("Daily Recurring Reminder")
         WEEKLY_REMINDER = "weekly_reminder", _("Weekly Recurring Reminder")
         GOAL_REMINDER = "goal_reminder", _("Goal Milestone Reminder")
+        
+        # Warnings (⚠️)
+        WARNING = "warning", _("Warning")
+        DEADLINE_WARNING = "deadline_warning", _("Deadline Warning")
+        
+        # Suggestions (💡)
+        SUGGESTION = "suggestion", _("Suggestion")
+        TIP = "tip", _("Tip")
+        
+        # Congratulations (🎉)
+        CONGRATULATIONS = "congratulations", _("Congratulations")
+        ACHIEVEMENT = "achievement", _("Achievement")
+        STREAK = "streak", _("Streak")
+        
+        # Info (ℹ️)
+        INFO = "info", _("Information")
 
     class Status(models.TextChoices):
         """Notification delivery status."""

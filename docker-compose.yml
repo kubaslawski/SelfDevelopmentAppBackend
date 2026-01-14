@@ -18,6 +18,19 @@ services:
       timeout: 3s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: sda-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   web:
     build:
       context: .
@@ -37,14 +50,66 @@ services:
       - DB_NAME=selfdevelopmentapp
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - SEED_DATA=true
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     # Auto-restart on code changes (Django runserver handles this)
     stdin_open: true
     tty: true
 
+  celery-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django
+    container_name: sda-celery-worker
+    command: celery -A config worker -l INFO
+    volumes:
+      - .:/app
+      - /app/venv
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=selfdevelopmentapp
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django
+    container_name: sda-celery-beat
+    command: celery -A config beat -l INFO
+    volumes:
+      - .:/app
+      - /app/venv
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=selfdevelopmentapp
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   postgres_data:
-
+  redis_data:

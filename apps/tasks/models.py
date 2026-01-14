@@ -12,6 +12,13 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
+class Visibility(models.TextChoices):
+    """Visibility levels for content (Task/Goal)."""
+    PRIVATE = "private", _("Private")
+    GROUP = "group", _("Group")
+    PUBLIC = "public", _("Public")
+
+
 class TimeStampedModel(models.Model):
     """
     Abstract base model with created and modified timestamps.
@@ -257,6 +264,22 @@ class Task(TimeStampedModel):
         null=True,
         blank=True,
         help_text=_("Target value in the specified unit (e.g., 30 minutes, 50 pages)"),
+    )
+
+    # Visibility settings
+    visibility = models.CharField(
+        _("visibility"),
+        max_length=10,
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE,
+        help_text=_("Who can see this task"),
+    )
+    shared_with_groups = models.ManyToManyField(
+        "groups.Group",
+        blank=True,
+        related_name="shared_tasks",
+        verbose_name=_("shared with groups"),
+        help_text=_("Groups this task is shared with (when visibility is 'group')"),
     )
 
     class Meta:

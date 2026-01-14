@@ -37,6 +37,7 @@ LOCAL_APPS = [
     "apps.feedback",
     "apps.goals",
     "apps.notifications",
+    "apps.groups",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -102,9 +103,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "pl"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Warsaw"
 
 USE_I18N = True
 
@@ -226,3 +227,29 @@ OAUTH2_PROVIDER = {
     # Note: "exp" scheme is needed for Expo Go development environment
     "ALLOWED_REDIRECT_URI_SCHEMES": ["selfdevelopmentapp", "exp", "http", "https"],
 }
+
+# =============================================================================
+# Celery Configuration
+# =============================================================================
+
+CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = config("CELERY_RESULT_BACKEND", default="redis://localhost:6379/0")
+
+# Celery settings
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Europe/Warsaw"
+CELERY_ENABLE_UTC = True
+
+# Task settings
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes max per task
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # Soft limit at 25 minutes
+
+# =============================================================================
+# Expo Push Notifications
+# =============================================================================
+
+EXPO_PUSH_API_URL = "https://exp.host/--/api/v2/push/send"
+EXPO_PUSH_BATCH_SIZE = 100  # Max notifications per request

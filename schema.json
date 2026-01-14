@@ -923,6 +923,1228 @@ paths:
               schema:
                 $ref: '#/components/schemas/Feedback'
           description: ''
+  /api/v1/goals/:
+    get:
+      operationId: v1_goals_list
+      description: |-
+        ViewSet for managing Goals.
+
+        Provides CRUD operations plus custom actions for:
+        - Generating contextual questions (LLM)
+        - Submitting answers and generating plan (LLM)
+        - Applying generated plan (creating milestones)
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Goals
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGoalListList'
+          description: ''
+    post:
+      operationId: v1_goals_create
+      description: |-
+        ViewSet for managing Goals.
+
+        Provides CRUD operations plus custom actions for:
+        - Generating contextual questions (LLM)
+        - Submitting answers and generating plan (LLM)
+        - Applying generated plan (creating milestones)
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoalCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoalCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalCreate'
+          description: ''
+  /api/v1/goals/{id}/:
+    get:
+      operationId: v1_goals_retrieve
+      description: |-
+        ViewSet for managing Goals.
+
+        Provides CRUD operations plus custom actions for:
+        - Generating contextual questions (LLM)
+        - Submitting answers and generating plan (LLM)
+        - Applying generated plan (creating milestones)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+          description: ''
+    put:
+      operationId: v1_goals_update
+      description: |-
+        ViewSet for managing Goals.
+
+        Provides CRUD operations plus custom actions for:
+        - Generating contextual questions (LLM)
+        - Submitting answers and generating plan (LLM)
+        - Applying generated plan (creating milestones)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+          description: ''
+    patch:
+      operationId: v1_goals_partial_update
+      description: |-
+        ViewSet for managing Goals.
+
+        Provides CRUD operations plus custom actions for:
+        - Generating contextual questions (LLM)
+        - Submitting answers and generating plan (LLM)
+        - Applying generated plan (creating milestones)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGoalDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGoalDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGoalDetail'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+          description: ''
+    delete:
+      operationId: v1_goals_destroy
+      description: |-
+        ViewSet for managing Goals.
+
+        Provides CRUD operations plus custom actions for:
+        - Generating contextual questions (LLM)
+        - Submitting answers and generating plan (LLM)
+        - Applying generated plan (creating milestones)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/goals/{id}/abandon/:
+    post:
+      operationId: v1_goals_abandon_create
+      description: Abandon the goal.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+          description: ''
+  /api/v1/goals/{id}/apply_plan/:
+    post:
+      operationId: v1_goals_apply_plan_create
+      description: |-
+        Apply the generated plan by creating Milestone objects.
+
+        This takes the LLM-generated plan stored in the goal and creates
+        actual Milestone objects from it. User can optionally modify
+        the milestones before applying.
+
+        Request body (optional):
+            {
+                "milestones": [...]  // Override generated milestones
+            }
+
+        Returns:
+            The updated goal with created milestones.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+          description: ''
+  /api/v1/goals/{id}/complete/:
+    post:
+      operationId: v1_goals_complete_create
+      description: Mark the goal as completed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+          description: ''
+  /api/v1/goals/{id}/generate_questions/:
+    post:
+      operationId: v1_goals_generate_questions_create
+      description: |-
+        Generate contextual questions for the goal using LLM.
+
+        The LLM analyzes the goal description and generates 3-5 specific
+        questions that will help create a personalized plan.
+
+        Returns:
+            List of generated questions with id, question, type, placeholder.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+          description: ''
+  /api/v1/goals/{id}/pause/:
+    post:
+      operationId: v1_goals_pause_create
+      description: Pause the goal.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+          description: ''
+  /api/v1/goals/{id}/resume/:
+    post:
+      operationId: v1_goals_resume_create
+      description: Resume a paused goal.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoalDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+          description: ''
+  /api/v1/goals/{id}/submit_answers/:
+    post:
+      operationId: v1_goals_submit_answers_create
+      description: |-
+        Submit answers to questions and generate the goal plan.
+
+        This takes the user's answers and generates a complete plan with
+        milestones and tasks using the LLM.
+
+        Request body:
+            {
+                "answers": [
+                    {"question_id": "q1", "question": "...", "answer": "..."},
+                    {"question_id": "q2", "question": "...", "answer": "..."}
+                ]
+            }
+
+        Returns:
+            The generated plan with milestones, tips, and motivation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswers'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswers'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswers'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitAnswers'
+          description: ''
+  /api/v1/milestones/:
+    get:
+      operationId: v1_milestones_list
+      description: |-
+        ViewSet for managing Milestones.
+
+        Milestones are always accessed in context of a Goal.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Goals
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMilestoneList'
+          description: ''
+    post:
+      operationId: v1_milestones_create
+      description: |-
+        ViewSet for managing Milestones.
+
+        Milestones are always accessed in context of a Goal.
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+          description: ''
+  /api/v1/milestones/{id}/:
+    get:
+      operationId: v1_milestones_retrieve
+      description: |-
+        ViewSet for managing Milestones.
+
+        Milestones are always accessed in context of a Goal.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+          description: ''
+    put:
+      operationId: v1_milestones_update
+      description: |-
+        ViewSet for managing Milestones.
+
+        Milestones are always accessed in context of a Goal.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+          description: ''
+    patch:
+      operationId: v1_milestones_partial_update
+      description: |-
+        ViewSet for managing Milestones.
+
+        Milestones are always accessed in context of a Goal.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMilestone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMilestone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMilestone'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+          description: ''
+    delete:
+      operationId: v1_milestones_destroy
+      description: |-
+        ViewSet for managing Milestones.
+
+        Milestones are always accessed in context of a Goal.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/milestones/{id}/complete/:
+    post:
+      operationId: v1_milestones_complete_create
+      description: Mark the milestone as completed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+          description: ''
+  /api/v1/milestones/{id}/create_tasks/:
+    post:
+      operationId: v1_milestones_create_tasks_create
+      description: |-
+        Create actual Task objects from suggested_tasks.
+
+        This converts the LLM-suggested tasks into real Task objects
+        that the user can track and complete.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+          description: ''
+  /api/v1/milestones/{id}/skip/:
+    post:
+      operationId: v1_milestones_skip_create
+      description: Skip this milestone.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+          description: ''
+  /api/v1/milestones/{id}/start/:
+    post:
+      operationId: v1_milestones_start_create
+      description: Start working on the milestone.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+          description: ''
+  /api/v1/milestones/{id}/uncomplete/:
+    post:
+      operationId: v1_milestones_uncomplete_create
+      description: Reopen a completed milestone back to pending.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Goals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+          description: ''
+  /api/v1/notifications/:
+    get:
+      operationId: v1_notifications_list
+      description: |-
+        ViewSet for viewing notifications.
+
+        Read-only - notifications are created by the system.
+        Users can view their notifications and mark them as read.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationListList'
+          description: ''
+  /api/v1/notifications/{id}/:
+    get:
+      operationId: v1_notifications_retrieve
+      description: |-
+        ViewSet for viewing notifications.
+
+        Read-only - notifications are created by the system.
+        Users can view their notifications and mark them as read.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/{id}/cancel/:
+    post:
+      operationId: v1_notifications_cancel_create
+      description: Cancel a pending notification.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/history/:
+    get:
+      operationId: v1_notifications_history_retrieve
+      description: Get sent notifications history.
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/pending/:
+    get:
+      operationId: v1_notifications_pending_retrieve
+      description: Get pending notifications for the user.
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/preferences/:
+    get:
+      operationId: v1_notifications_preferences_retrieve
+      description: Get notification preferences.
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: v1_notifications_preferences_update
+      description: Update notification preferences.
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: v1_notifications_preferences_partial_update
+      description: Partially update notification preferences.
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/push-token/:
+    post:
+      operationId: v1_notifications_push_token_create
+      description: Register push token.
+      tags:
+      - Notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPushToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterPushToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterPushToken'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: v1_notifications_push_token_destroy
+      description: Remove push token.
+      tags:
+      - Notifications
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/task-groups/:
+    get:
+      operationId: v1_task_groups_list
+      description: |-
+        ViewSet for managing task groups.
+
+        Task groups allow organizing tasks into logical collections
+        (e.g., "German Learning", "Fitness", "Work Projects").
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Task Groups
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskGroupListList'
+          description: ''
+    post:
+      operationId: v1_task_groups_create
+      description: |-
+        ViewSet for managing task groups.
+
+        Task groups allow organizing tasks into logical collections
+        (e.g., "German Learning", "Fitness", "Work Projects").
+      tags:
+      - Task Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskGroup'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskGroup'
+          description: ''
+  /api/v1/task-groups/{id}/:
+    get:
+      operationId: v1_task_groups_retrieve
+      description: |-
+        ViewSet for managing task groups.
+
+        Task groups allow organizing tasks into logical collections
+        (e.g., "German Learning", "Fitness", "Work Projects").
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Task Groups
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskGroup'
+          description: ''
+    put:
+      operationId: v1_task_groups_update
+      description: |-
+        ViewSet for managing task groups.
+
+        Task groups allow organizing tasks into logical collections
+        (e.g., "German Learning", "Fitness", "Work Projects").
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Task Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskGroup'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskGroup'
+          description: ''
+    patch:
+      operationId: v1_task_groups_partial_update
+      description: |-
+        ViewSet for managing task groups.
+
+        Task groups allow organizing tasks into logical collections
+        (e.g., "German Learning", "Fitness", "Work Projects").
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Task Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskGroup'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskGroup'
+          description: ''
+    delete:
+      operationId: v1_task_groups_destroy
+      description: |-
+        ViewSet for managing task groups.
+
+        Task groups allow organizing tasks into logical collections
+        (e.g., "German Learning", "Fitness", "Work Projects").
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Task Groups
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/tasks/:
     get:
       operationId: v1_tasks_list
@@ -975,6 +2197,26 @@ paths:
           format: date-time
         description: Due before
       - in: query
+        name: goal
+        schema:
+          type: integer
+        description: Filter by goal id
+      - in: query
+        name: goal_none
+        schema:
+          type: boolean
+        description: Without goal (no milestone link)
+      - in: query
+        name: group
+        schema:
+          type: number
+        description: Filter by group id
+      - in: query
+        name: group_none
+        schema:
+          type: boolean
+        description: Without group
+      - in: query
         name: has_due_date
         schema:
           type: boolean
@@ -983,6 +2225,11 @@ paths:
         name: is_recurring
         schema:
           type: boolean
+      - in: query
+        name: milestone
+        schema:
+          type: number
+        description: Filter by milestone id
       - name: ordering
         required: false
         in: query
@@ -1467,6 +2714,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TaskCompletionCreate'
+          description: ''
+  /api/v1/tasks/{id}/sync_completions/:
+    post:
+      operationId: v1_tasks_sync_completions_create
+      description: |-
+        Synchronize completions for a recurring task.
+
+        Accepts a list of dates. Compares with existing completions:
+        - Adds new completions for dates not in DB
+        - Removes completions for dates not in the list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncCompletions'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SyncCompletions'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SyncCompletions'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncCompletionsResponse'
           description: ''
   /api/v1/tasks/{id}/update_status/:
     post:
@@ -2023,6 +3311,245 @@ components:
         * `suggestion` - Suggestion
         * `comment` - General Comment
         * `question` - Question
+    GoalCategoryEnum:
+      enum:
+      - health
+      - career
+      - education
+      - finance
+      - relationships
+      - creativity
+      - personal
+      - other
+      type: string
+      description: |-
+        * `health` - Health & Fitness
+        * `career` - Career & Professional
+        * `education` - Education & Learning
+        * `finance` - Finance & Wealth
+        * `relationships` - Relationships & Social
+        * `creativity` - Creativity & Hobbies
+        * `personal` - Personal Growth
+        * `other` - Other
+    GoalCreate:
+      type: object
+      description: |-
+        Serializer for creating a new goal.
+
+        Step 1 of the flow: User just provides their goal description.
+        The system will then generate contextual questions.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: What do you want to achieve?
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed description of your goal
+        category:
+          $ref: '#/components/schemas/GoalCategoryEnum'
+        target_date:
+          type: string
+          format: date
+          description: When do you want to achieve this goal?
+        icon:
+          type: string
+          description: Optional icon name for the goal (e.g., material-community icon
+            key)
+          maxLength: 64
+        status:
+          allOf:
+          - $ref: '#/components/schemas/GoalStatusEnum'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - status
+      - target_date
+      - title
+    GoalDetail:
+      type: object
+      description: Full serializer for goal details including milestones.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: What do you want to achieve?
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed description of your goal
+        category:
+          $ref: '#/components/schemas/GoalCategoryEnum'
+        status:
+          $ref: '#/components/schemas/GoalStatusEnum'
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: When do you want to start working on this goal?
+        target_date:
+          type: string
+          format: date
+          description: When do you want to achieve this goal?
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        planning_answers:
+          description: User's answers to planning questions
+        planning_questions:
+          description: LLM-generated questions specific to this goal
+        llm_generated_plan:
+          readOnly: true
+          nullable: true
+          description: The full plan generated by LLM (stored for reference)
+        plan_generated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        motivation:
+          type: string
+          description: Why is this goal important to you? (from LLM or user)
+        potential_obstacles:
+          description: List of potential obstacles identified
+        tips:
+          description: Tips and advice for achieving the goal
+        final_achievement:
+          type: string
+          description: Concrete description of what 'success' looks like
+        icon:
+          type: string
+          description: Optional icon name for the goal (e.g., material-community icon
+            key)
+          maxLength: 64
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+          readOnly: true
+        progress_percentage:
+          type: number
+          format: double
+          readOnly: true
+        days_remaining:
+          type: integer
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completed_at
+      - created_at
+      - days_remaining
+      - id
+      - is_overdue
+      - llm_generated_plan
+      - milestones
+      - plan_generated_at
+      - progress_percentage
+      - target_date
+      - title
+      - updated_at
+    GoalList:
+      type: object
+      description: Lightweight serializer for goal lists.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: What do you want to achieve?
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed description of your goal
+        category:
+          $ref: '#/components/schemas/GoalCategoryEnum'
+        icon:
+          type: string
+          readOnly: true
+          description: Optional icon name for the goal (e.g., material-community icon
+            key)
+        status:
+          $ref: '#/components/schemas/GoalStatusEnum'
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: When do you want to start working on this goal?
+        target_date:
+          type: string
+          format: date
+          description: When do you want to achieve this goal?
+        progress_percentage:
+          type: number
+          format: double
+          readOnly: true
+        days_remaining:
+          type: integer
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        milestone_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - days_remaining
+      - icon
+      - id
+      - is_overdue
+      - milestone_count
+      - progress_percentage
+      - target_date
+      - title
+      - updated_at
+    GoalStatusEnum:
+      enum:
+      - draft
+      - planning
+      - active
+      - paused
+      - completed
+      - abandoned
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `planning` - Planning
+        * `active` - Active
+        * `paused` - Paused
+        * `completed` - Completed
+        * `abandoned` - Abandoned
     Login:
       type: object
       description: Serializer for user login with email and password.
@@ -2036,6 +3563,211 @@ components:
       required:
       - email
       - password
+    Milestone:
+      type: object
+      description: Serializer for Milestone model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        goal:
+          type: integer
+        title:
+          type: string
+          description: Milestone title
+          maxLength: 255
+        description:
+          type: string
+          description: What does achieving this milestone mean?
+        status:
+          $ref: '#/components/schemas/MilestoneStatusEnum'
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Order within the goal (0 = first)
+        target_date:
+          type: string
+          format: date
+          nullable: true
+          description: When should this milestone be completed?
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        requirements:
+          type: string
+          description: What's needed before starting this milestone?
+        success_criteria:
+          type: string
+          description: How to know this milestone is complete
+        notes:
+          type: string
+          description: Additional notes
+        suggested_tasks:
+          description: Tasks suggested by LLM (before user creates actual Task objects)
+        progress_percentage:
+          type: number
+          format: double
+          readOnly: true
+        days_remaining:
+          type: integer
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        task_count:
+          type: integer
+          readOnly: true
+        completed_task_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completed_at
+      - completed_task_count
+      - created_at
+      - days_remaining
+      - goal
+      - id
+      - is_overdue
+      - progress_percentage
+      - task_count
+      - title
+      - updated_at
+    MilestoneStatusEnum:
+      enum:
+      - pending
+      - in_progress
+      - completed
+      - skipped
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `in_progress` - In Progress
+        * `completed` - Completed
+        * `skipped` - Skipped
+    Notification:
+      type: object
+      description: Serializer for Notification.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        notification_type:
+          allOf:
+          - $ref: '#/components/schemas/NotificationTypeEnum'
+          readOnly: true
+          title: Type
+        title:
+          type: string
+          readOnly: true
+          description: Notification title
+        body:
+          type: string
+          readOnly: true
+          description: Notification message body
+        scheduled_for:
+          type: string
+          format: date-time
+          readOnly: true
+          description: When this notification should be sent
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status259Enum'
+          readOnly: true
+        sent_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        task:
+          type: integer
+          readOnly: true
+          nullable: true
+        task_title:
+          type: string
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - body
+      - created_at
+      - id
+      - notification_type
+      - scheduled_for
+      - sent_at
+      - status
+      - task
+      - task_title
+      - title
+    NotificationList:
+      type: object
+      description: Lightweight serializer for listing notifications.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        notification_type:
+          allOf:
+          - $ref: '#/components/schemas/NotificationTypeEnum'
+          title: Type
+        title:
+          type: string
+          description: Notification title
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/Status259Enum'
+        scheduled_for:
+          type: string
+          format: date-time
+          description: When this notification should be sent
+        task:
+          type: integer
+          nullable: true
+      required:
+      - id
+      - scheduled_for
+      - title
+    NotificationTypeEnum:
+      enum:
+      - task_reminder
+      - daily_reminder
+      - weekly_reminder
+      - goal_reminder
+      - warning
+      - deadline_warning
+      - suggestion
+      - tip
+      - congratulations
+      - achievement
+      - streak
+      - info
+      type: string
+      description: |-
+        * `task_reminder` - Task Reminder
+        * `daily_reminder` - Daily Recurring Reminder
+        * `weekly_reminder` - Weekly Recurring Reminder
+        * `goal_reminder` - Goal Milestone Reminder
+        * `warning` - Warning
+        * `deadline_warning` - Deadline Warning
+        * `suggestion` - Suggestion
+        * `tip` - Tip
+        * `congratulations` - Congratulations
+        * `achievement` - Achievement
+        * `streak` - Streak
+        * `info` - Information
     NullEnum:
       enum:
       - null
@@ -2085,6 +3817,75 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeedbackList'
+    PaginatedGoalListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoalList'
+    PaginatedMilestoneList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+    PaginatedNotificationListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationList'
     PaginatedTaskCompletionList:
       type: object
       required:
@@ -2108,6 +3909,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaskCompletion'
+    PaginatedTaskGroupListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskGroupList'
     PaginatedTaskListList:
       type: object
       required:
@@ -2229,6 +4053,157 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedGoalDetail:
+      type: object
+      description: Full serializer for goal details including milestones.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          description: What do you want to achieve?
+          maxLength: 255
+        description:
+          type: string
+          description: Detailed description of your goal
+        category:
+          $ref: '#/components/schemas/GoalCategoryEnum'
+        status:
+          $ref: '#/components/schemas/GoalStatusEnum'
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: When do you want to start working on this goal?
+        target_date:
+          type: string
+          format: date
+          description: When do you want to achieve this goal?
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        planning_answers:
+          description: User's answers to planning questions
+        planning_questions:
+          description: LLM-generated questions specific to this goal
+        llm_generated_plan:
+          readOnly: true
+          nullable: true
+          description: The full plan generated by LLM (stored for reference)
+        plan_generated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        motivation:
+          type: string
+          description: Why is this goal important to you? (from LLM or user)
+        potential_obstacles:
+          description: List of potential obstacles identified
+        tips:
+          description: Tips and advice for achieving the goal
+        final_achievement:
+          type: string
+          description: Concrete description of what 'success' looks like
+        icon:
+          type: string
+          description: Optional icon name for the goal (e.g., material-community icon
+            key)
+          maxLength: 64
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+          readOnly: true
+        progress_percentage:
+          type: number
+          format: double
+          readOnly: true
+        days_remaining:
+          type: integer
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedMilestone:
+      type: object
+      description: Serializer for Milestone model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        goal:
+          type: integer
+        title:
+          type: string
+          description: Milestone title
+          maxLength: 255
+        description:
+          type: string
+          description: What does achieving this milestone mean?
+        status:
+          $ref: '#/components/schemas/MilestoneStatusEnum'
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Order within the goal (0 = first)
+        target_date:
+          type: string
+          format: date
+          nullable: true
+          description: When should this milestone be completed?
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        requirements:
+          type: string
+          description: What's needed before starting this milestone?
+        success_criteria:
+          type: string
+          description: How to know this milestone is complete
+        notes:
+          type: string
+          description: Additional notes
+        suggested_tasks:
+          description: Tasks suggested by LLM (before user creates actual Task objects)
+        progress_percentage:
+          type: number
+          format: double
+          readOnly: true
+        days_remaining:
+          type: integer
+          readOnly: true
+        is_overdue:
+          type: boolean
+          readOnly: true
+        task_count:
+          type: integer
+          readOnly: true
+        completed_task_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     PatchedTask:
       type: object
       description: Serializer for Task model - full CRUD operations.
@@ -2258,6 +4233,14 @@ components:
           type: string
           format: date-time
           readOnly: true
+          nullable: true
+        group:
+          allOf:
+          - $ref: '#/components/schemas/TaskGroupList'
+          readOnly: true
+        group_id:
+          type: integer
+          writeOnly: true
           nullable: true
         is_recurring:
           type: boolean
@@ -2385,6 +4368,11 @@ components:
         is_overdue:
           type: boolean
           readOnly: true
+        milestone_ids:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -2416,6 +4404,45 @@ components:
           nullable: true
           title: Actual duration (minutes)
           description: How long it actually took to complete (legacy, use completed_value)
+    PatchedTaskGroup:
+      type: object
+      description: Serializer for TaskGroup model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Group name
+          maxLength: 100
+        description:
+          type: string
+          description: Optional description of this task group
+        color:
+          type: string
+          description: 'Hex color code for UI (e.g., #FF5733)'
+          maxLength: 7
+        icon:
+          type: string
+          description: Icon name for UI (e.g., material-community icon key)
+          maxLength: 64
+        is_active:
+          type: boolean
+          description: Whether this group is active
+        task_count:
+          type: integer
+          readOnly: true
+        completed_task_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     PatchedUser:
       type: object
       description: Serializer for user profile.
@@ -2449,6 +4476,23 @@ components:
           title: Active
           description: Designates whether this user should be treated as active. Unselect
             this instead of deleting accounts.
+    QuestionAnswer:
+      type: object
+      description: A single question-answer pair.
+      properties:
+        question_id:
+          type: string
+          description: The ID of the question being answered
+        question:
+          type: string
+          description: The question text (for context)
+        answer:
+          type: string
+          description: User's answer to the question
+      required:
+      - answer
+      - question
+      - question_id
     RecurrencePeriodEnum:
       enum:
       - daily
@@ -2465,6 +4509,84 @@ components:
         * `monthly` - Monthly
         * `quarterly` - Quarterly
         * `yearly` - Yearly
+    RegisterPushToken:
+      type: object
+      description: Serializer for registering push notification token.
+      properties:
+        push_token:
+          type: string
+          description: Expo push notification token
+          maxLength: 512
+      required:
+      - push_token
+    Status259Enum:
+      enum:
+      - pending
+      - scheduled
+      - sent
+      - failed
+      - cancelled
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `scheduled` - Scheduled
+        * `sent` - Sent
+        * `failed` - Failed
+        * `cancelled` - Cancelled
+    SubmitAnswers:
+      type: object
+      description: |-
+        Serializer for submitting answers to generated questions.
+
+        Step 3: User submits answers, system generates the plan.
+      properties:
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionAnswer'
+          description: List of question-answer pairs
+      required:
+      - answers
+    SyncCompletions:
+      type: object
+      description: |-
+        Serializer for syncing completions.
+        Accepts a list of dates and an optional completed_value.
+      properties:
+        dates:
+          type: array
+          items:
+            type: string
+            format: date
+          description: List of dates (YYYY-MM-DD) for completions
+        completed_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Default completed value for new completions
+      required:
+      - dates
+    SyncCompletionsResponse:
+      type: object
+      description: Response serializer for sync_completions endpoint.
+      properties:
+        added:
+          type: integer
+          description: Number of completions added
+        removed:
+          type: integer
+          description: Number of completions removed
+        total:
+          type: integer
+          description: Total completions after sync
+        task:
+          $ref: '#/components/schemas/TaskWithCompletions'
+      required:
+      - added
+      - removed
+      - task
+      - total
     Task:
       type: object
       description: Serializer for Task model - full CRUD operations.
@@ -2494,6 +4616,14 @@ components:
           type: string
           format: date-time
           readOnly: true
+          nullable: true
+        group:
+          allOf:
+          - $ref: '#/components/schemas/TaskGroupList'
+          readOnly: true
+        group_id:
+          type: integer
+          writeOnly: true
           nullable: true
         is_recurring:
           type: boolean
@@ -2621,6 +4751,11 @@ components:
         is_overdue:
           type: boolean
           readOnly: true
+        milestone_ids:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -2637,10 +4772,12 @@ components:
       - current_period_end
       - current_period_start
       - goal_display
+      - group
       - id
       - is_overdue
       - is_period_complete
       - last_completion
+      - milestone_ids
       - recurrence_display
       - remaining_completions_in_period
       - status
@@ -2710,6 +4847,81 @@ components:
           nullable: true
           title: Actual duration (minutes)
           description: How long it actually took to complete (legacy, use completed_value)
+    TaskGroup:
+      type: object
+      description: Serializer for TaskGroup model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Group name
+          maxLength: 100
+        description:
+          type: string
+          description: Optional description of this task group
+        color:
+          type: string
+          description: 'Hex color code for UI (e.g., #FF5733)'
+          maxLength: 7
+        icon:
+          type: string
+          description: Icon name for UI (e.g., material-community icon key)
+          maxLength: 64
+        is_active:
+          type: boolean
+          description: Whether this group is active
+        task_count:
+          type: integer
+          readOnly: true
+        completed_task_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completed_task_count
+      - created_at
+      - id
+      - name
+      - task_count
+      - updated_at
+    TaskGroupList:
+      type: object
+      description: Lightweight serializer for listing task groups.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Group name
+          maxLength: 100
+        color:
+          type: string
+          description: 'Hex color code for UI (e.g., #FF5733)'
+          maxLength: 7
+        icon:
+          type: string
+          description: Icon name for UI (e.g., material-community icon key)
+          maxLength: 64
+        is_active:
+          type: boolean
+          description: Whether this group is active
+        task_count:
+          type: integer
+          readOnly: true
+      required:
+      - id
+      - name
+      - task_count
     TaskList:
       type: object
       description: Lightweight serializer for listing tasks.
@@ -2771,6 +4983,10 @@ components:
         is_period_complete:
           type: boolean
           readOnly: true
+        group:
+          allOf:
+          - $ref: '#/components/schemas/TaskGroupList'
+          readOnly: true
         unit_type:
           nullable: true
           description: |-
@@ -2807,6 +5023,15 @@ components:
           type: string
           readOnly: true
           nullable: true
+        milestone_ids:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        goal_icon:
+          type: string
+          nullable: true
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -2814,9 +5039,12 @@ components:
       required:
       - created_at
       - goal_display
+      - goal_icon
+      - group
       - id
       - is_overdue
       - is_period_complete
+      - milestone_ids
       - status
       - title
       - unit_display_name
@@ -2883,6 +5111,14 @@ components:
           type: string
           format: date-time
           readOnly: true
+          nullable: true
+        group:
+          allOf:
+          - $ref: '#/components/schemas/TaskGroupList'
+          readOnly: true
+        group_id:
+          type: integer
+          writeOnly: true
           nullable: true
         is_recurring:
           type: boolean
@@ -3010,6 +5246,11 @@ components:
         is_overdue:
           type: boolean
           readOnly: true
+        milestone_ids:
+          type: array
+          items:
+            type: integer
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -3031,10 +5272,12 @@ components:
       - current_period_end
       - current_period_start
       - goal_display
+      - group
       - id
       - is_overdue
       - is_period_complete
       - last_completion
+      - milestone_ids
       - recent_completions
       - recurrence_display
       - remaining_completions_in_period

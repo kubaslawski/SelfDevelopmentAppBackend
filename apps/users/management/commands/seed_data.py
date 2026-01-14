@@ -30,8 +30,9 @@ class Command(BaseCommand):
 
         self.stdout.write("Seeding database...")
 
-        # Create superuser
-        superuser = self._create_superuser()
+        # Create superusers
+        self._create_superuser("admin@admin.pl", "admin", "Admin", "User")
+        self._create_superuser("kubaslawski@gmail.com", "admin", "Kuba", "Sławski")
 
         # Create regular users with tasks
         users_data = [
@@ -307,25 +308,26 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("=" * 50))
         self.stdout.write(self.style.SUCCESS("Seed data created successfully!"))
-        self.stdout.write(self.style.SUCCESS(f"Users: {user_count} (including 1 superuser)"))
+        self.stdout.write(self.style.SUCCESS(f"Users: {user_count} (including 2 superusers)"))
         self.stdout.write(self.style.SUCCESS(f"Tasks: {task_count}"))
         self.stdout.write(self.style.SUCCESS("=" * 50))
-        self.stdout.write(self.style.SUCCESS("Superuser: admin@admin.pl / admin"))
+        self.stdout.write(self.style.SUCCESS("Superusers:"))
+        self.stdout.write(self.style.SUCCESS("  - admin@admin.pl / admin"))
+        self.stdout.write(self.style.SUCCESS("  - kubaslawski@gmail.com / admin"))
         self.stdout.write(self.style.SUCCESS("Regular users: password123"))
         self.stdout.write(self.style.SUCCESS("=" * 50))
 
-    def _create_superuser(self):
+    def _create_superuser(self, email, password, first_name, last_name):
         """Create superuser if not exists."""
-        email = "admin@admin.pl"
         if User.objects.filter(email=email).exists():
             self.stdout.write(f"Superuser {email} already exists.")
             return User.objects.get(email=email)
 
         user = User.objects.create_superuser(
             email=email,
-            password="admin",
-            first_name="Admin",
-            last_name="User",
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
         )
         self.stdout.write(self.style.SUCCESS(f"Created superuser: {email}"))
         return user

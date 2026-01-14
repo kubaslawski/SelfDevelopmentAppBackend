@@ -12,7 +12,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from apps.tasks.models import TimeStampedModel
+from apps.tasks.models import TimeStampedModel, Visibility
 
 
 class Goal(TimeStampedModel):
@@ -152,6 +152,22 @@ class Goal(TimeStampedModel):
         blank=True,
         default="",
         help_text=_("Optional icon name for the goal (e.g., material-community icon key)"),
+    )
+
+    # Visibility settings
+    visibility = models.CharField(
+        _("visibility"),
+        max_length=10,
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE,
+        help_text=_("Who can see this goal"),
+    )
+    shared_with_groups = models.ManyToManyField(
+        "groups.Group",
+        blank=True,
+        related_name="shared_goals",
+        verbose_name=_("shared with groups"),
+        help_text=_("Groups this goal is shared with (when visibility is 'group')"),
     )
 
     class Meta:

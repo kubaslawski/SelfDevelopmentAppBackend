@@ -29,3 +29,10 @@ pydantic-ai==0.0.39
 
 # Validation / DTO
 pydantic==2.10.3
+
+# Task Queue
+celery==5.4.0
+redis==5.2.1
+
+# HTTP Client (for Expo Push API)
+requests==2.32.3
