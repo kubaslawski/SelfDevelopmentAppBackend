@@ -74,19 +74,18 @@ class LoginView(APIView):
         )
 
 
-@extend_schema_view(
-    post=extend_schema(
-        summary="Logout",
-        description="Logout the current user and destroy the session.",
-        tags=["Authentication"],
-        request=None,  # No request body needed
-    )
-)
 class LogoutView(APIView):
     """Logout the current user."""
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="Logout",
+        description="Logout the current user and destroy the session.",
+        tags=["Authentication"],
+        request=None,
+        responses={200: None},
+    )
     def post(self, request):
         logout(request)
         return Response(

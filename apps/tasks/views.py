@@ -456,9 +456,12 @@ class TaskGroupViewSet(viewsets.ModelViewSet):
     search_fields = ["name", "description"]
     ordering_fields = ["name", "created_at"]
     ordering = ["name"]
+    queryset = TaskGroup.objects.none()  # Default for schema generation
 
     def get_queryset(self):
         """Filter groups to current user only."""
+        if getattr(self, "swagger_fake_view", False):
+            return TaskGroup.objects.none()
         return TaskGroup.objects.filter(user=self.request.user)
 
     def get_serializer_class(self):

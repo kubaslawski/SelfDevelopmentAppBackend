@@ -4,6 +4,9 @@ Serializers for Goals API.
 
 from rest_framework import serializers
 
+from apps.groups.models import Group
+from apps.tasks.models import Visibility
+
 from .models import Goal, Milestone
 
 
@@ -65,6 +68,7 @@ class GoalListSerializer(serializers.ModelSerializer):
     days_remaining = serializers.IntegerField(read_only=True)
     is_overdue = serializers.BooleanField(read_only=True)
     milestone_count = serializers.SerializerMethodField()
+    visibility = serializers.ChoiceField(choices=Visibility.choices, read_only=True)
 
     class Meta:
         model = Goal
@@ -81,6 +85,7 @@ class GoalListSerializer(serializers.ModelSerializer):
             "days_remaining",
             "is_overdue",
             "milestone_count",
+            "visibility",
             "created_at",
             "updated_at",
         ]
@@ -97,6 +102,22 @@ class GoalDetailSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.FloatField(read_only=True)
     days_remaining = serializers.IntegerField(read_only=True)
     is_overdue = serializers.BooleanField(read_only=True)
+    
+    # Visibility fields
+    visibility = serializers.ChoiceField(
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE,
+    )
+    shared_with_groups = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(),
+        many=True,
+        required=False,
+    )
+    shared_with_group_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+    )
 
     class Meta:
         model = Goal
@@ -122,6 +143,10 @@ class GoalDetailSerializer(serializers.ModelSerializer):
             "progress_percentage",
             "days_remaining",
             "is_overdue",
+            # Visibility
+            "visibility",
+            "shared_with_groups",
+            "shared_with_group_ids",
             "created_at",
             "updated_at",
         ]
@@ -134,6 +159,33 @@ class GoalDetailSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate(self, data):
+        """Validate visibility with shared_with_groups."""
+        visibility = data.get("visibility", getattr(self.instance, "visibility", Visibility.PRIVATE) if self.instance else Visibility.PRIVATE)
+        shared_with_group_ids = data.get("shared_with_group_ids", [])
+        
+        if visibility == Visibility.GROUP and not shared_with_group_ids:
+            if not (self.instance and self.instance.shared_with_groups.exists()):
+                raise serializers.ValidationError(
+                    {"shared_with_group_ids": "At least one group is required when visibility is 'group'."}
+                )
+        return data
+
+    def update(self, instance, validated_data):
+        """Update goal with shared_with_groups handling."""
+        shared_with_group_ids = validated_data.pop("shared_with_group_ids", None)
+        shared_with_groups = validated_data.pop("shared_with_groups", None)
+        
+        instance = super().update(instance, validated_data)
+        
+        if shared_with_group_ids is not None:
+            groups = Group.objects.filter(id__in=shared_with_group_ids)
+            instance.shared_with_groups.set(groups)
+        elif shared_with_groups is not None:
+            instance.shared_with_groups.set(shared_with_groups)
+        
+        return instance
+
 
 class GoalCreateSerializer(serializers.ModelSerializer):
     """
@@ -142,6 +194,18 @@ class GoalCreateSerializer(serializers.ModelSerializer):
     Step 1 of the flow: User just provides their goal description.
     The system will then generate contextual questions.
     """
+    
+    # Visibility fields
+    visibility = serializers.ChoiceField(
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE,
+        required=False,
+    )
+    shared_with_group_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
+    )
 
     class Meta:
         model = Goal
@@ -153,14 +217,35 @@ class GoalCreateSerializer(serializers.ModelSerializer):
             "target_date",
             "icon",
             "status",
+            "visibility",
+            "shared_with_group_ids",
             "created_at",
         ]
         read_only_fields = ["id", "status", "created_at"]
 
+    def validate(self, data):
+        """Validate visibility with shared_with_groups."""
+        visibility = data.get("visibility", Visibility.PRIVATE)
+        shared_with_group_ids = data.get("shared_with_group_ids", [])
+        
+        if visibility == Visibility.GROUP and not shared_with_group_ids:
+            raise serializers.ValidationError(
+                {"shared_with_group_ids": "At least one group is required when visibility is 'group'."}
+            )
+        return data
+
     def create(self, validated_data):
+        shared_with_group_ids = validated_data.pop("shared_with_group_ids", [])
+        
         validated_data["user"] = self.context["request"].user
         validated_data["status"] = Goal.Status.DRAFT
-        return super().create(validated_data)
+        goal = super().create(validated_data)
+        
+        if shared_with_group_ids:
+            groups = Group.objects.filter(id__in=shared_with_group_ids)
+            goal.shared_with_groups.set(groups)
+        
+        return goal
 
 
 # =============================================================================

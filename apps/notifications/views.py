@@ -17,7 +17,6 @@ from .serializers import (
 from .services import get_or_create_preferences
 
 
-@extend_schema(tags=["Notifications"])
 class NotificationPreferenceView(APIView):
     """
     View for managing notification preferences.
@@ -28,12 +27,21 @@ class NotificationPreferenceView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["Notifications"],
+        responses={200: NotificationPreferenceSerializer},
+    )
     def get(self, request):
         """Get notification preferences."""
         prefs = get_or_create_preferences(request.user)
         serializer = NotificationPreferenceSerializer(prefs)
         return Response(serializer.data)
 
+    @extend_schema(
+        tags=["Notifications"],
+        request=NotificationPreferenceSerializer,
+        responses={200: NotificationPreferenceSerializer},
+    )
     def put(self, request):
         """Update notification preferences."""
         prefs = get_or_create_preferences(request.user)
@@ -42,6 +50,11 @@ class NotificationPreferenceView(APIView):
         serializer.save()
         return Response(serializer.data)
 
+    @extend_schema(
+        tags=["Notifications"],
+        request=NotificationPreferenceSerializer,
+        responses={200: NotificationPreferenceSerializer},
+    )
     def patch(self, request):
         """Partially update notification preferences."""
         prefs = get_or_create_preferences(request.user)
@@ -53,7 +66,6 @@ class NotificationPreferenceView(APIView):
         return Response(serializer.data)
 
 
-@extend_schema(tags=["Notifications"])
 class RegisterPushTokenView(APIView):
     """
     Register or update push notification token.
@@ -64,7 +76,11 @@ class RegisterPushTokenView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(request=RegisterPushTokenSerializer)
+    @extend_schema(
+        tags=["Notifications"],
+        request=RegisterPushTokenSerializer,
+        responses={200: None},
+    )
     def post(self, request):
         """Register push token."""
         serializer = RegisterPushTokenSerializer(data=request.data)
@@ -81,6 +97,10 @@ class RegisterPushTokenView(APIView):
             }
         )
 
+    @extend_schema(
+        tags=["Notifications"],
+        responses={200: None},
+    )
     def delete(self, request):
         """Remove push token."""
         prefs = get_or_create_preferences(request.user)
@@ -98,7 +118,6 @@ class RegisterPushTokenView(APIView):
 @extend_schema_view(
     list=extend_schema(tags=["Notifications"]),
     retrieve=extend_schema(tags=["Notifications"]),
-    destroy=extend_schema(tags=["Notifications"]),
 )
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -109,9 +128,12 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     permission_classes = [IsAuthenticated]
+    queryset = Notification.objects.none()  # Default for schema generation
 
     def get_queryset(self):
         """Filter notifications to current user."""
+        if getattr(self, "swagger_fake_view", False):
+            return Notification.objects.none()
         return Notification.objects.filter(user=self.request.user).select_related(
             "task"
         )

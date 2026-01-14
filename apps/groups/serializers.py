@@ -3,6 +3,7 @@ Serializers for Groups app.
 """
 
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import Group, GroupInvitation, GroupMembership
@@ -26,7 +27,8 @@ class GroupUserSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "first_name", "last_name", "full_name"]
         read_only_fields = fields
 
-    def get_full_name(self, obj):
+    @extend_schema_field(serializers.CharField())
+    def get_full_name(self, obj) -> str:
         return f"{obj.first_name} {obj.last_name}".strip() or obj.email
 
 
@@ -59,21 +61,24 @@ class GroupListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def get_is_member(self, obj):
-        user = self.context.get("request").user
-        if user.is_anonymous:
+    @extend_schema_field(serializers.BooleanField())
+    def get_is_member(self, obj) -> bool:
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
             return False
+        user = request.user
         if obj.owner == user:
             return True
         return GroupMembership.objects.filter(
             group=obj, user=user, is_active=True
         ).exists()
 
-    def get_user_role(self, obj):
-        user = self.context.get("request").user
-        if user.is_anonymous:
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_user_role(self, obj) -> str | None:
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
             return None
-        return get_user_role_in_group(user, obj)
+        return get_user_role_in_group(request.user, obj)
 
 
 class GroupDetailSerializer(serializers.ModelSerializer):
@@ -122,33 +127,39 @@ class GroupDetailSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def get_is_member(self, obj):
-        user = self.context.get("request").user
-        if user.is_anonymous:
+    @extend_schema_field(serializers.BooleanField())
+    def get_is_member(self, obj) -> bool:
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
             return False
+        user = request.user
         if obj.owner == user:
             return True
         return GroupMembership.objects.filter(
             group=obj, user=user, is_active=True
         ).exists()
 
-    def get_user_role(self, obj):
-        user = self.context.get("request").user
-        if user.is_anonymous:
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_user_role(self, obj) -> str | None:
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
             return None
-        return get_user_role_in_group(user, obj)
+        return get_user_role_in_group(request.user, obj)
 
-    def get_can_edit(self, obj):
-        user = self.context.get("request").user
-        if user.is_anonymous:
+    @extend_schema_field(serializers.BooleanField())
+    def get_can_edit(self, obj) -> bool:
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
             return False
-        role = get_user_role_in_group(user, obj)
+        role = get_user_role_in_group(request.user, obj)
         return role in ["owner", "admin"]
 
-    def get_can_invite(self, obj):
-        user = self.context.get("request").user
-        if user.is_anonymous:
+    @extend_schema_field(serializers.BooleanField())
+    def get_can_invite(self, obj) -> bool:
+        request = self.context.get("request")
+        if not request or not request.user or request.user.is_anonymous:
             return False
+        user = request.user
         if obj.owner == user:
             return True
         try:
@@ -212,7 +223,8 @@ class GroupMembershipSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "user", "is_owner", "is_active", "joined_at", "created_at"]
 
-    def get_is_owner(self, obj):
+    @extend_schema_field(serializers.BooleanField())
+    def get_is_owner(self, obj) -> bool:
         return obj.user == obj.group.owner
 
 
@@ -270,6 +282,7 @@ class GroupInvitationSerializer(serializers.ModelSerializer):
 class CreateInvitationSerializer(serializers.Serializer):
     """Serializer for creating an invitation."""
 
+    group_id = serializers.IntegerField()
     email = serializers.EmailField(required=False, allow_blank=True)
     user_id = serializers.IntegerField(required=False, allow_null=True)
     role = serializers.ChoiceField(
@@ -292,3 +305,22 @@ class AcceptInvitationSerializer(serializers.Serializer):
 
     invite_code = serializers.CharField(max_length=32)
 
+
+# =============================================================================
+# Response serializers for OpenAPI schema
+# =============================================================================
+
+
+class GroupActionResponseSerializer(serializers.Serializer):
+    """Response serializer for group actions (join, leave, etc.)."""
+
+    success = serializers.BooleanField()
+    message = serializers.CharField()
+    membership_id = serializers.IntegerField(required=False)
+    group_id = serializers.IntegerField(required=False)
+
+
+class ErrorResponseSerializer(serializers.Serializer):
+    """Response serializer for errors."""
+
+    error = serializers.CharField()

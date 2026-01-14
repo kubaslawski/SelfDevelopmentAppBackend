@@ -1011,7 +1011,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1038,7 +1039,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1077,7 +1079,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1115,7 +1118,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1133,7 +1137,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1180,7 +1185,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1214,7 +1220,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1255,7 +1262,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1289,7 +1297,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1323,7 +1332,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1372,7 +1382,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this goal.
         required: true
       tags:
       - Goals
@@ -1397,6 +1408,691 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubmitAnswers'
+          description: ''
+  /api/v1/groups/:
+    get:
+      operationId: v1_groups_list
+      description: |-
+        ViewSet for managing groups.
+
+        List: Shows groups user is member of + public groups
+        Create: Create a new group (user becomes owner)
+        Update: Edit group (admin only)
+        Delete: Delete group (owner only)
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Groups
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGroupListList'
+          description: ''
+    post:
+      operationId: v1_groups_create
+      description: |-
+        ViewSet for managing groups.
+
+        List: Shows groups user is member of + public groups
+        Create: Create a new group (user becomes owner)
+        Update: Edit group (admin only)
+        Delete: Delete group (owner only)
+      tags:
+      - Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupCreate'
+          description: ''
+  /api/v1/groups/{id}/:
+    get:
+      operationId: v1_groups_retrieve
+      description: |-
+        ViewSet for managing groups.
+
+        List: Shows groups user is member of + public groups
+        Create: Create a new group (user becomes owner)
+        Update: Edit group (admin only)
+        Delete: Delete group (owner only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grupa.
+        required: true
+      tags:
+      - Groups
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDetail'
+          description: ''
+    put:
+      operationId: v1_groups_update
+      description: |-
+        ViewSet for managing groups.
+
+        List: Shows groups user is member of + public groups
+        Create: Create a new group (user becomes owner)
+        Update: Edit group (admin only)
+        Delete: Delete group (owner only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grupa.
+        required: true
+      tags:
+      - Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDetail'
+          description: ''
+    patch:
+      operationId: v1_groups_partial_update
+      description: |-
+        ViewSet for managing groups.
+
+        List: Shows groups user is member of + public groups
+        Create: Create a new group (user becomes owner)
+        Update: Edit group (admin only)
+        Delete: Delete group (owner only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grupa.
+        required: true
+      tags:
+      - Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGroupDetail'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDetail'
+          description: ''
+    delete:
+      operationId: v1_groups_destroy
+      description: |-
+        ViewSet for managing groups.
+
+        List: Shows groups user is member of + public groups
+        Create: Create a new group (user becomes owner)
+        Update: Edit group (admin only)
+        Delete: Delete group (owner only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grupa.
+        required: true
+      tags:
+      - Groups
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/groups/{id}/join/:
+    post:
+      operationId: v1_groups_join_create
+      description: Join a public group.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grupa.
+        required: true
+      tags:
+      - Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupActionResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/groups/{id}/leave/:
+    post:
+      operationId: v1_groups_leave_create
+      description: Leave a group.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grupa.
+        required: true
+      tags:
+      - Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupActionResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/groups/{id}/members/:
+    get:
+      operationId: v1_groups_members_list
+      description: List all members of a group.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grupa.
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Groups
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGroupMembershipList'
+          description: ''
+  /api/v1/groups/{id}/members/{user_id}/remove/:
+    post:
+      operationId: v1_groups_members_remove_create
+      description: Remove a member from the group (admin only).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grupa.
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupDetail'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupActionResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/groups/{id}/members/{user_id}/role/:
+    post:
+      operationId: v1_groups_members_role_create
+      description: Update a member's role (admin only).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grupa.
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMembershipRole'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UpdateMembershipRole'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateMembershipRole'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupActionResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/invitations/:
+    get:
+      operationId: v1_invitations_list
+      description: ViewSet for managing group invitations.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Group Invitations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGroupInvitationList'
+          description: ''
+    post:
+      operationId: v1_invitations_create
+      description: Create a new invitation.
+      tags:
+      - Group Invitations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvitation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateInvitation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateInvitation'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupInvitation'
+          description: ''
+  /api/v1/invitations/{id}/:
+    get:
+      operationId: v1_invitations_retrieve
+      description: ViewSet for managing group invitations.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this group invitation.
+        required: true
+      tags:
+      - Group Invitations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupInvitation'
+          description: ''
+    delete:
+      operationId: v1_invitations_destroy
+      description: Cancel an invitation (only by creator or group admin).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this group invitation.
+        required: true
+      tags:
+      - Group Invitations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/invitations/{id}/accept/:
+    post:
+      operationId: v1_invitations_accept_create
+      description: Accept an invitation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this group invitation.
+        required: true
+      tags:
+      - Group Invitations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInvitation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupInvitation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupInvitation'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupActionResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/invitations/{id}/decline/:
+    post:
+      operationId: v1_invitations_decline_create
+      description: Decline an invitation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this group invitation.
+        required: true
+      tags:
+      - Group Invitations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInvitation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GroupInvitation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GroupInvitation'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupActionResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/invitations/accept-by-code/:
+    post:
+      operationId: v1_invitations_accept_by_code_create
+      description: |-
+        Accept an invitation using invite code.
+
+        This is used for link-based invitations.
+      tags:
+      - Group Invitations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptInvitation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AcceptInvitation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AcceptInvitation'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupActionResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
           description: ''
   /api/v1/milestones/:
     get:
@@ -1477,7 +2173,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this milestone.
         required: true
       tags:
       - Goals
@@ -1501,7 +2198,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this milestone.
         required: true
       tags:
       - Goals
@@ -1537,7 +2235,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this milestone.
         required: true
       tags:
       - Goals
@@ -1572,7 +2271,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this milestone.
         required: true
       tags:
       - Goals
@@ -1590,7 +2290,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this milestone.
         required: true
       tags:
       - Goals
@@ -1628,7 +2329,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this milestone.
         required: true
       tags:
       - Goals
@@ -1662,7 +2364,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this milestone.
         required: true
       tags:
       - Goals
@@ -1696,7 +2399,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this milestone.
         required: true
       tags:
       - Goals
@@ -1730,7 +2434,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this milestone.
         required: true
       tags:
       - Goals
@@ -1807,7 +2512,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this notification.
         required: true
       tags:
       - Notifications
@@ -1829,7 +2535,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this notification.
         required: true
       tags:
       - Notifications
@@ -1897,29 +2604,63 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreference'
+          description: ''
     put:
       operationId: v1_notifications_preferences_update
       description: Update notification preferences.
       tags:
       - Notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPreference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NotificationPreference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NotificationPreference'
       security:
       - jwtAuth: []
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreference'
+          description: ''
     patch:
       operationId: v1_notifications_preferences_partial_update
       description: Partially update notification preferences.
       tags:
       - Notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationPreference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationPreference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationPreference'
       security:
       - jwtAuth: []
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreference'
+          description: ''
   /api/v1/notifications/push-token/:
     post:
       operationId: v1_notifications_push_token_create
@@ -1953,7 +2694,7 @@ paths:
       - jwtAuth: []
       - cookieAuth: []
       responses:
-        '204':
+        '200':
           description: No response body
   /api/v1/task-groups/:
     get:
@@ -2037,7 +2778,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this task group.
         required: true
       tags:
       - Task Groups
@@ -2062,7 +2804,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this task group.
         required: true
       tags:
       - Task Groups
@@ -2099,7 +2842,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this task group.
         required: true
       tags:
       - Task Groups
@@ -2135,7 +2879,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this task group.
         required: true
       tags:
       - Task Groups
@@ -2262,7 +3007,7 @@ paths:
           type: array
           items:
             type: string
-        description: Multiple values may be separated by commas.
+        description: Wiele wartości można rozdzielić przecinkami
         explode: false
         style: form
       - in: query
@@ -2304,7 +3049,7 @@ paths:
           type: array
           items:
             type: string
-        description: Multiple values may be separated by commas.
+        description: Wiele wartości można rozdzielić przecinkami
         explode: false
         style: form
       - name: search
@@ -2317,6 +3062,7 @@ paths:
         name: status
         schema:
           type: string
+          title: Stan
           enum:
           - archived
           - completed
@@ -2333,7 +3079,7 @@ paths:
           type: array
           items:
             type: string
-        description: Multiple values may be separated by commas.
+        description: Wiele wartości można rozdzielić przecinkami
         explode: false
         style: form
       - in: query
@@ -2967,6 +3713,25 @@ paths:
           description: ''
 components:
   schemas:
+    AcceptInvitation:
+      type: object
+      description: Serializer for accepting an invitation.
+      properties:
+        invite_code:
+          type: string
+          maxLength: 32
+      required:
+      - invite_code
+    AssignedRoleEnum:
+      enum:
+      - member
+      - moderator
+      - admin
+      type: string
+      description: |-
+        * `member` - Member
+        * `moderator` - Moderator
+        * `admin` - Admin
     BlankEnum:
       enum:
       - ''
@@ -2984,6 +3749,32 @@ components:
       - new_password
       - new_password_confirm
       - old_password
+    CreateInvitation:
+      type: object
+      description: Serializer for creating an invitation.
+      properties:
+        group_id:
+          type: integer
+        email:
+          type: string
+          format: email
+        user_id:
+          type: integer
+          nullable: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          default: member
+        message:
+          type: string
+          default: ''
+        expires_days:
+          type: integer
+          maximum: 30
+          minimum: 1
+          default: 7
+      required:
+      - group_id
     EmailTokenObtainPair:
       type: object
       description: Custom JWT serializer that uses email instead of username.
@@ -2997,6 +3788,14 @@ components:
       required:
       - email
       - password
+    ErrorResponse:
+      type: object
+      description: Response serializer for errors.
+      properties:
+        error:
+          type: string
+      required:
+      - error
     Feedback:
       type: object
       description: Serializer for viewing feedback (user's own feedback).
@@ -3344,10 +4143,12 @@ components:
           readOnly: true
         title:
           type: string
+          title: Tytuł
           description: What do you want to achieve?
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: Detailed description of your goal
         category:
           $ref: '#/components/schemas/GoalCategoryEnum'
@@ -3364,10 +4165,21 @@ components:
           allOf:
           - $ref: '#/components/schemas/GoalStatusEnum'
           readOnly: true
+          title: Stan
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          default: private
+        shared_with_group_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
       required:
       - created_at
       - id
@@ -3383,15 +4195,19 @@ components:
           readOnly: true
         title:
           type: string
+          title: Tytuł
           description: What do you want to achieve?
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: Detailed description of your goal
         category:
           $ref: '#/components/schemas/GoalCategoryEnum'
         status:
-          $ref: '#/components/schemas/GoalStatusEnum'
+          allOf:
+          - $ref: '#/components/schemas/GoalStatusEnum'
+          title: Stan
         start_date:
           type: string
           format: date
@@ -3449,10 +4265,24 @@ components:
         is_overdue:
           type: boolean
           readOnly: true
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          default: private
+        shared_with_groups:
+          type: array
+          items:
+            type: integer
+        shared_with_group_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
         updated_at:
           type: string
           format: date-time
@@ -3479,10 +4309,12 @@ components:
           readOnly: true
         title:
           type: string
+          title: Tytuł
           description: What do you want to achieve?
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: Detailed description of your goal
         category:
           $ref: '#/components/schemas/GoalCategoryEnum'
@@ -3492,7 +4324,9 @@ components:
           description: Optional icon name for the goal (e.g., material-community icon
             key)
         status:
-          $ref: '#/components/schemas/GoalStatusEnum'
+          allOf:
+          - $ref: '#/components/schemas/GoalStatusEnum'
+          title: Stan
         start_date:
           type: string
           format: date
@@ -3515,10 +4349,15 @@ components:
         milestone_count:
           type: integer
           readOnly: true
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          readOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
         updated_at:
           type: string
           format: date-time
@@ -3534,6 +4373,7 @@ components:
       - target_date
       - title
       - updated_at
+      - visibility
     GoalStatusEnum:
       enum:
       - draft
@@ -3546,10 +4386,344 @@ components:
       description: |-
         * `draft` - Draft
         * `planning` - Planning
-        * `active` - Active
+        * `active` - Aktywne
         * `paused` - Paused
         * `completed` - Completed
         * `abandoned` - Abandoned
+    GroupActionResponse:
+      type: object
+      description: Response serializer for group actions (join, leave, etc.).
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        membership_id:
+          type: integer
+        group_id:
+          type: integer
+      required:
+      - message
+      - success
+    GroupCreate:
+      type: object
+      description: Serializer for creating a new group.
+      properties:
+        name:
+          type: string
+          title: Nazwa
+          description: Group display name
+          maxLength: 100
+        description:
+          type: string
+          title: Opis
+          description: Group description
+        icon:
+          type: string
+          description: Emoji icon for the group
+          maxLength: 10
+        color:
+          type: string
+          description: Hex color for the group
+          maxLength: 7
+        is_public:
+          type: boolean
+          description: Public groups can be discovered and joined by anyone
+        allow_member_invites:
+          type: boolean
+          description: Allow non-admin members to invite others
+      required:
+      - name
+    GroupDetail:
+      type: object
+      description: Serializer for group detail view.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nazwa
+          description: Group display name
+          maxLength: 100
+        slug:
+          type: string
+          readOnly: true
+          description: Unique URL-friendly identifier
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+          title: Opis
+          description: Group description
+        icon:
+          type: string
+          description: Emoji icon for the group
+          maxLength: 10
+        color:
+          type: string
+          description: Hex color for the group
+          maxLength: 7
+        is_public:
+          type: boolean
+          description: Public groups can be discovered and joined by anyone
+        allow_member_invites:
+          type: boolean
+          description: Allow non-admin members to invite others
+        owner:
+          allOf:
+          - $ref: '#/components/schemas/GroupUser'
+          readOnly: true
+        member_count:
+          type: integer
+          readOnly: true
+        admin_count:
+          type: integer
+          readOnly: true
+        is_member:
+          type: boolean
+          readOnly: true
+        user_role:
+          type: string
+          nullable: true
+          readOnly: true
+        can_edit:
+          type: boolean
+          readOnly: true
+        can_invite:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Stworzony w
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - admin_count
+      - can_edit
+      - can_invite
+      - created_at
+      - id
+      - is_member
+      - member_count
+      - name
+      - owner
+      - slug
+      - updated_at
+      - user_role
+    GroupInvitation:
+      type: object
+      description: Serializer for group invitations.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        group:
+          type: integer
+          readOnly: true
+          title: Grupa
+        group_name:
+          type: string
+          readOnly: true
+        invited_user:
+          allOf:
+          - $ref: '#/components/schemas/GroupUser'
+          readOnly: true
+        invited_email:
+          type: string
+          format: email
+          description: Email address if inviting non-registered user
+          maxLength: 254
+        invited_by:
+          allOf:
+          - $ref: '#/components/schemas/GroupUser'
+          readOnly: true
+        assigned_role:
+          $ref: '#/components/schemas/AssignedRoleEnum'
+        status:
+          allOf:
+          - $ref: '#/components/schemas/GroupInvitationStatusEnum'
+          readOnly: true
+          title: Stan
+        message:
+          type: string
+          description: Optional invitation message
+        invite_code:
+          type: string
+          readOnly: true
+          description: Unique code for invite link
+        is_valid:
+          type: boolean
+          readOnly: true
+        is_expired:
+          type: boolean
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          title: Wygasa o
+          description: When this invitation expires
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Stworzony w
+      required:
+      - created_at
+      - expires_at
+      - group
+      - group_name
+      - id
+      - invite_code
+      - invited_by
+      - invited_user
+      - is_expired
+      - is_valid
+      - status
+    GroupInvitationStatusEnum:
+      enum:
+      - pending
+      - accepted
+      - declined
+      - expired
+      - cancelled
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `accepted` - Accepted
+        * `declined` - Declined
+        * `expired` - Expired
+        * `cancelled` - Cancelled
+    GroupList:
+      type: object
+      description: Serializer for group list view.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          title: Nazwa
+          description: Group display name
+        slug:
+          type: string
+          readOnly: true
+          description: Unique URL-friendly identifier
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+          readOnly: true
+          title: Opis
+          description: Group description
+        icon:
+          type: string
+          readOnly: true
+          description: Emoji icon for the group
+        color:
+          type: string
+          readOnly: true
+          description: Hex color for the group
+        is_public:
+          type: boolean
+          readOnly: true
+          description: Public groups can be discovered and joined by anyone
+        member_count:
+          type: integer
+          readOnly: true
+        is_member:
+          type: boolean
+          readOnly: true
+        user_role:
+          type: string
+          nullable: true
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Stworzony w
+      required:
+      - color
+      - created_at
+      - description
+      - icon
+      - id
+      - is_member
+      - is_public
+      - member_count
+      - name
+      - slug
+      - user_role
+    GroupMembership:
+      type: object
+      description: Serializer for group membership.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/GroupUser'
+          readOnly: true
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        is_owner:
+          type: boolean
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+          description: Inactive memberships are soft-deleted
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Stworzony w
+      required:
+      - created_at
+      - id
+      - is_active
+      - is_owner
+      - joined_at
+      - user
+    GroupUser:
+      type: object
+      description: Minimal user serializer for group context.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Adres e-mail
+          description: Required. A valid email address.
+        first_name:
+          type: string
+          readOnly: true
+          title: Imię
+        last_name:
+          type: string
+          readOnly: true
+          title: Nazwisko
+        full_name:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - first_name
+      - full_name
+      - id
+      - last_name
     Login:
       type: object
       description: Serializer for user login with email and password.
@@ -3574,13 +4748,17 @@ components:
           type: integer
         title:
           type: string
+          title: Tytuł
           description: Milestone title
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: What does achieving this milestone mean?
         status:
-          $ref: '#/components/schemas/MilestoneStatusEnum'
+          allOf:
+          - $ref: '#/components/schemas/MilestoneStatusEnum'
+          title: Stan
         order:
           type: integer
           maximum: 2147483647
@@ -3627,6 +4805,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
         updated_at:
           type: string
           format: date-time
@@ -3670,6 +4849,7 @@ components:
         title:
           type: string
           readOnly: true
+          title: Tytuł
           description: Notification title
         body:
           type: string
@@ -3684,6 +4864,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/Status259Enum'
           readOnly: true
+          title: Stan
         sent_at:
           type: string
           format: date-time
@@ -3701,6 +4882,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
       required:
       - body
       - created_at
@@ -3725,10 +4907,13 @@ components:
           title: Type
         title:
           type: string
+          title: Tytuł
           description: Notification title
           maxLength: 255
         status:
-          $ref: '#/components/schemas/Status259Enum'
+          allOf:
+          - $ref: '#/components/schemas/Status259Enum'
+          title: Stan
         scheduled_for:
           type: string
           format: date-time
@@ -3740,6 +4925,56 @@ components:
       - id
       - scheduled_for
       - title
+    NotificationPreference:
+      type: object
+      description: Serializer for NotificationPreference.
+      properties:
+        notifications_enabled:
+          type: boolean
+          description: Master switch for all notifications
+        push_enabled:
+          type: boolean
+          title: Push notifications enabled
+          description: Receive push notifications on mobile
+        email_enabled:
+          type: boolean
+          title: Email notifications enabled
+          description: Receive notifications via email
+        regular_task_reminders:
+          title: Regular task reminder times
+          description: List of reminder times for regular tasks, e.g., ['6h', '1h']
+        daily_reminder_enabled:
+          type: boolean
+          title: Daily recurring reminder
+          description: Remind about incomplete daily tasks
+        daily_reminder_hours_before:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Hours before day end
+          description: Hours before midnight to send daily task reminder
+        quiet_hours_enabled:
+          type: boolean
+          description: Don't send notifications during quiet hours
+        quiet_hours_start:
+          type: string
+          format: time
+          description: Start of quiet hours (HH:MM)
+        quiet_hours_end:
+          type: string
+          format: time
+          description: End of quiet hours (HH:MM)
+        push_token:
+          type: string
+          title: Push notification token
+          description: Expo push token for mobile notifications
+          maxLength: 512
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - updated_at
     NotificationTypeEnum:
       enum:
       - task_reminder
@@ -3840,6 +5075,75 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GoalList'
+    PaginatedGroupInvitationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupInvitation'
+    PaginatedGroupListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupList'
+    PaginatedGroupMembershipList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupMembership'
     PaginatedMilestoneList:
       type: object
       required:
@@ -4062,15 +5366,19 @@ components:
           readOnly: true
         title:
           type: string
+          title: Tytuł
           description: What do you want to achieve?
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: Detailed description of your goal
         category:
           $ref: '#/components/schemas/GoalCategoryEnum'
         status:
-          $ref: '#/components/schemas/GoalStatusEnum'
+          allOf:
+          - $ref: '#/components/schemas/GoalStatusEnum'
+          title: Stan
         start_date:
           type: string
           format: date
@@ -4128,10 +5436,91 @@ components:
         is_overdue:
           type: boolean
           readOnly: true
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          default: private
+        shared_with_groups:
+          type: array
+          items:
+            type: integer
+        shared_with_group_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
         created_at:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedGroupDetail:
+      type: object
+      description: Serializer for group detail view.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nazwa
+          description: Group display name
+          maxLength: 100
+        slug:
+          type: string
+          readOnly: true
+          description: Unique URL-friendly identifier
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+          title: Opis
+          description: Group description
+        icon:
+          type: string
+          description: Emoji icon for the group
+          maxLength: 10
+        color:
+          type: string
+          description: Hex color for the group
+          maxLength: 7
+        is_public:
+          type: boolean
+          description: Public groups can be discovered and joined by anyone
+        allow_member_invites:
+          type: boolean
+          description: Allow non-admin members to invite others
+        owner:
+          allOf:
+          - $ref: '#/components/schemas/GroupUser'
+          readOnly: true
+        member_count:
+          type: integer
+          readOnly: true
+        admin_count:
+          type: integer
+          readOnly: true
+        is_member:
+          type: boolean
+          readOnly: true
+        user_role:
+          type: string
+          nullable: true
+          readOnly: true
+        can_edit:
+          type: boolean
+          readOnly: true
+        can_invite:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Stworzony w
         updated_at:
           type: string
           format: date-time
@@ -4147,13 +5536,17 @@ components:
           type: integer
         title:
           type: string
+          title: Tytuł
           description: Milestone title
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: What does achieving this milestone mean?
         status:
-          $ref: '#/components/schemas/MilestoneStatusEnum'
+          allOf:
+          - $ref: '#/components/schemas/MilestoneStatusEnum'
+          title: Stan
         order:
           type: integer
           maximum: 2147483647
@@ -4200,6 +5593,55 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedNotificationPreference:
+      type: object
+      description: Serializer for NotificationPreference.
+      properties:
+        notifications_enabled:
+          type: boolean
+          description: Master switch for all notifications
+        push_enabled:
+          type: boolean
+          title: Push notifications enabled
+          description: Receive push notifications on mobile
+        email_enabled:
+          type: boolean
+          title: Email notifications enabled
+          description: Receive notifications via email
+        regular_task_reminders:
+          title: Regular task reminder times
+          description: List of reminder times for regular tasks, e.g., ['6h', '1h']
+        daily_reminder_enabled:
+          type: boolean
+          title: Daily recurring reminder
+          description: Remind about incomplete daily tasks
+        daily_reminder_hours_before:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Hours before day end
+          description: Hours before midnight to send daily task reminder
+        quiet_hours_enabled:
+          type: boolean
+          description: Don't send notifications during quiet hours
+        quiet_hours_start:
+          type: string
+          format: time
+          description: Start of quiet hours (HH:MM)
+        quiet_hours_end:
+          type: string
+          format: time
+          description: End of quiet hours (HH:MM)
+        push_token:
+          type: string
+          title: Push notification token
+          description: Expo push token for mobile notifications
+          maxLength: 512
         updated_at:
           type: string
           format: date-time
@@ -4213,10 +5655,12 @@ components:
           readOnly: true
         title:
           type: string
+          title: Tytuł
           description: Task title
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: Detailed description of the task
         status:
           type: string
@@ -4242,6 +5686,19 @@ components:
           type: integer
           writeOnly: true
           nullable: true
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          default: private
+        shared_with_groups:
+          type: array
+          items:
+            type: integer
+        shared_with_group_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
         is_recurring:
           type: boolean
           description: Whether this task repeats on a schedule
@@ -4377,6 +5834,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
         updated_at:
           type: string
           format: date-time
@@ -4413,10 +5871,12 @@ components:
           readOnly: true
         name:
           type: string
+          title: Nazwa
           description: Group name
           maxLength: 100
         description:
           type: string
+          title: Opis
           description: Optional description of this task group
         color:
           type: string
@@ -4439,6 +5899,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
         updated_at:
           type: string
           format: date-time
@@ -4454,28 +5915,32 @@ components:
           type: string
           format: email
           readOnly: true
-          title: Email address
+          title: Adres e-mail
           description: Required. A valid email address.
         username:
           type: string
+          title: Nazwa użytkownika
           description: Display name shown in the app.
           maxLength: 50
         first_name:
           type: string
+          title: Imię
           maxLength: 150
         last_name:
           type: string
+          title: Nazwisko
           maxLength: 150
         date_joined:
           type: string
           format: date-time
           readOnly: true
+          title: Data dołączenia
         is_active:
           type: boolean
           readOnly: true
-          title: Active
-          description: Designates whether this user should be treated as active. Unselect
-            this instead of deleting accounts.
+          title: Aktywny
+          description: Określa czy użytkownika należy uważać za aktywnego. Odznacz
+            zamiast usuwać konto.
     QuestionAnswer:
       type: object
       description: A single question-answer pair.
@@ -4519,6 +5984,16 @@ components:
           maxLength: 512
       required:
       - push_token
+    RoleEnum:
+      enum:
+      - member
+      - moderator
+      - admin
+      type: string
+      description: |-
+        * `member` - Member
+        * `moderator` - Moderator
+        * `admin` - Admin
     Status259Enum:
       enum:
       - pending
@@ -4596,10 +6071,12 @@ components:
           readOnly: true
         title:
           type: string
+          title: Tytuł
           description: Task title
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: Detailed description of the task
         status:
           type: string
@@ -4625,6 +6102,19 @@ components:
           type: integer
           writeOnly: true
           nullable: true
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          default: private
+        shared_with_groups:
+          type: array
+          items:
+            type: integer
+        shared_with_group_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
         is_recurring:
           type: boolean
           description: Whether this task repeats on a schedule
@@ -4760,6 +6250,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
         updated_at:
           type: string
           format: date-time
@@ -4856,10 +6347,12 @@ components:
           readOnly: true
         name:
           type: string
+          title: Nazwa
           description: Group name
           maxLength: 100
         description:
           type: string
+          title: Opis
           description: Optional description of this task group
         color:
           type: string
@@ -4882,6 +6375,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
         updated_at:
           type: string
           format: date-time
@@ -4902,6 +6396,7 @@ components:
           readOnly: true
         name:
           type: string
+          title: Nazwa
           description: Group name
           maxLength: 100
         color:
@@ -4931,10 +6426,12 @@ components:
           readOnly: true
         title:
           type: string
+          title: Tytuł
           description: Task title
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: Detailed description of the task
         status:
           type: string
@@ -4987,6 +6484,10 @@ components:
           allOf:
           - $ref: '#/components/schemas/TaskGroupList'
           readOnly: true
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          readOnly: true
         unit_type:
           nullable: true
           description: |-
@@ -5036,6 +6537,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
       required:
       - created_at
       - goal_display
@@ -5048,6 +6550,7 @@ components:
       - status
       - title
       - unit_display_name
+      - visibility
     TaskPriorityEnum:
       enum:
       - low
@@ -5091,10 +6594,12 @@ components:
           readOnly: true
         title:
           type: string
+          title: Tytuł
           description: Task title
           maxLength: 255
         description:
           type: string
+          title: Opis
           description: Detailed description of the task
         status:
           type: string
@@ -5120,6 +6625,19 @@ components:
           type: integer
           writeOnly: true
           nullable: true
+        visibility:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityEnum'
+          default: private
+        shared_with_groups:
+          type: array
+          items:
+            type: integer
+        shared_with_group_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
         is_recurring:
           type: boolean
           description: Whether this task repeats on a schedule
@@ -5255,6 +6773,7 @@ components:
           type: string
           format: date-time
           readOnly: true
+          title: Stworzony w
         updated_at:
           type: string
           format: date-time
@@ -5329,6 +6848,14 @@ components:
         * `calories` - Calories
         * `steps` - Steps
         * `custom` - Custom unit
+    UpdateMembershipRole:
+      type: object
+      description: Serializer for updating a member's role.
+      properties:
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - role
     User:
       type: object
       description: Serializer for user profile.
@@ -5340,28 +6867,32 @@ components:
           type: string
           format: email
           readOnly: true
-          title: Email address
+          title: Adres e-mail
           description: Required. A valid email address.
         username:
           type: string
+          title: Nazwa użytkownika
           description: Display name shown in the app.
           maxLength: 50
         first_name:
           type: string
+          title: Imię
           maxLength: 150
         last_name:
           type: string
+          title: Nazwisko
           maxLength: 150
         date_joined:
           type: string
           format: date-time
           readOnly: true
+          title: Data dołączenia
         is_active:
           type: boolean
           readOnly: true
-          title: Active
-          description: Designates whether this user should be treated as active. Unselect
-            this instead of deleting accounts.
+          title: Aktywny
+          description: Określa czy użytkownika należy uważać za aktywnego. Odznacz
+            zamiast usuwać konto.
       required:
       - date_joined
       - email
@@ -5374,7 +6905,7 @@ components:
         email:
           type: string
           format: email
-          title: Email address
+          title: Adres e-mail
           description: Required. A valid email address.
           maxLength: 254
         password:
@@ -5385,15 +6916,27 @@ components:
           writeOnly: true
         first_name:
           type: string
+          title: Imię
           maxLength: 150
         username:
           type: string
+          title: Nazwa użytkownika
           description: Display name shown in the app.
           maxLength: 50
       required:
       - email
       - password
       - password_confirm
+    VisibilityEnum:
+      enum:
+      - private
+      - group
+      - public
+      type: string
+      description: |-
+        * `private` - Private
+        * `group` - Group
+        * `public` - Public
   securitySchemes:
     cookieAuth:
       type: apiKey

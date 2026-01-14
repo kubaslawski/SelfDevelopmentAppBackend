@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -26,6 +26,8 @@ from .permissions import (
 from .serializers import (
     AcceptInvitationSerializer,
     CreateInvitationSerializer,
+    ErrorResponseSerializer,
+    GroupActionResponseSerializer,
     GroupCreateSerializer,
     GroupDetailSerializer,
     GroupInvitationSerializer,
@@ -56,18 +58,21 @@ class GroupViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [IsAuthenticated]
+    queryset = Group.objects.none()  # Default for schema generation
 
     def get_queryset(self):
+        # Handle schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return Group.objects.none()
+        
         user = self.request.user
+        if user.is_anonymous:
+            return Group.objects.filter(is_public=True).distinct()
+        
         return Group.objects.filter(
             Q(owner=user) |
             Q(memberships__user=user, memberships__is_active=True) |
             Q(is_public=True)
-        ).annotate(
-            member_count=Count(
-                "memberships",
-                filter=Q(memberships__is_active=True),
-            )
         ).distinct().order_by("-created_at")
 
     def get_serializer_class(self):
@@ -84,7 +89,10 @@ class GroupViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsGroupOwner()]
         return [IsAuthenticated()]
 
-    @extend_schema(tags=["Groups"])
+    @extend_schema(
+        tags=["Groups"],
+        responses={200: GroupMembershipSerializer(many=True)},
+    )
     @action(detail=True, methods=["get"])
     def members(self, request, pk=None):
         """List all members of a group."""
@@ -105,7 +113,13 @@ class GroupViewSet(viewsets.ModelViewSet):
         serializer = GroupMembershipSerializer(memberships, many=True)
         return Response(serializer.data)
 
-    @extend_schema(tags=["Groups"])
+    @extend_schema(
+        tags=["Groups"],
+        responses={
+            200: GroupActionResponseSerializer,
+            400: ErrorResponseSerializer,
+        },
+    )
     @action(detail=True, methods=["post"])
     def leave(self, request, pk=None):
         """Leave a group."""
@@ -133,7 +147,14 @@ class GroupViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @extend_schema(tags=["Groups"])
+    @extend_schema(
+        tags=["Groups"],
+        responses={
+            200: GroupActionResponseSerializer,
+            400: ErrorResponseSerializer,
+            403: ErrorResponseSerializer,
+        },
+    )
     @action(detail=True, methods=["post"])
     def join(self, request, pk=None):
         """Join a public group."""
@@ -166,7 +187,19 @@ class GroupViewSet(viewsets.ModelViewSet):
             "membership_id": membership.id,
         })
 
-    @extend_schema(tags=["Groups"], request=UpdateMembershipRoleSerializer)
+    @extend_schema(
+        tags=["Groups"],
+        request=UpdateMembershipRoleSerializer,
+        responses={
+            200: GroupActionResponseSerializer,
+            400: ErrorResponseSerializer,
+            403: ErrorResponseSerializer,
+            404: ErrorResponseSerializer,
+        },
+        parameters=[
+            OpenApiParameter(name="user_id", type=int, location=OpenApiParameter.PATH),
+        ],
+    )
     @action(detail=True, methods=["post"], url_path="members/(?P<user_id>[^/.]+)/role")
     def update_member_role(self, request, pk=None, user_id=None):
         """Update a member's role (admin only)."""
@@ -209,7 +242,18 @@ class GroupViewSet(viewsets.ModelViewSet):
             "message": f"Role updated to {membership.role}",
         })
 
-    @extend_schema(tags=["Groups"])
+    @extend_schema(
+        tags=["Groups"],
+        responses={
+            200: GroupActionResponseSerializer,
+            400: ErrorResponseSerializer,
+            403: ErrorResponseSerializer,
+            404: ErrorResponseSerializer,
+        },
+        parameters=[
+            OpenApiParameter(name="user_id", type=int, location=OpenApiParameter.PATH),
+        ],
+    )
     @action(detail=True, methods=["post"], url_path="members/(?P<user_id>[^/.]+)/remove")
     def remove_member(self, request, pk=None, user_id=None):
         """Remove a member from the group (admin only)."""
@@ -253,7 +297,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 @extend_schema_view(
     list=extend_schema(tags=["Group Invitations"]),
     retrieve=extend_schema(tags=["Group Invitations"]),
-    create=extend_schema(tags=["Group Invitations"]),
+    create=extend_schema(tags=["Group Invitations"], request=CreateInvitationSerializer),
     destroy=extend_schema(tags=["Group Invitations"]),
 )
 class GroupInvitationViewSet(viewsets.ModelViewSet):
@@ -264,9 +308,17 @@ class GroupInvitationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = GroupInvitationSerializer
     http_method_names = ["get", "post", "delete"]
+    queryset = GroupInvitation.objects.none()  # Default for schema generation
 
     def get_queryset(self):
+        # Handle schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return GroupInvitation.objects.none()
+        
         user = self.request.user
+        if user.is_anonymous:
+            return GroupInvitation.objects.none()
+        
         # Show invitations user received or created
         return GroupInvitation.objects.filter(
             Q(invited_user=user) |
@@ -274,19 +326,12 @@ class GroupInvitationViewSet(viewsets.ModelViewSet):
             Q(invited_by=user)
         ).select_related("group", "invited_by", "invited_user").order_by("-created_at")
 
-    @extend_schema(tags=["Group Invitations"], request=CreateInvitationSerializer)
     def create(self, request, *args, **kwargs):
         """Create a new invitation."""
         serializer = CreateInvitationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        group_id = request.data.get("group_id")
-        if not group_id:
-            return Response(
-                {"error": "group_id is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        group_id = serializer.validated_data.get("group_id")
         group = get_object_or_404(Group, id=group_id)
 
         # Check if user can invite
@@ -329,7 +374,14 @@ class GroupInvitationViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    @extend_schema(tags=["Group Invitations"])
+    @extend_schema(
+        tags=["Group Invitations"],
+        responses={
+            200: GroupActionResponseSerializer,
+            400: ErrorResponseSerializer,
+            403: ErrorResponseSerializer,
+        },
+    )
     @action(detail=True, methods=["post"])
     def accept(self, request, pk=None):
         """Accept an invitation."""
@@ -361,7 +413,13 @@ class GroupInvitationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @extend_schema(tags=["Group Invitations"])
+    @extend_schema(
+        tags=["Group Invitations"],
+        responses={
+            200: GroupActionResponseSerializer,
+            403: ErrorResponseSerializer,
+        },
+    )
     @action(detail=True, methods=["post"])
     def decline(self, request, pk=None):
         """Decline an invitation."""
@@ -396,7 +454,15 @@ class GroupInvitationViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@extend_schema(tags=["Group Invitations"])
+@extend_schema(
+    tags=["Group Invitations"],
+    request=AcceptInvitationSerializer,
+    responses={
+        200: GroupActionResponseSerializer,
+        400: ErrorResponseSerializer,
+        404: ErrorResponseSerializer,
+    },
+)
 class AcceptInviteByCodeView(APIView):
     """
     Accept an invitation using invite code.
@@ -439,4 +505,3 @@ class AcceptInviteByCodeView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-

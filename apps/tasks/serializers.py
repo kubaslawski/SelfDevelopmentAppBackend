@@ -9,8 +9,9 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.goals.models import MilestoneTaskLink
+from apps.groups.models import Group
 
-from .models import Task, TaskCompletion, TaskGroup
+from .models import Task, TaskCompletion, TaskGroup, Visibility
 
 
 class TaskGroupSerializer(serializers.ModelSerializer):
@@ -119,7 +120,7 @@ class TaskSerializer(serializers.ModelSerializer):
     total_completions = serializers.SerializerMethodField()
     milestone_ids = serializers.SerializerMethodField()
 
-    # Group fields
+    # Group fields (TaskGroup - for organizing tasks)
     group = TaskGroupListSerializer(read_only=True)
     group_id = serializers.PrimaryKeyRelatedField(
         queryset=TaskGroup.objects.all(),
@@ -127,6 +128,22 @@ class TaskSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
         allow_null=True,
+    )
+
+    # Visibility fields
+    visibility = serializers.ChoiceField(
+        choices=Visibility.choices,
+        default=Visibility.PRIVATE,
+    )
+    shared_with_groups = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(),
+        many=True,
+        required=False,
+    )
+    shared_with_group_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        write_only=True,
+        required=False,
     )
 
     class Meta:
@@ -139,9 +156,13 @@ class TaskSerializer(serializers.ModelSerializer):
             "priority",
             "due_date",
             "completed_at",
-            # Group
+            # TaskGroup (for organizing)
             "group",
             "group_id",
+            # Visibility
+            "visibility",
+            "shared_with_groups",
+            "shared_with_group_ids",
             # Recurrence fields
             "is_recurring",
             "recurrence_period",
@@ -220,7 +241,50 @@ class TaskSerializer(serializers.ModelSerializer):
                     {"recurrence_period": "Recurrence period is required for recurring tasks."}
                 )
 
+        # Validate visibility with shared_with_groups
+        visibility = data.get("visibility", getattr(self.instance, "visibility", Visibility.PRIVATE) if self.instance else Visibility.PRIVATE)
+        shared_with_group_ids = data.get("shared_with_group_ids", [])
+        
+        if visibility == Visibility.GROUP and not shared_with_group_ids:
+            # Check if instance already has groups
+            if not (self.instance and self.instance.shared_with_groups.exists()):
+                raise serializers.ValidationError(
+                    {"shared_with_group_ids": "At least one group is required when visibility is 'group'."}
+                )
+
         return data
+
+    def create(self, validated_data):
+        """Create task with shared_with_groups handling."""
+        shared_with_group_ids = validated_data.pop("shared_with_group_ids", [])
+        shared_with_groups = validated_data.pop("shared_with_groups", [])
+        
+        task = super().create(validated_data)
+        
+        # Handle shared_with_group_ids (write_only)
+        if shared_with_group_ids:
+            groups = Group.objects.filter(id__in=shared_with_group_ids)
+            task.shared_with_groups.set(groups)
+        elif shared_with_groups:
+            task.shared_with_groups.set(shared_with_groups)
+        
+        return task
+
+    def update(self, instance, validated_data):
+        """Update task with shared_with_groups handling."""
+        shared_with_group_ids = validated_data.pop("shared_with_group_ids", None)
+        shared_with_groups = validated_data.pop("shared_with_groups", None)
+        
+        instance = super().update(instance, validated_data)
+        
+        # Handle shared_with_group_ids (write_only)
+        if shared_with_group_ids is not None:
+            groups = Group.objects.filter(id__in=shared_with_group_ids)
+            instance.shared_with_groups.set(groups)
+        elif shared_with_groups is not None:
+            instance.shared_with_groups.set(shared_with_groups)
+        
+        return instance
 
 
 class TaskListSerializer(serializers.ModelSerializer):
@@ -240,6 +304,9 @@ class TaskListSerializer(serializers.ModelSerializer):
     # Group - lightweight version with just essential fields
     group = TaskGroupListSerializer(read_only=True)
 
+    # Visibility
+    visibility = serializers.ChoiceField(choices=Visibility.choices, read_only=True)
+
     class Meta:
         model = Task
         fields = [
@@ -257,6 +324,8 @@ class TaskListSerializer(serializers.ModelSerializer):
             "is_period_complete",
             # Group
             "group",
+            # Visibility
+            "visibility",
             # Goal/target fields
             "unit_type",
             "custom_unit_name",
