@@ -1,6 +1,7 @@
 """
 Filters for the Tasks app.
 """
+
 import django_filters
 
 from .models import Task, TaskCompletion
@@ -23,45 +24,28 @@ class TaskFilter(django_filters.FilterSet):
     """
 
     due_date_before = django_filters.DateTimeFilter(
-        field_name='due_date',
-        lookup_expr='lte',
-        label='Due before'
+        field_name="due_date", lookup_expr="lte", label="Due before"
     )
     due_date_after = django_filters.DateTimeFilter(
-        field_name='due_date',
-        lookup_expr='gte',
-        label='Due after'
+        field_name="due_date", lookup_expr="gte", label="Due after"
     )
     created_after = django_filters.DateTimeFilter(
-        field_name='created_at',
-        lookup_expr='gte',
-        label='Created after'
+        field_name="created_at", lookup_expr="gte", label="Created after"
     )
     created_before = django_filters.DateTimeFilter(
-        field_name='created_at',
-        lookup_expr='lte',
-        label='Created before'
+        field_name="created_at", lookup_expr="lte", label="Created before"
     )
     tags_contains = django_filters.CharFilter(
-        field_name='tags',
-        lookup_expr='icontains',
-        label='Tags contain'
+        field_name="tags", lookup_expr="icontains", label="Tags contain"
     )
     has_due_date = django_filters.BooleanFilter(
-        field_name='due_date',
-        lookup_expr='isnull',
-        exclude=True,
-        label='Has due date'
+        field_name="due_date", lookup_expr="isnull", exclude=True, label="Has due date"
     )
     recurrence_end_before = django_filters.DateFilter(
-        field_name='recurrence_end_date',
-        lookup_expr='lte',
-        label='Recurrence ends before'
+        field_name="recurrence_end_date", lookup_expr="lte", label="Recurrence ends before"
     )
     recurrence_end_after = django_filters.DateFilter(
-        field_name='recurrence_end_date',
-        lookup_expr='gte',
-        label='Recurrence ends after'
+        field_name="recurrence_end_date", lookup_expr="gte", label="Recurrence ends after"
     )
     goal = django_filters.NumberFilter(
         method="filter_goal",
@@ -75,22 +59,29 @@ class TaskFilter(django_filters.FilterSet):
         method="filter_milestone",
         label="Filter by milestone id",
     )
+    group = django_filters.NumberFilter(
+        field_name="group_id",
+        label="Filter by group id",
+    )
+    group_none = django_filters.BooleanFilter(
+        method="filter_group_none",
+        label="Without group",
+    )
 
     class Meta:
         model = Task
         fields = {
-            'status': ['exact', 'in'],
-            'priority': ['exact', 'in'],
-            'is_recurring': ['exact'],
-            'recurrence_period': ['exact', 'in'],
+            "status": ["exact", "in"],
+            "priority": ["exact", "in"],
+            "is_recurring": ["exact"],
+            "recurrence_period": ["exact", "in"],
+            "group": ["exact"],
         }
 
     def filter_goal(self, queryset, name, value):
         if value is None:
             return queryset
-        return queryset.filter(
-            milestone_links__milestone__goal_id=value
-        ).distinct()
+        return queryset.filter(milestone_links__milestone__goal_id=value).distinct()
 
     def filter_goal_none(self, queryset, name, value):
         if value:
@@ -100,9 +91,12 @@ class TaskFilter(django_filters.FilterSet):
     def filter_milestone(self, queryset, name, value):
         if value is None:
             return queryset
-        return queryset.filter(
-            milestone_links__milestone_id=value
-        ).distinct()
+        return queryset.filter(milestone_links__milestone_id=value).distinct()
+
+    def filter_group_none(self, queryset, name, value):
+        if value:
+            return queryset.filter(group__isnull=True)
+        return queryset
 
 
 class TaskCompletionFilter(django_filters.FilterSet):
@@ -115,23 +109,17 @@ class TaskCompletionFilter(django_filters.FilterSet):
     """
 
     completed_after = django_filters.DateTimeFilter(
-        field_name='completed_at',
-        lookup_expr='gte',
-        label='Completed after'
+        field_name="completed_at", lookup_expr="gte", label="Completed after"
     )
     completed_before = django_filters.DateTimeFilter(
-        field_name='completed_at',
-        lookup_expr='lte',
-        label='Completed before'
+        field_name="completed_at", lookup_expr="lte", label="Completed before"
     )
     completed_on = django_filters.DateFilter(
-        field_name='completed_at',
-        lookup_expr='date',
-        label='Completed on date'
+        field_name="completed_at", lookup_expr="date", label="Completed on date"
     )
 
     class Meta:
         model = TaskCompletion
         fields = {
-            'task': ['exact'],
+            "task": ["exact"],
         }

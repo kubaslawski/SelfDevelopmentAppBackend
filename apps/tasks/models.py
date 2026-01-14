@@ -24,6 +24,71 @@ class TimeStampedModel(models.Model):
         abstract = True
 
 
+class TaskGroup(TimeStampedModel):
+    """
+    Group/family of related tasks.
+
+    Allows organizing tasks into logical groups (e.g., "German Learning",
+    "Fitness", "Work Projects").
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="task_groups",
+        verbose_name=_("user"),
+    )
+    name = models.CharField(
+        _("name"),
+        max_length=100,
+        help_text=_("Group name"),
+    )
+    description = models.TextField(
+        _("description"),
+        blank=True,
+        default="",
+        help_text=_("Optional description of this task group"),
+    )
+    color = models.CharField(
+        _("color"),
+        max_length=7,
+        blank=True,
+        default="",
+        help_text=_("Hex color code for UI (e.g., #FF5733)"),
+    )
+    icon = models.CharField(
+        _("icon"),
+        max_length=64,
+        blank=True,
+        default="",
+        help_text=_("Icon name for UI (e.g., material-community icon key)"),
+    )
+    is_active = models.BooleanField(
+        _("is active"),
+        default=True,
+        help_text=_("Whether this group is active"),
+    )
+
+    class Meta:
+        verbose_name = _("task group")
+        verbose_name_plural = _("task groups")
+        ordering = ["name"]
+        unique_together = ["user", "name"]
+
+    def __str__(self) -> str:
+        return self.name
+
+    @property
+    def task_count(self) -> int:
+        """Number of tasks in this group."""
+        return self.tasks.count()
+
+    @property
+    def completed_task_count(self) -> int:
+        """Number of completed tasks in this group."""
+        return self.tasks.filter(status=Task.Status.COMPLETED).count()
+
+
 class Task(TimeStampedModel):
     """
     Task model representing a self-development task or goal.
@@ -119,6 +184,15 @@ class Task(TimeStampedModel):
         null=True,
         blank=True,
         help_text=_("Goal this task belongs to (auto-deleted with goal)"),
+    )
+    group = models.ForeignKey(
+        TaskGroup,
+        on_delete=models.CASCADE,
+        related_name="tasks",
+        verbose_name=_("task group"),
+        null=True,
+        blank=True,
+        help_text=_("Optional group/family this task belongs to (deleted with group)"),
     )
 
     # Recurrence settings

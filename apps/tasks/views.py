@@ -8,13 +8,17 @@ from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .filters import TaskFilter, TaskCompletionFilter
-from .models import Task, TaskCompletion
+from rest_framework.permissions import IsAuthenticated
+
+from .filters import TaskCompletionFilter, TaskFilter
+from .models import Task, TaskCompletion, TaskGroup
 from .serializers import (
     SyncCompletionsResponseSerializer,
     SyncCompletionsSerializer,
     TaskCompletionCreateSerializer,
     TaskCompletionSerializer,
+    TaskGroupListSerializer,
+    TaskGroupSerializer,
     TaskListSerializer,
     TaskSerializer,
     TaskStatusUpdateSerializer,
@@ -429,3 +433,40 @@ class TaskCompletionViewSet(viewsets.ModelViewSet):
         if task_id:
             queryset = queryset.filter(task_id=task_id)
         return queryset
+
+
+@extend_schema_view(
+    list=extend_schema(tags=["Task Groups"]),
+    create=extend_schema(tags=["Task Groups"]),
+    retrieve=extend_schema(tags=["Task Groups"]),
+    update=extend_schema(tags=["Task Groups"]),
+    partial_update=extend_schema(tags=["Task Groups"]),
+    destroy=extend_schema(tags=["Task Groups"]),
+)
+class TaskGroupViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing task groups.
+
+    Task groups allow organizing tasks into logical collections
+    (e.g., "German Learning", "Fitness", "Work Projects").
+    """
+
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["name", "description"]
+    ordering_fields = ["name", "created_at"]
+    ordering = ["name"]
+
+    def get_queryset(self):
+        """Filter groups to current user only."""
+        return TaskGroup.objects.filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        """Use list serializer for list action."""
+        if self.action == "list":
+            return TaskGroupListSerializer
+        return TaskGroupSerializer
+
+    def perform_create(self, serializer):
+        """Set the user when creating a group."""
+        serializer.save(user=self.request.user)

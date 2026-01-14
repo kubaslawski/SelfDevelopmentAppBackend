@@ -5,7 +5,86 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import Task, TaskCompletion
+from .models import Task, TaskCompletion, TaskGroup
+
+
+@admin.register(TaskGroup)
+class TaskGroupAdmin(admin.ModelAdmin):
+    """Admin interface for TaskGroup model."""
+
+    list_display = [
+        "id",
+        "name",
+        "user",
+        "color_preview",
+        "task_count",
+        "is_active",
+        "created_at",
+    ]
+    list_filter = ["is_active", "created_at"]
+    search_fields = ["name", "description"]
+    ordering = ["name"]
+    readonly_fields = ["created_at", "updated_at", "task_count", "completed_task_count"]
+
+    fieldsets = (
+        (
+            "Basic Information",
+            {
+                "fields": ("name", "description", "user"),
+            },
+        ),
+        (
+            "Appearance",
+            {
+                "fields": ("color", "icon"),
+            },
+        ),
+        (
+            "Status",
+            {
+                "fields": ("is_active",),
+            },
+        ),
+        (
+            "Statistics",
+            {
+                "fields": ("task_count", "completed_task_count"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Timestamps",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def color_preview(self, obj):
+        """Display color as a colored square."""
+        if obj.color:
+            return format_html(
+                '<span style="display: inline-block; width: 20px; height: 20px; '
+                'background-color: {}; border: 1px solid #ccc; border-radius: 3px;"></span> {}',
+                obj.color,
+                obj.color,
+            )
+        return "-"
+
+    color_preview.short_description = "Color"
+
+    def task_count(self, obj):
+        """Display task count."""
+        return obj.task_count
+
+    task_count.short_description = "Tasks"
+
+    def completed_task_count(self, obj):
+        """Display completed task count."""
+        return obj.completed_task_count
+
+    completed_task_count.short_description = "Completed"
 
 
 class TaskCompletionInline(admin.TabularInline):
@@ -32,6 +111,7 @@ class TaskAdmin(admin.ModelAdmin):
         'title',
         'status_badge',
         'priority_badge',
+        'group_badge',
         'goal_badge',
         'recurrence_badge',
         'due_date',
@@ -43,6 +123,7 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = [
         'status',
         'priority',
+        'group',
         'unit_type',
         'is_recurring',
         'recurrence_period',
@@ -82,7 +163,7 @@ class TaskAdmin(admin.ModelAdmin):
             'fields': ('due_date', 'estimated_duration')
         }),
         ('Metadata', {
-            'fields': ('tags', 'user')
+            'fields': ('tags', 'user', 'group')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at', 'completed_at'),
@@ -125,6 +206,20 @@ class TaskAdmin(admin.ModelAdmin):
         )
     priority_badge.short_description = 'Priority'
     priority_badge.admin_order_field = 'priority'
+
+    def group_badge(self, obj):
+        """Display task group as a colored badge."""
+        if not obj.group:
+            return '-'
+        color = obj.group.color if obj.group.color else '#6c757d'
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 8px; '
+            'border-radius: 3px; font-size: 11px;">{}</span>',
+            color,
+            obj.group.name
+        )
+    group_badge.short_description = 'Group'
+    group_badge.admin_order_field = 'group__name'
 
     def goal_badge(self, obj):
         """Display goal/target as a badge."""

@@ -10,7 +10,47 @@ from rest_framework import serializers
 
 from apps.goals.models import MilestoneTaskLink
 
-from .models import Task, TaskCompletion
+from .models import Task, TaskCompletion, TaskGroup
+
+
+class TaskGroupSerializer(serializers.ModelSerializer):
+    """Serializer for TaskGroup model."""
+
+    task_count = serializers.IntegerField(read_only=True)
+    completed_task_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = TaskGroup
+        fields = [
+            "id",
+            "name",
+            "description",
+            "color",
+            "icon",
+            "is_active",
+            "task_count",
+            "completed_task_count",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class TaskGroupListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for listing task groups."""
+
+    task_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = TaskGroup
+        fields = [
+            "id",
+            "name",
+            "color",
+            "icon",
+            "is_active",
+            "task_count",
+        ]
 
 
 class TaskCompletionSerializer(serializers.ModelSerializer):
@@ -79,6 +119,16 @@ class TaskSerializer(serializers.ModelSerializer):
     total_completions = serializers.SerializerMethodField()
     milestone_ids = serializers.SerializerMethodField()
 
+    # Group fields
+    group = TaskGroupListSerializer(read_only=True)
+    group_id = serializers.PrimaryKeyRelatedField(
+        queryset=TaskGroup.objects.all(),
+        source="group",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
     class Meta:
         model = Task
         fields = [
@@ -89,6 +139,9 @@ class TaskSerializer(serializers.ModelSerializer):
             "priority",
             "due_date",
             "completed_at",
+            # Group
+            "group",
+            "group_id",
             # Recurrence fields
             "is_recurring",
             "recurrence_period",
@@ -184,6 +237,9 @@ class TaskListSerializer(serializers.ModelSerializer):
     milestone_ids = serializers.SerializerMethodField()
     goal_icon = serializers.SerializerMethodField()
 
+    # Group - lightweight version with just essential fields
+    group = TaskGroupListSerializer(read_only=True)
+
     class Meta:
         model = Task
         fields = [
@@ -199,6 +255,8 @@ class TaskListSerializer(serializers.ModelSerializer):
             "recurrence_target_count",
             "is_overdue",
             "is_period_complete",
+            # Group
+            "group",
             # Goal/target fields
             "unit_type",
             "custom_unit_name",
