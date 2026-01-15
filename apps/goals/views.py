@@ -246,6 +246,8 @@ class GoalViewSet(viewsets.ModelViewSet):
         serializer = SubmitAnswersSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         answers = serializer.validated_data["answers"]
+        num_milestones = serializer.validated_data.get("num_milestones", 5)
+        tasks_per_milestone = serializer.validated_data.get("tasks_per_milestone", 3)
 
         # Update goal status to planning
         goal.status = Goal.Status.PLANNING
@@ -263,7 +265,13 @@ class GoalViewSet(viewsets.ModelViewSet):
                 for a in answers
             ]
 
-            plan = generate_plan(goal=goal, answers=answer_entities, user_id=request.user.id)
+            plan = generate_plan(
+                goal=goal,
+                answers=answer_entities,
+                user_id=request.user.id,
+                num_milestones=num_milestones,
+                tasks_per_milestone=tasks_per_milestone,
+            )
             save_plan(goal, plan)
 
             return Response(

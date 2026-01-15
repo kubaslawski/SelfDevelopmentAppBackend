@@ -110,6 +110,12 @@ class GroupViewSet(viewsets.ModelViewSet):
             is_active=True,
         ).select_related("user").order_by("-role", "joined_at")
 
+        # Use pagination
+        page = self.paginate_queryset(memberships)
+        if page is not None:
+            serializer = GroupMembershipSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = GroupMembershipSerializer(memberships, many=True)
         return Response(serializer.data)
 

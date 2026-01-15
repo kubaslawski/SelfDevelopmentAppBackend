@@ -289,6 +289,20 @@ class SubmitAnswersSerializer(serializers.Serializer):
         many=True,
         help_text="List of question-answer pairs",
     )
+    num_milestones = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        max_value=10,
+        default=5,
+        help_text="Number of milestones to generate (1-10)",
+    )
+    tasks_per_milestone = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        max_value=6,
+        default=3,
+        help_text="Number of tasks per milestone (1-6)",
+    )
 
 
 class GeneratedQuestionSerializer(serializers.Serializer):

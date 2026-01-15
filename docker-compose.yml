@@ -17,6 +17,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - sda-network
 
   redis:
     image: redis:7-alpine
@@ -30,6 +32,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - sda-network
 
   web:
     build:
@@ -61,6 +65,8 @@ services:
     # Auto-restart on code changes (Django runserver handles this)
     stdin_open: true
     tty: true
+    networks:
+      - sda-network
 
   celery-worker:
     build:
@@ -85,6 +91,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - sda-network
 
   celery-beat:
     build:
@@ -109,6 +117,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - sda-network
+
+networks:
+  sda-network:
+    driver: bridge
 
 volumes:
   postgres_data:

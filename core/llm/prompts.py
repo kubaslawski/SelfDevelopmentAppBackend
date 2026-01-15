@@ -92,61 +92,28 @@ GOAL_PLAN_TEMPLATE = """Based on the following information, create a detailed, g
 ## Target Date
 {target_date}
 
-## CRITICAL: Milestone Duration Rules
+## CRITICAL: Plan Size Requirements
 
-**EVERY milestone MUST be exactly 1 week (7 days) or less.**
+**YOU MUST CREATE EXACTLY {num_milestones} MILESTONES with EXACTLY {tasks_per_milestone} TASKS EACH.**
 
-Calculate the total weeks from today to target_date and create that many weekly milestones:
-- 1 month goal = 4 weekly milestones
-- 2 months = 8 weekly milestones
-- 3 months = 12 weekly milestones
-- 6 months = 24 weekly milestones
-- 12 months = 52 weekly milestones
+This is a strict requirement. Do not create more or fewer milestones/tasks.
 
-DO NOT create monthly milestones. Always break down into weeks.
+## Milestone Structure
 
-## Progressive Learning Structure
+Distribute the milestones evenly across the timeline from today to target_date:
+- First milestone: Foundation & Setup
+- Middle milestones: Progressive skill building
+- Final milestone: Achievement & completion
 
-Each week should have a SPECIFIC, MEASURABLE focus:
-
-### Week 1: Foundation & Setup
-- Research best learning methods/resources
-- Purchase/acquire necessary materials
-- Set up learning environment
-- Find mentor/teacher/community if needed
-- Create learning schedule
-
-### Week 2-3: Absolute Basics
-- Learn the most fundamental concepts
-- Start with easiest exercises
-- Build daily habit (even 15 min/day)
-- Track progress from day 1
-
-### Week 4-8: Building Blocks
-- Progressively harder concepts
-- Regular practice sessions
-- First small achievements
-- Identify weaknesses early
-
-### Remaining weeks until 80%: Skill Development
-- Each week focuses on ONE specific skill/topic
-- Week N: "Master [specific topic]"
-- Include practice, review, and application
-- Mini-milestones and checkpoints
-
-### Final 20% of time: Achievement Preparation
-- Review all material
-- Mock tests/practice runs
-- Final polishing
-- The actual achievement
+Each milestone should have a clear, specific focus and measurable outcomes.
 
 ## Task Requirements
 
-Each weekly milestone should have 4-8 tasks:
-- Daily practice task (recurring, 15-60 min)
-- 2-3 learning tasks (new material)
-- 1-2 review tasks (consolidation)
-- 1 assessment task (end of week check)
+Each milestone should have exactly {tasks_per_milestone} tasks that are:
+- Specific and actionable
+- Completable in 30 minutes to 2 hours
+- A mix of learning, practice, and assessment
+- Properly prioritized (high/medium/low)
 
 Tasks should be completable in 30 minutes to 2 hours maximum.
 
@@ -236,8 +203,10 @@ def format_generate_questions_prompt(goal_description: str) -> str:
 def format_goal_plan_prompt(
     goal_title: str,
     goal_description: str,
-    answers: dict | list,
+    answers_text: str,
     target_date: str,
+    num_milestones: int = 5,
+    tasks_per_milestone: int = 3,
 ) -> str:
     """
     Format the goal planning prompt with user's data.
@@ -245,29 +214,21 @@ def format_goal_plan_prompt(
     Args:
         goal_title: The title of the goal.
         goal_description: Detailed description of the goal.
-        answers: Dictionary or list of user's answers to questions.
+        answers_text: Pre-formatted answers string (Q: ... A: ...).
         target_date: Target completion date (YYYY-MM-DD format).
+        num_milestones: Number of milestones to generate (1-10).
+        tasks_per_milestone: Number of tasks per milestone (1-6).
 
     Returns:
         Formatted prompt string.
     """
-    # Format answers as readable text
-    if isinstance(answers, dict):
-        formatted_answers = "\n".join(f"- **{key}**: {value}" for key, value in answers.items())
-    elif isinstance(answers, list):
-        # List of {question, answer} objects
-        formatted_answers = "\n".join(
-            f"- **Q**: {item.get('question', 'Question')}\n  **A**: {item.get('answer', 'No answer')}"
-            for item in answers
-        )
-    else:
-        formatted_answers = str(answers)
-
     return GOAL_PLAN_TEMPLATE.format(
         goal_title=goal_title,
         goal_description=goal_description or "No additional description provided.",
-        answers=formatted_answers,
+        answers=answers_text,
         target_date=target_date,
+        num_milestones=num_milestones,
+        tasks_per_milestone=tasks_per_milestone,
     )
 
 

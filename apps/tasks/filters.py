@@ -67,6 +67,10 @@ class TaskFilter(django_filters.FilterSet):
         method="filter_group_none",
         label="Without group",
     )
+    shared_with_group = django_filters.NumberFilter(
+        method="filter_shared_with_group",
+        label="Filter tasks shared with a specific group",
+    )
 
     class Meta:
         model = Task
@@ -97,6 +101,12 @@ class TaskFilter(django_filters.FilterSet):
         if value:
             return queryset.filter(group__isnull=True)
         return queryset
+
+    def filter_shared_with_group(self, queryset, name, value):
+        """Filter tasks that are shared with a specific group."""
+        if value is None:
+            return queryset
+        return queryset.filter(shared_with_groups__id=value).distinct()
 
 
 class TaskCompletionFilter(django_filters.FilterSet):

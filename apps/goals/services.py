@@ -107,11 +107,22 @@ def _fallback_questions() -> List[GeneratedQuestion]:
 
 
 def generate_plan(
-    goal: Goal, answers: List[QuestionAnswer], user_id: int
+    goal: Goal,
+    answers: List[QuestionAnswer],
+    user_id: int,
+    num_milestones: int = 5,
+    tasks_per_milestone: int = 3,
 ) -> GeneratedPlan:
     """
     Generate a plan (milestones + tasks) using Gemini.
     Returns a GeneratedPlan entity.
+    
+    Args:
+        goal: The goal to generate a plan for.
+        answers: User's answers to the generated questions.
+        user_id: The user's ID (for rate limiting).
+        num_milestones: Number of milestones to generate (1-10).
+        tasks_per_milestone: Number of tasks per milestone (1-6).
     """
     # Format answers for prompt
     answers_text = "\n".join(
@@ -123,6 +134,8 @@ def generate_plan(
         goal_description=goal.description or "",
         answers=answers_text,
         target_date=goal.target_date.isoformat(),
+        num_milestones=num_milestones,
+        tasks_per_milestone=tasks_per_milestone,
     )
 
     response = gemini_client.generate_json(

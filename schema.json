@@ -2696,6 +2696,268 @@ paths:
       responses:
         '200':
           description: No response body
+  /api/v1/stats/compare/month/:
+    get:
+      operationId: stats_compare_month
+      description: Compare this month vs last month.
+      summary: Compare months
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComparisonResult'
+          description: ''
+  /api/v1/stats/compare/week/:
+    get:
+      operationId: stats_compare_week
+      description: Compare this week vs last week.
+      summary: Compare weeks
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComparisonResult'
+          description: ''
+  /api/v1/stats/dashboard/:
+    get:
+      operationId: stats_dashboard
+      description: 'Get combined stats: streak, today, this week, records, top habits,
+        active goals'
+      summary: Get dashboard stats
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+          description: ''
+  /api/v1/stats/goals/:
+    get:
+      operationId: stats_goals_list
+      description: Get summary of all goals progress.
+      summary: Get goals progress
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalsSummary'
+          description: ''
+  /api/v1/stats/goals/{goal_id}/:
+    get:
+      operationId: stats_goals_detail
+      description: Get progress for a specific goal.
+      summary: Get goal progress
+      parameters:
+      - in: path
+        name: goal_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalProgress'
+          description: ''
+  /api/v1/stats/groups/{group_id}/leaderboard/:
+    get:
+      operationId: stats_group_leaderboard
+      description: Get leaderboard for a specific group.
+      summary: Get group leaderboard
+      parameters:
+      - in: path
+        name: group_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: period
+        schema:
+          type: string
+          default: week
+        description: 'Period type: ''week'' or ''month'''
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupLeaderboard'
+          description: ''
+  /api/v1/stats/habits/:
+    get:
+      operationId: stats_habits_list
+      description: Get summary of all habits.
+      summary: Get habits performance
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HabitSummary'
+          description: ''
+  /api/v1/stats/habits/{task_id}/:
+    get:
+      operationId: stats_habits_detail
+      description: Get performance for a specific recurring task.
+      summary: Get habit performance
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HabitPerformance'
+          description: ''
+  /api/v1/stats/productivity/:
+    get:
+      operationId: stats_productivity_get
+      description: Get daily productivity stats.
+      summary: Get daily productivity
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: Specific date (YYYY-MM-DD). Defaults to today.
+      - in: query
+        name: end_date
+        schema:
+          type: string
+        description: End date for range (YYYY-MM-DD)
+      - in: query
+        name: start_date
+        schema:
+          type: string
+        description: Start date for range (YYYY-MM-DD)
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductivitySummary'
+          description: ''
+  /api/v1/stats/records/:
+    get:
+      operationId: stats_records_get
+      description: Get all personal records.
+      summary: Get personal records
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalRecordsSummary'
+          description: ''
+  /api/v1/stats/streak/:
+    get:
+      operationId: stats_streak_get
+      description: Get current user's streak.
+      summary: Get user streak
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStreak'
+          description: ''
+    post:
+      operationId: stats_streak_recalculate
+      description: Recalculate streak from task completion history. Use if streak
+        seems incorrect.
+      summary: Recalculate streak
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStreak'
+          description: ''
+  /api/v1/stats/today/:
+    get:
+      operationId: stats_today_get
+      description: Get today's productivity stats.
+      summary: Get today's stats
+      tags:
+      - Stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyProductivity'
+          description: ''
   /api/v1/task-groups/:
     get:
       operationId: v1_task_groups_list
@@ -3058,6 +3320,11 @@ paths:
         description: A search term.
         schema:
           type: string
+      - in: query
+        name: shared_with_group
+        schema:
+          type: number
+        description: Filter tasks shared with a specific group
       - in: query
         name: status
         schema:
@@ -3749,6 +4016,46 @@ components:
       - new_password
       - new_password_confirm
       - old_password
+    ComparisonResult:
+      type: object
+      description: Comparison between two periods.
+      properties:
+        current_period:
+          $ref: '#/components/schemas/PeriodComparison'
+        previous_period:
+          allOf:
+          - $ref: '#/components/schemas/PeriodComparison'
+          nullable: true
+        tasks_change:
+          type: integer
+        tasks_change_percent:
+          type: number
+          format: double
+        habits_change:
+          type: integer
+        habits_change_percent:
+          type: number
+          format: double
+        time_change:
+          type: integer
+        time_change_percent:
+          type: number
+          format: double
+        is_improvement:
+          type: boolean
+        summary:
+          type: string
+      required:
+      - current_period
+      - habits_change
+      - habits_change_percent
+      - is_improvement
+      - previous_period
+      - summary
+      - tasks_change
+      - tasks_change_percent
+      - time_change
+      - time_change_percent
     CreateInvitation:
       type: object
       description: Serializer for creating an invitation.
@@ -3775,6 +4082,73 @@ components:
           default: 7
       required:
       - group_id
+    DailyProductivity:
+      type: object
+      description: Serializer for daily productivity stats.
+      properties:
+        date:
+          type: string
+          format: date
+          readOnly: true
+        tasks_completed:
+          type: integer
+          readOnly: true
+        tasks_created:
+          type: integer
+          readOnly: true
+        habit_completions:
+          type: integer
+          readOnly: true
+          description: Number of recurring task completions
+        total_time_spent:
+          type: integer
+          readOnly: true
+          description: Total minutes spent on tasks
+        completions_by_hour:
+          readOnly: true
+          description: Task completions breakdown by hour (0-23)
+        milestones_completed:
+          type: integer
+          readOnly: true
+      required:
+      - completions_by_hour
+      - date
+      - habit_completions
+      - milestones_completed
+      - tasks_completed
+      - tasks_created
+      - total_time_spent
+    DashboardStats:
+      type: object
+      description: Combined dashboard stats.
+      properties:
+        streak:
+          $ref: '#/components/schemas/UserStreak'
+        today:
+          allOf:
+          - $ref: '#/components/schemas/DailyProductivity'
+          nullable: true
+        this_week:
+          $ref: '#/components/schemas/ProductivitySummary'
+        personal_records:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonalRecord'
+        top_habits:
+          type: array
+          items:
+            $ref: '#/components/schemas/HabitPerformance'
+        active_goals:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoalProgress'
+      required:
+      - active_goals
+      - personal_records
+      - streak
+      - this_week
+      - today
+      - top_habits
     EmailTokenObtainPair:
       type: object
       description: Custom JWT serializer that uses email instead of username.
@@ -4374,6 +4748,100 @@ components:
       - title
       - updated_at
       - visibility
+    GoalProgress:
+      type: object
+      description: Serializer for goal progress stats.
+      properties:
+        goal_id:
+          type: integer
+          readOnly: true
+        goal_title:
+          type: string
+          readOnly: true
+        goal_category:
+          type: string
+          readOnly: true
+        goal_target_date:
+          type: string
+          format: date
+          readOnly: true
+        progress_percentage:
+          type: number
+          format: double
+          readOnly: true
+          description: Overall completion percentage (0-100)
+        velocity:
+          type: number
+          format: double
+          readOnly: true
+          description: Progress percentage per day
+        velocity_trend:
+          allOf:
+          - $ref: '#/components/schemas/VelocityTrendEnum'
+          readOnly: true
+        milestones_total:
+          type: integer
+          readOnly: true
+          title: Total milestones
+        milestones_completed:
+          type: integer
+          readOnly: true
+          title: Completed milestones
+        tasks_total:
+          type: integer
+          readOnly: true
+          title: Total tasks
+        tasks_completed:
+          type: integer
+          readOnly: true
+          title: Completed tasks
+        estimated_completion_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Estimated completion
+          description: Predicted completion date based on current velocity
+        days_ahead_or_behind:
+          type: integer
+          readOnly: true
+          title: Days ahead/behind
+          description: Positive = ahead of schedule, Negative = behind
+        on_track:
+          type: boolean
+          readOnly: true
+          description: Whether goal is on track to meet deadline
+        last_activity_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Last activity
+        days_since_activity:
+          type: integer
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - days_ahead_or_behind
+      - days_since_activity
+      - estimated_completion_date
+      - goal_category
+      - goal_id
+      - goal_target_date
+      - goal_title
+      - last_activity_date
+      - milestones_completed
+      - milestones_total
+      - on_track
+      - progress_percentage
+      - tasks_completed
+      - tasks_total
+      - updated_at
+      - velocity
+      - velocity_trend
     GoalStatusEnum:
       enum:
       - draft
@@ -4390,6 +4858,32 @@ components:
         * `paused` - Paused
         * `completed` - Completed
         * `abandoned` - Abandoned
+    GoalsSummary:
+      type: object
+      description: Summary of all goals progress.
+      properties:
+        total_goals:
+          type: integer
+        active_goals:
+          type: integer
+        on_track_count:
+          type: integer
+        behind_count:
+          type: integer
+        average_progress:
+          type: number
+          format: double
+        goals:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoalProgress'
+      required:
+      - active_goals
+      - average_progress
+      - behind_count
+      - goals
+      - on_track_count
+      - total_goals
     GroupActionResponse:
       type: object
       description: Response serializer for group actions (join, leave, etc.).
@@ -4597,6 +5091,34 @@ components:
         * `declined` - Declined
         * `expired` - Expired
         * `cancelled` - Cancelled
+    GroupLeaderboard:
+      type: object
+      description: Leaderboard for a group.
+      properties:
+        group_id:
+          type: integer
+        group_name:
+          type: string
+        period_type:
+          type: string
+        period_start:
+          type: string
+          format: date
+        rankings:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupRanking'
+        my_rank:
+          allOf:
+          - $ref: '#/components/schemas/GroupRanking'
+          nullable: true
+      required:
+      - group_id
+      - group_name
+      - my_rank
+      - period_start
+      - period_type
+      - rankings
     GroupList:
       type: object
       description: Serializer for group list view.
@@ -4694,6 +5216,62 @@ components:
       - is_owner
       - joined_at
       - user
+    GroupRanking:
+      type: object
+      description: Serializer for group ranking.
+      properties:
+        rank:
+          type: integer
+          readOnly: true
+          description: Position in the group (1 = top)
+        user_email:
+          type: string
+          format: email
+          readOnly: true
+        user_name:
+          type: string
+          readOnly: true
+        period_type:
+          allOf:
+          - $ref: '#/components/schemas/PeriodTypeEnum'
+          readOnly: true
+        period_start:
+          type: string
+          format: date
+          readOnly: true
+        tasks_completed:
+          type: integer
+          readOnly: true
+        habit_completions:
+          type: integer
+          readOnly: true
+        streak_days:
+          type: integer
+          readOnly: true
+        goals_progress:
+          type: number
+          format: double
+          readOnly: true
+        total_score:
+          type: integer
+          readOnly: true
+          description: Weighted score for ranking
+        rank_change:
+          type: integer
+          readOnly: true
+          description: Positive = moved up, Negative = moved down
+      required:
+      - goals_progress
+      - habit_completions
+      - period_start
+      - period_type
+      - rank
+      - rank_change
+      - streak_days
+      - tasks_completed
+      - total_score
+      - user_email
+      - user_name
     GroupUser:
       type: object
       description: Minimal user serializer for group context.
@@ -4724,6 +5302,101 @@ components:
       - full_name
       - id
       - last_name
+    HabitPerformance:
+      type: object
+      description: Serializer for habit/recurring task performance.
+      properties:
+        task_id:
+          type: integer
+          readOnly: true
+        task_title:
+          type: string
+          readOnly: true
+        task_recurrence:
+          type: string
+          readOnly: true
+        consistency_rate:
+          type: number
+          format: double
+          readOnly: true
+          description: Percentage of periods where target was met (0-100)
+        current_streak:
+          type: integer
+          readOnly: true
+          description: Current consecutive periods with completion
+        longest_streak:
+          type: integer
+          readOnly: true
+          description: Longest streak ever
+        trend:
+          allOf:
+          - $ref: '#/components/schemas/TrendEnum'
+          readOnly: true
+        last_completion_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: Last completion
+        completions_last_7_days:
+          type: integer
+          readOnly: true
+          title: Completions (7 days)
+        completions_last_30_days:
+          type: integer
+          readOnly: true
+          title: Completions (30 days)
+        total_completions:
+          type: integer
+          readOnly: true
+        completion_heatmap:
+          readOnly: true
+          description: Daily completion counts for heatmap visualization
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completion_heatmap
+      - completions_last_30_days
+      - completions_last_7_days
+      - consistency_rate
+      - current_streak
+      - last_completion_date
+      - longest_streak
+      - task_id
+      - task_recurrence
+      - task_title
+      - total_completions
+      - trend
+      - updated_at
+    HabitSummary:
+      type: object
+      description: Summary of all habits performance.
+      properties:
+        total_habits:
+          type: integer
+        average_consistency:
+          type: number
+          format: double
+        best_habits:
+          type: array
+          items:
+            $ref: '#/components/schemas/HabitPerformance'
+        at_risk_habits:
+          type: array
+          items:
+            $ref: '#/components/schemas/HabitPerformance'
+        improving_habits:
+          type: array
+          items:
+            $ref: '#/components/schemas/HabitPerformance'
+      required:
+      - at_risk_habits
+      - average_consistency
+      - best_habits
+      - improving_habits
+      - total_habits
     Login:
       type: object
       description: Serializer for user login with email and password.
@@ -5941,6 +6614,174 @@ components:
           title: Aktywny
           description: Określa czy użytkownika należy uważać za aktywnego. Odznacz
             zamiast usuwać konto.
+    PeriodComparison:
+      type: object
+      description: Serializer for period comparison.
+      properties:
+        period_type:
+          allOf:
+          - $ref: '#/components/schemas/PeriodTypeEnum'
+          readOnly: true
+        period_start:
+          type: string
+          format: date
+          readOnly: true
+        period_end:
+          type: string
+          format: date
+          readOnly: true
+        tasks_completed:
+          type: integer
+          readOnly: true
+        tasks_created:
+          type: integer
+          readOnly: true
+        habit_completions:
+          type: integer
+          readOnly: true
+        time_spent_minutes:
+          type: integer
+          readOnly: true
+        goals_progressed:
+          type: integer
+          readOnly: true
+        milestones_completed:
+          type: integer
+          readOnly: true
+        tasks_change_percent:
+          type: number
+          format: double
+          readOnly: true
+          title: Tasks change %
+          description: Percentage change from previous period
+        productivity_score:
+          type: integer
+          readOnly: true
+          description: Computed productivity score (0-100)
+      required:
+      - goals_progressed
+      - habit_completions
+      - milestones_completed
+      - period_end
+      - period_start
+      - period_type
+      - productivity_score
+      - tasks_change_percent
+      - tasks_completed
+      - tasks_created
+      - time_spent_minutes
+    PeriodTypeEnum:
+      enum:
+      - week
+      - month
+      type: string
+      description: |-
+        * `week` - Week
+        * `month` - Month
+    PersonalRecord:
+      type: object
+      description: Serializer for personal records.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        record_type:
+          allOf:
+          - $ref: '#/components/schemas/RecordTypeEnum'
+          readOnly: true
+        record_type_display:
+          type: string
+          readOnly: true
+        value:
+          type: integer
+          readOnly: true
+          description: Record value (tasks count, days, etc.)
+        achieved_at:
+          type: string
+          format: date-time
+          readOnly: true
+        achieved_date:
+          type: string
+          format: date
+          readOnly: true
+          description: Date when record was set
+        context:
+          readOnly: true
+          description: Additional context about the record
+        is_current:
+          type: boolean
+          readOnly: true
+          description: Whether this is the current record (not beaten)
+      required:
+      - achieved_at
+      - achieved_date
+      - context
+      - id
+      - is_current
+      - record_type
+      - record_type_display
+      - value
+    PersonalRecordsSummary:
+      type: object
+      description: Summary of all personal records.
+      properties:
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonalRecord'
+        recent_records:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonalRecord'
+      required:
+      - recent_records
+      - records
+    ProductivitySummary:
+      type: object
+      description: Summary of productivity stats for a period.
+      properties:
+        period_start:
+          type: string
+          format: date
+        period_end:
+          type: string
+          format: date
+        total_tasks_completed:
+          type: integer
+        total_habit_completions:
+          type: integer
+        total_time_spent:
+          type: integer
+        average_tasks_per_day:
+          type: number
+          format: double
+        peak_hour:
+          type: integer
+          nullable: true
+        peak_hour_count:
+          type: integer
+        best_day:
+          type: string
+          format: date
+          nullable: true
+        best_day_count:
+          type: integer
+        daily_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyProductivity'
+      required:
+      - average_tasks_per_day
+      - best_day
+      - best_day_count
+      - daily_breakdown
+      - peak_hour
+      - peak_hour_count
+      - period_end
+      - period_start
+      - total_habit_completions
+      - total_tasks_completed
+      - total_time_spent
     QuestionAnswer:
       type: object
       description: A single question-answer pair.
@@ -5958,6 +6799,26 @@ components:
       - answer
       - question
       - question_id
+    RecordTypeEnum:
+      enum:
+      - max_tasks_day
+      - max_tasks_week
+      - max_habits_day
+      - longest_streak
+      - fastest_goal
+      - most_productive_hour
+      - best_week
+      - best_month
+      type: string
+      description: |-
+        * `max_tasks_day` - Most tasks in a day
+        * `max_tasks_week` - Most tasks in a week
+        * `max_habits_day` - Most habits in a day
+        * `longest_streak` - Longest streak
+        * `fastest_goal` - Fastest goal completion
+        * `most_productive_hour` - Most productive hour
+        * `best_week` - Best week ever
+        * `best_month` - Best month ever
     RecurrencePeriodEnum:
       enum:
       - daily
@@ -6020,6 +6881,18 @@ components:
           items:
             $ref: '#/components/schemas/QuestionAnswer'
           description: List of question-answer pairs
+        num_milestones:
+          type: integer
+          maximum: 10
+          minimum: 1
+          default: 5
+          description: Number of milestones to generate (1-10)
+        tasks_per_milestone:
+          type: integer
+          maximum: 6
+          minimum: 1
+          default: 3
+          description: Number of tasks per milestone (1-6)
       required:
       - answers
     SyncCompletions:
@@ -6826,6 +7699,18 @@ components:
           writeOnly: true
       required:
       - token
+    TrendEnum:
+      enum:
+      - improving
+      - stable
+      - declining
+      - at_risk
+      type: string
+      description: |-
+        * `improving` - Improving
+        * `stable` - Stable
+        * `declining` - Declining
+        * `at_risk` - At Risk
     UnitTypeEnum:
       enum:
       - minutes
@@ -6927,6 +7812,75 @@ components:
       - email
       - password
       - password_confirm
+    UserStreak:
+      type: object
+      description: Serializer for user streak data.
+      properties:
+        current_streak:
+          type: integer
+          readOnly: true
+          description: Current consecutive days with completed tasks
+        current_streak_start:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          description: When the current streak started
+        last_activity_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          description: Last date with completed task
+        longest_streak:
+          type: integer
+          readOnly: true
+          description: Longest streak ever achieved
+        longest_streak_start:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+        longest_streak_end:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+        is_active_today:
+          type: boolean
+          description: Check if user has completed a task today.
+          readOnly: true
+        days_until_streak_lost:
+          type: integer
+          description: Days until streak is lost (0 = today is last chance, -1 = already
+            lost).
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - current_streak
+      - current_streak_start
+      - days_until_streak_lost
+      - is_active_today
+      - last_activity_date
+      - longest_streak
+      - longest_streak_end
+      - longest_streak_start
+      - updated_at
+    VelocityTrendEnum:
+      enum:
+      - accelerating
+      - steady
+      - slowing
+      - stalled
+      type: string
+      description: |-
+        * `accelerating` - Accelerating
+        * `steady` - Steady
+        * `slowing` - Slowing
+        * `stalled` - Stalled
     VisibilityEnum:
       enum:
       - private
