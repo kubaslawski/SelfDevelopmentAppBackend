@@ -23,7 +23,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--expo-ip",
             type=str,
-            help="Your local IP for Expo development (e.g., 192.168.33.11)",
+            help="Your local IP for Expo development (e.g., 192.168.33.6)",
         )
 
     def handle(self, *args, **options):
@@ -39,10 +39,27 @@ class Command(BaseCommand):
             "exp://127.0.0.1:8081/--/oauth/callback",
         ]
 
+        # Add production IP from settings if available (CSRF_TRUSTED_ORIGINS often contains it)
+        from django.conf import settings
+
+        trusted_origins = getattr(settings, "CSRF_TRUSTED_ORIGINS", [])
+        for origin in trusted_origins:
+            # origin might be "http://91.99.236.86" or similar
+            if "localhost" not in origin and "127.0.0.1" not in origin:
+                # Add scheme-based callback for production IP/domain
+                clean_origin = origin.rstrip("/")
+                redirect_uris.append(f"{clean_origin}/oauth/callback")
+                self.stdout.write(
+                    f"Adding production redirect URI from settings: {clean_origin}/oauth/callback"
+                )
+
         # Add custom Expo IP if provided
         if expo_ip:
             redirect_uris.append(f"exp://{expo_ip}:8081/--/oauth/callback")
             self.stdout.write(f"Adding Expo IP: {expo_ip}")
+
+        # Remove duplicates while preserving order
+        redirect_uris = list(dict.fromkeys(redirect_uris))
 
         # OAuth2 application settings for mobile app with PKCE
         app_defaults = {

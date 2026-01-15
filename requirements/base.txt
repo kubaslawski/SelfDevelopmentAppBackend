@@ -11,7 +11,7 @@ django-cors-headers==4.6.0
 django-oauth-toolkit==3.0.1
 
 # Database
-psycopg2-binary==2.9.10
+psycopg2==2.9.10
 
 # Environment variables
 python-decouple==3.8
@@ -30,9 +30,10 @@ pydantic-ai==0.0.39
 # Validation / DTO
 pydantic==2.10.3
 
-# Task Queue
+# Task Queue & Cache
 celery==5.4.0
 redis==5.2.1
+django-redis==5.4.0
 
 # HTTP Client (for Expo Push API)
 requests==2.32.3
