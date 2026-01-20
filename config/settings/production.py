@@ -8,11 +8,8 @@ from .base import *  # noqa: F401, F403
 
 DEBUG = False
 
-ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS", default="", cast=lambda v: [s.strip() for s in v.split(",") if s.strip()]
-)
-# Zezwalaj na dowolną subdomenę Cloudflare i Ngrok dla testów
-ALLOWED_HOSTS += [".trycloudflare.com", ".ngrok-free.app"]
+# TRYB DEMO: Pozwalamy na wszystkie hosty, żeby Cloudflare Tunnel działał bez błędów 400
+ALLOWED_HOSTS = ["*"]
 
 # Database - PostgreSQL for production
 DATABASES = {
@@ -37,9 +34,9 @@ X_FRAME_OPTIONS = "DENY"
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=True, cast=bool)
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 # Static files with whitenoise
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")  # noqa: F405
@@ -86,6 +83,8 @@ CSRF_TRUSTED_ORIGINS = config(
     default="http://91.99.236.86:8000,http://91.99.236.86",
     cast=lambda v: [s.strip() for s in v.split(",") if s.strip()],
 )
+# Dodajemy obsługę Cloudflare i Ngrok dla CSRF
+CSRF_TRUSTED_ORIGINS += ["https://*.trycloudflare.com", "https://*.ngrok-free.app"]
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True

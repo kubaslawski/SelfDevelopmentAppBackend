@@ -1,0 +1,147 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.postgres
+    container_name: sda-postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: selfdevelopmentapp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d selfdevelopmentapp"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [sda-network]
+
+  redis:
+    image: redis:7-alpine
+    container_name: sda-redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [sda-network]
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django
+    container_name: sda-django
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_DEBUG=false
+      - DEMO_HTTP=true
+      - SECURE_SSL_REDIRECT=false
+
+      - ALLOWED_HOSTS=*
+      - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
+
+      - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
+
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=selfdevelopmentapp
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+
+      - REDIS_URL=redis://redis:6379/1
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      - DJANGO_LOG_LEVEL=WARNING
+      - SEED_DATA=true
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 4 --timeout 60
+    networks: [sda-network]
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django
+    container_name: sda-celery-worker
+    command: celery -A config worker -l INFO
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_DEBUG=false
+      - DEMO_HTTP=true
+      - SECURE_SSL_REDIRECT=false
+
+      - ALLOWED_HOSTS=*
+      - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
+
+      - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
+
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=selfdevelopmentapp
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+
+      - REDIS_URL=redis://redis:6379/1
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      - DJANGO_LOG_LEVEL=WARNING
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [sda-network]
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.django
+    container_name: sda-celery-beat
+    command: celery -A config beat -l INFO
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_DEBUG=false
+      - DEMO_HTTP=true
+      - SECURE_SSL_REDIRECT=false
+
+      - ALLOWED_HOSTS=*
+      - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
+
+      - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
+
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=selfdevelopmentapp
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+
+      - REDIS_URL=redis://redis:6379/1
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      - DJANGO_LOG_LEVEL=WARNING
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [sda-network]
+
+
+networks:
+  sda-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
