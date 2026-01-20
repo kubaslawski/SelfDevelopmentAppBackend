@@ -11,6 +11,8 @@ DEBUG = False
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS", default="", cast=lambda v: [s.strip() for s in v.split(",") if s.strip()]
 )
+# Zezwalaj na dowolną subdomenę Cloudflare i Ngrok dla testów
+ALLOWED_HOSTS += [".trycloudflare.com", ".ngrok-free.app"]
 
 # Database - PostgreSQL for production
 DATABASES = {
@@ -79,6 +81,16 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = True
 
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="http://91.99.236.86:8000,http://91.99.236.86",
+    cast=lambda v: [s.strip() for s in v.split(",") if s.strip()],
+)
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
 # Logging
 LOGGING = {
     "version": 1,
@@ -112,4 +124,3 @@ LOGGING = {
         },
     },
 }
-
