@@ -37,3 +37,9 @@ django-redis==5.4.0
 
 # HTTP Client (for Expo Push API)
 requests==2.32.3
+
+# Production server (added for compatibility with local-only Dockerfile)
+gunicorn==23.0.0
+uvicorn[standard]==0.32.1
+
+whitenoise==6.8.2
