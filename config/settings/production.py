@@ -8,8 +8,18 @@ from .base import *  # noqa: F401, F403
 
 DEBUG = False
 
-# TRYB DEMO: Pozwalamy na wszystkie hosty, żeby Cloudflare Tunnel działał bez błędów 400
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS",
+    default="",
+    cast=lambda v: [s.strip() for s in v.split(",") if s.strip()]
+)
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="",
+    cast=lambda v: [s.strip() for s in v.split(",") if s.strip()]
+)
+
+CORS_ALLOWED_ORIGINS=https://api-sda.com,http://api-sda.com,http://91.99.236.86:8000
 
 # Database - PostgreSQL for production
 DATABASES = {
@@ -34,9 +44,11 @@ X_FRAME_OPTIONS = "DENY"
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Static files with whitenoise
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")  # noqa: F405
