@@ -48,6 +48,7 @@ services:
       - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
 
       - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
 
       - DB_HOST=db
       - DB_PORT=5432
@@ -85,6 +86,7 @@ services:
       - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
 
       - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
 
       - DB_HOST=db
       - DB_PORT=5432
@@ -120,6 +122,7 @@ services:
       - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
 
       - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
 
       - DB_HOST=db
       - DB_PORT=5432
