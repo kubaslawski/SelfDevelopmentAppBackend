@@ -9,7 +9,7 @@ Flow for creating a goal with AI-generated plan:
 """
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import List, Optional
 
 from core.llm import RateLimitExceeded
@@ -420,6 +420,13 @@ class GoalViewSet(viewsets.ModelViewSet):
             for task_idx, task_dto in enumerate(milestone_dto.tasks):
                 task_due_date = task_due_dates[task_idx] if task_idx < len(task_due_dates) else None
 
+                # Convert date to datetime (model expects DateTimeField)
+                task_due_datetime = (
+                    timezone.make_aware(datetime.combine(task_due_date, time(23, 59)))
+                    if task_due_date
+                    else None
+                )
+
                 task = Task.objects.create(
                     user=request.user,
                     goal=goal,  # Link to goal for CASCADE delete
@@ -429,7 +436,7 @@ class GoalViewSet(viewsets.ModelViewSet):
                     is_recurring=task_dto.is_recurring,
                     recurrence_period=task_dto.recurrence_period,
                     recurrence_target_count=1 if task_dto.is_recurring else None,
-                    due_date=task_due_date,  # Set calculated due date
+                    due_date=task_due_datetime,  # Set calculated due date as datetime
                     status=Task.Status.TODO,
                 )
                 MilestoneTaskLink.objects.create(
@@ -653,6 +660,13 @@ class MilestoneViewSet(viewsets.ModelViewSet):
         for task_idx, task_dto in enumerate(tasks_dtos):
             task_due_date = task_due_dates[task_idx] if task_idx < len(task_due_dates) else None
 
+            # Convert date to datetime (model expects DateTimeField)
+            task_due_datetime = (
+                timezone.make_aware(datetime.combine(task_due_date, time(23, 59)))
+                if task_due_date
+                else None
+            )
+
             task = Task.objects.create(
                 user=request.user,
                 goal=goal,  # Link to goal for CASCADE delete
@@ -662,7 +676,7 @@ class MilestoneViewSet(viewsets.ModelViewSet):
                 is_recurring=task_dto.is_recurring,
                 recurrence_period=task_dto.recurrence_period,
                 recurrence_target_count=1 if task_dto.is_recurring else None,
-                due_date=task_due_date,  # Set calculated due date
+                due_date=task_due_datetime,  # Set calculated due date as datetime
                 status=Task.Status.TODO,
             )
             MilestoneTaskLink.objects.create(

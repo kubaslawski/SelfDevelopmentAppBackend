@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.django
       args:
-        REQUIREMENTS_FILE: production.txt
+        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-production.txt}
     container_name: sda-django
     ports:
       - "8000:8000"
@@ -74,6 +74,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.django
+      args:
+        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-production.txt}
     container_name: sda-celery-worker
     command: celery -A config worker -l INFO
     environment:
@@ -110,6 +112,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.django
+      args:
+        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-production.txt}
     container_name: sda-celery-beat
     command: celery -A config beat -l INFO
     environment:
