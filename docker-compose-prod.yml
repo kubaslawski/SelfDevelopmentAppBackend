@@ -33,6 +33,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.django
+      args:
+        REQUIREMENTS_FILE: production.txt
     container_name: sda-django
     ports:
       - "8000:8000"
