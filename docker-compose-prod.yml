@@ -6,8 +6,6 @@ services:
     container_name: sda-postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_DB: selfdevelopmentapp
       POSTGRES_USER: postgres
@@ -17,14 +15,11 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    networks:
-      - sda-network
+    networks: [sda-network]
 
   redis:
     image: redis:7-alpine
     container_name: sda-redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -32,99 +27,125 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    networks:
-      - sda-network
+    networks: [sda-network]
 
   web:
     build:
       context: .
       dockerfile: docker/Dockerfile.django
       args:
-        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-local.txt}
+        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-production.txt}
     container_name: sda-django
-    volumes:
-      # Mount source code for hot reload
-      - .:/app
-      # Prevent overriding venv in container
-      - /app/venv
     ports:
       - "8000:8000"
     environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.local
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_DEBUG=false
+      - DEMO_HTTP=true
+      - SECURE_SSL_REDIRECT=false
+
+      - ALLOWED_HOSTS=*
+      - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
+
+      - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+
       - DB_HOST=db
       - DB_PORT=5432
       - DB_NAME=selfdevelopmentapp
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+
+      - REDIS_URL=redis://redis:6379/1
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      - DJANGO_LOG_LEVEL=WARNING
       - SEED_DATA=true
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Auto-restart on code changes (Django runserver handles this)
-    stdin_open: true
-    tty: true
-    networks:
-      - sda-network
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 2 --threads 4 --timeout 60
+    networks: [sda-network]
 
   celery-worker:
     build:
       context: .
       dockerfile: docker/Dockerfile.django
       args:
-        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-local.txt}
+        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-production.txt}
     container_name: sda-celery-worker
     command: celery -A config worker -l INFO
-    volumes:
-      - .:/app
-      - /app/venv
     environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.local
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_DEBUG=false
+      - DEMO_HTTP=true
+      - SECURE_SSL_REDIRECT=false
+
+      - ALLOWED_HOSTS=*
+      - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
+
+      - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+
       - DB_HOST=db
       - DB_PORT=5432
       - DB_NAME=selfdevelopmentapp
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+
+      - REDIS_URL=redis://redis:6379/1
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      - DJANGO_LOG_LEVEL=WARNING
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - sda-network
+    networks: [sda-network]
 
   celery-beat:
     build:
       context: .
       dockerfile: docker/Dockerfile.django
       args:
-        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-local.txt}
+        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-production.txt}
     container_name: sda-celery-beat
     command: celery -A config beat -l INFO
-    volumes:
-      - .:/app
-      - /app/venv
     environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.local
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - DJANGO_DEBUG=false
+      - DEMO_HTTP=true
+      - SECURE_SSL_REDIRECT=false
+
+      - ALLOWED_HOSTS=*
+      - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
+
+      - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+
       - DB_HOST=db
       - DB_PORT=5432
       - DB_NAME=selfdevelopmentapp
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+
+      - REDIS_URL=redis://redis:6379/1
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      - DJANGO_LOG_LEVEL=WARNING
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    networks:
-      - sda-network
+    networks: [sda-network]
+
 
 networks:
   sda-network:

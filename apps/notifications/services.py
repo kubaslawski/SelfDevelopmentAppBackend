@@ -119,9 +119,7 @@ def schedule_task_reminders(task: Task) -> list[Notification]:
             status=Notification.Status.PENDING,
         )
         created_notifications.append(notification)
-        logger.info(
-            f"Scheduled {reminder_key} reminder for task {task.id} at {scheduled_for}"
-        )
+        logger.info(f"Scheduled {reminder_key} reminder for task {task.id} at {scheduled_for}")
 
     return created_notifications
 
@@ -182,9 +180,7 @@ def schedule_daily_recurring_reminder(task: Task) -> Optional[Notification]:
         reminder_key=reminder_key,
         status=Notification.Status.PENDING,
     )
-    logger.info(
-        f"Scheduled daily reminder for task {task.id} at {scheduled_for}"
-    )
+    logger.info(f"Scheduled daily reminder for task {task.id} at {scheduled_for}")
     return notification
 
 
@@ -225,20 +221,16 @@ NOTIFICATION_STYLE = {
     "daily_reminder": {"emoji": "📅", "category": "reminder"},
     "weekly_reminder": {"emoji": "📆", "category": "reminder"},
     "goal_reminder": {"emoji": "🎯", "category": "reminder"},
-    
     # Warnings
     "warning": {"emoji": "⚠️", "category": "warning"},
     "deadline_warning": {"emoji": "🚨", "category": "warning"},
-    
     # Suggestions
     "suggestion": {"emoji": "💡", "category": "suggestion"},
     "tip": {"emoji": "✨", "category": "suggestion"},
-    
     # Congratulations
     "congratulations": {"emoji": "🎉", "category": "congratulations"},
     "achievement": {"emoji": "🏆", "category": "congratulations"},
     "streak": {"emoji": "🔥", "category": "congratulations"},
-    
     # Info
     "info": {"emoji": "ℹ️", "category": "info"},
 }
@@ -415,9 +407,7 @@ def send_push_notifications_batch(notifications: list[Notification]) -> dict:
                     # Token is invalid, remove it
                     prefs.push_token = ""
                     prefs.save(update_fields=["push_token", "updated_at"])
-                    logger.warning(
-                        f"Removed invalid token for user {notification.user_id}"
-                    )
+                    logger.warning(f"Removed invalid token for user {notification.user_id}")
 
                 notification.mark_failed(error)
                 results["failed"] += 1
@@ -437,12 +427,15 @@ def _build_expo_payload(notification: Notification, push_token: str) -> dict:
     """Build Expo Push API payload for a notification."""
     emoji = get_notification_emoji(notification.notification_type)
     category = get_notification_category(notification.notification_type)
-    
+
     # Add emoji to title if not already present
     title = notification.title
-    if not any(title.startswith(e) for e in ["⏰", "📅", "📆", "🎯", "⚠️", "🚨", "💡", "✨", "🎉", "🏆", "🔥", "ℹ️", "📬", "🧪"]):
+    if not any(
+        title.startswith(e)
+        for e in ["⏰", "📅", "📆", "🎯", "⚠️", "🚨", "💡", "✨", "🎉", "🏆", "🔥", "ℹ️", "📬", "🧪"]
+    ):
         title = f"{emoji} {title}"
-    
+
     payload = {
         "to": push_token,
         "title": title,
@@ -498,7 +491,7 @@ def create_notification(
 ) -> Notification:
     """
     Create a notification of any type.
-    
+
     Args:
         user: User to notify
         notification_type: One of Notification.NotificationType choices
@@ -506,13 +499,13 @@ def create_notification(
         body: Notification body text
         task: Optional related task
         scheduled_for: When to send (default: now)
-    
+
     Returns:
         Created Notification object
     """
     if scheduled_for is None:
         scheduled_for = timezone.now()
-    
+
     return Notification.objects.create(
         user=user,
         task=task,
@@ -630,4 +623,3 @@ def _handle_expo_response(
         notification.mark_failed(error)
         logger.error(f"Failed notification {notification.id}: {error}")
         return False
-

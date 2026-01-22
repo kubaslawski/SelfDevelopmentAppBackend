@@ -89,8 +89,9 @@ GOAL_PLAN_TEMPLATE = """Based on the following information, create a detailed, g
 ## User's Answers to Clarifying Questions
 {answers}
 
-## Target Date
-{target_date}
+## Timeline
+Today's Date: {today_date}
+Target Date: {target_date}
 
 ## CRITICAL: Plan Size Requirements
 
@@ -100,7 +101,7 @@ This is a strict requirement. Do not create more or fewer milestones/tasks.
 
 ## Milestone Structure
 
-Distribute the milestones evenly across the timeline from today to target_date:
+Distribute the milestones evenly across the timeline from {today_date} to {target_date}:
 - First milestone: Foundation & Setup
 - Middle milestones: Progressive skill building
 - Final milestone: Achievement & completion
@@ -205,6 +206,7 @@ def format_goal_plan_prompt(
     goal_description: str,
     answers_text: str,
     target_date: str,
+    today_date: str,
     num_milestones: int = 5,
     tasks_per_milestone: int = 3,
 ) -> str:
@@ -216,6 +218,7 @@ def format_goal_plan_prompt(
         goal_description: Detailed description of the goal.
         answers_text: Pre-formatted answers string (Q: ... A: ...).
         target_date: Target completion date (YYYY-MM-DD format).
+        today_date: Today's date (YYYY-MM-DD format).
         num_milestones: Number of milestones to generate (1-10).
         tasks_per_milestone: Number of tasks per milestone (1-6).
 
@@ -227,6 +230,7 @@ def format_goal_plan_prompt(
         goal_description=goal_description or "No additional description provided.",
         answers=answers_text,
         target_date=target_date,
+        today_date=today_date,
         num_milestones=num_milestones,
         tasks_per_milestone=tasks_per_milestone,
     )

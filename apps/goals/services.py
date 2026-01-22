@@ -8,8 +8,6 @@ import logging
 from datetime import date, datetime
 from typing import Any, List
 
-from django.utils import timezone
-
 from core.llm import (
     LLMError,
     RateLimitExceeded,
@@ -22,6 +20,7 @@ from core.llm.prompts import (
     GOAL_PLANNER_SYSTEM,
     QUESTION_GENERATOR_SYSTEM,
 )
+from django.utils import timezone
 
 from .domain.entities import (
     GeneratedMilestone,
@@ -40,18 +39,14 @@ logger = logging.getLogger(__name__)
 # -----------------------------------------------------------------------------
 
 
-def generate_questions(
-    goal: Goal, user_id: int
-) -> tuple[List[GeneratedQuestion], bool]:
+def generate_questions(goal: Goal, user_id: int) -> tuple[List[GeneratedQuestion], bool]:
     """
     Generate contextual questions for a goal using Gemini.
 
     Returns:
         Tuple of (questions, is_fallback) where is_fallback=True means LLM failed.
     """
-    goal_description = (
-        f"{goal.title}. {goal.description}" if goal.description else goal.title
-    )
+    goal_description = f"{goal.title}. {goal.description}" if goal.description else goal.title
 
     try:
         prompt = GENERATE_QUESTIONS_TEMPLATE.format(goal_description=goal_description)
@@ -116,7 +111,7 @@ def generate_plan(
     """
     Generate a plan (milestones + tasks) using Gemini.
     Returns a GeneratedPlan entity.
-    
+
     Args:
         goal: The goal to generate a plan for.
         answers: User's answers to the generated questions.
@@ -125,15 +120,19 @@ def generate_plan(
         tasks_per_milestone: Number of tasks per milestone (1-6).
     """
     # Format answers for prompt
-    answers_text = "\n".join(
-        f"Q: {a.question}\nA: {a.answer}" for a in answers
-    )
+    answers_text = "\n".join(f"Q: {a.question}\nA: {a.answer}" for a in answers)
+
+    # Get today's date
+    from django.utils import timezone
+
+    today_date = timezone.now().date().isoformat()
 
     prompt = GOAL_PLAN_TEMPLATE.format(
         goal_title=goal.title,
         goal_description=goal.description or "",
         answers=answers_text,
         target_date=goal.target_date.isoformat(),
+        today_date=today_date,
         num_milestones=num_milestones,
         tasks_per_milestone=tasks_per_milestone,
     )
