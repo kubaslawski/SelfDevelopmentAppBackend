@@ -518,6 +518,7 @@ class TaskCompletionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(task_id=task_id)
         return queryset
 
+    @extend_schema(tags=["Completions"])
     @action(detail=False, methods=["get"], url_path="daily-summary")
     def daily_summary(self, request):
         queryset = self.filter_queryset(self.get_queryset()).select_related("task")
