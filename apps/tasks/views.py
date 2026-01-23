@@ -1,14 +1,15 @@
 """
 Views for the Tasks app.
 """
-from django.db.models import Case, When, Value, IntegerField
+
+from django.db.models import Case, IntegerField, Value, When
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
-
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .filters import TaskCompletionFilter, TaskFilter
 from .models import Task, TaskCompletion, TaskGroup
@@ -27,10 +28,10 @@ from .serializers import (
 
 # Priority ordering: low=1, medium=2, high=3, urgent=4
 PRIORITY_ORDER = Case(
-    When(priority='low', then=Value(1)),
-    When(priority='medium', then=Value(2)),
-    When(priority='high', then=Value(3)),
-    When(priority='urgent', then=Value(4)),
+    When(priority="low", then=Value(1)),
+    When(priority="medium", then=Value(2)),
+    When(priority="high", then=Value(3)),
+    When(priority="urgent", then=Value(4)),
     default=Value(0),
     output_field=IntegerField(),
 )
@@ -52,10 +53,10 @@ class TaskOrderingFilter(filters.OrderingFilter):
             # Replace priority with priority_order in ordering
             new_ordering = []
             for field in ordering:
-                if field == 'priority':
-                    new_ordering.append('priority_order')
-                elif field == '-priority':
-                    new_ordering.append('-priority_order')
+                if field == "priority":
+                    new_ordering.append("priority_order")
+                elif field == "-priority":
+                    new_ordering.append("-priority_order")
                 else:
                     new_ordering.append(field)
 
@@ -105,24 +106,25 @@ class TaskViewSet(viewsets.ModelViewSet):
     destroy:
         Delete a task.
     """
+
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, TaskOrderingFilter]
     filterset_class = TaskFilter
-    search_fields = ['title', 'description', 'tags']
-    ordering_fields = ['created_at', 'updated_at', 'due_date', 'priority', 'status']
-    ordering = ['-created_at']
+    search_fields = ["title", "description", "tags"]
+    ordering_fields = ["created_at", "updated_at", "due_date", "priority", "status"]
+    ordering = ["-created_at"]
 
     def get_serializer_class(self):
         """Return appropriate serializer class based on action."""
-        if self.action == 'list':
+        if self.action == "list":
             return TaskListSerializer
-        if self.action == 'update_status':
+        if self.action == "update_status":
             return TaskStatusUpdateSerializer
-        if self.action == 'retrieve':
+        if self.action == "retrieve":
             # Include completions in detail view
             return TaskWithCompletionsSerializer
-        if self.action == 'record_completion':
+        if self.action == "record_completion":
             return TaskCompletionCreateSerializer
         return TaskSerializer
 
@@ -144,7 +146,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         user = self.request.user if self.request.user.is_authenticated else None
         serializer.save(user=user)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def update_status(self, request, pk=None):
         """
         Update only the status of a task.
@@ -157,7 +159,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.update(task, serializer.validated_data)
         return Response(TaskSerializer(task).data)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
         """
         Mark a task as completed.
@@ -169,7 +171,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         task.mark_completed()
         return Response(TaskWithCompletionsSerializer(task).data)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def record_completion(self, request, pk=None):
         """
         Record a completion for a recurring task.
@@ -186,24 +188,24 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         if not task.is_recurring:
             return Response(
-                {'error': 'This action is only available for recurring tasks'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "This action is only available for recurring tasks"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = TaskCompletionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        completion = TaskCompletion.objects.create(
-            task=task,
-            **serializer.validated_data
+        completion = TaskCompletion.objects.create(task=task, **serializer.validated_data)
+
+        return Response(
+            {
+                "completion": TaskCompletionSerializer(completion).data,
+                "task": TaskWithCompletionsSerializer(task).data,
+            },
+            status=status.HTTP_201_CREATED,
         )
 
-        return Response({
-            'completion': TaskCompletionSerializer(completion).data,
-            'task': TaskWithCompletionsSerializer(task).data,
-        }, status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=["get"])
     def completions(self, request, pk=None):
         """
         Get all completions for a recurring task.
@@ -214,15 +216,14 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         if not task.is_recurring:
             return Response(
-                {'error': 'This task is not a recurring task'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "This task is not a recurring task"}, status=status.HTTP_400_BAD_REQUEST
             )
 
         completions = task.completions.all()
 
         # Optional date filtering
-        start_date = request.query_params.get('start_date')
-        end_date = request.query_params.get('end_date')
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
 
         if start_date:
             completions = completions.filter(completed_at__gte=start_date)
@@ -237,7 +238,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = TaskCompletionSerializer(completions, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def stats(self, request):
         """
         Get task statistics including recurring task stats.
@@ -246,33 +247,47 @@ class TaskViewSet(viewsets.ModelViewSet):
         recurring_tasks = queryset.filter(is_recurring=True)
 
         stats = {
-            'total': queryset.count(),
-            'todo': queryset.filter(status=Task.Status.TODO).count(),
-            'in_progress': queryset.filter(status=Task.Status.IN_PROGRESS).count(),
-            'completed': queryset.filter(status=Task.Status.COMPLETED).count(),
-            'archived': queryset.filter(status=Task.Status.ARCHIVED).count(),
-            'by_priority': {
-                'low': queryset.filter(priority=Task.Priority.LOW).count(),
-                'medium': queryset.filter(priority=Task.Priority.MEDIUM).count(),
-                'high': queryset.filter(priority=Task.Priority.HIGH).count(),
-                'urgent': queryset.filter(priority=Task.Priority.URGENT).count(),
+            "total": queryset.count(),
+            "todo": queryset.filter(status=Task.Status.TODO).count(),
+            "in_progress": queryset.filter(status=Task.Status.IN_PROGRESS).count(),
+            "completed": queryset.filter(status=Task.Status.COMPLETED).count(),
+            "archived": queryset.filter(status=Task.Status.ARCHIVED).count(),
+            "by_priority": {
+                "low": queryset.filter(priority=Task.Priority.LOW).count(),
+                "medium": queryset.filter(priority=Task.Priority.MEDIUM).count(),
+                "high": queryset.filter(priority=Task.Priority.HIGH).count(),
+                "urgent": queryset.filter(priority=Task.Priority.URGENT).count(),
             },
-            'recurring': {
-                'total': recurring_tasks.count(),
-                'by_period': {
-                    'daily': recurring_tasks.filter(recurrence_period=Task.RecurrencePeriod.DAILY).count(),
-                    'weekly': recurring_tasks.filter(recurrence_period=Task.RecurrencePeriod.WEEKLY).count(),
-                    'biweekly': recurring_tasks.filter(recurrence_period=Task.RecurrencePeriod.BIWEEKLY).count(),
-                    'monthly': recurring_tasks.filter(recurrence_period=Task.RecurrencePeriod.MONTHLY).count(),
-                    'quarterly': recurring_tasks.filter(recurrence_period=Task.RecurrencePeriod.QUARTERLY).count(),
-                    'yearly': recurring_tasks.filter(recurrence_period=Task.RecurrencePeriod.YEARLY).count(),
+            "recurring": {
+                "total": recurring_tasks.count(),
+                "by_period": {
+                    "daily": recurring_tasks.filter(
+                        recurrence_period=Task.RecurrencePeriod.DAILY
+                    ).count(),
+                    "weekly": recurring_tasks.filter(
+                        recurrence_period=Task.RecurrencePeriod.WEEKLY
+                    ).count(),
+                    "biweekly": recurring_tasks.filter(
+                        recurrence_period=Task.RecurrencePeriod.BIWEEKLY
+                    ).count(),
+                    "monthly": recurring_tasks.filter(
+                        recurrence_period=Task.RecurrencePeriod.MONTHLY
+                    ).count(),
+                    "quarterly": recurring_tasks.filter(
+                        recurrence_period=Task.RecurrencePeriod.QUARTERLY
+                    ).count(),
+                    "yearly": recurring_tasks.filter(
+                        recurrence_period=Task.RecurrencePeriod.YEARLY
+                    ).count(),
                 },
-                'total_completions': TaskCompletion.objects.filter(task__in=recurring_tasks).count(),
-            }
+                "total_completions": TaskCompletion.objects.filter(
+                    task__in=recurring_tasks
+                ).count(),
+            },
         }
         return Response(stats)
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=["post"])
     def bulk_update_status(self, request):
         """
         Bulk update status for multiple tasks.
@@ -283,29 +298,20 @@ class TaskViewSet(viewsets.ModelViewSet):
             "status": "completed"
         }
         """
-        task_ids = request.data.get('task_ids', [])
-        new_status = request.data.get('status')
+        task_ids = request.data.get("task_ids", [])
+        new_status = request.data.get("status")
 
         if not task_ids:
-            return Response(
-                {'error': 'No task IDs provided'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "No task IDs provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         if new_status not in dict(Task.Status.choices):
-            return Response(
-                {'error': 'Invalid status'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
 
         updated = self.get_queryset().filter(id__in=task_ids).update(status=new_status)
 
-        return Response({
-            'updated': updated,
-            'message': f'Successfully updated {updated} tasks'
-        })
+        return Response({"updated": updated, "message": f"Successfully updated {updated} tasks"})
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def recurring(self, request):
         """
         Get only recurring tasks.
@@ -323,7 +329,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         request=SyncCompletionsSerializer,
         responses={200: SyncCompletionsResponseSerializer},
     )
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def sync_completions(self, request, pk=None):
         """
         Synchronize completions for a recurring task.
@@ -338,15 +344,15 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         if not task.is_recurring:
             return Response(
-                {'error': 'This action is only available for recurring tasks'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "This action is only available for recurring tasks"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = SyncCompletionsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        dates = serializer.validated_data['dates']
-        completed_value = serializer.validated_data.get('completed_value')
+        dates = serializer.validated_data["dates"]
+        completed_value = serializer.validated_data.get("completed_value")
 
         incoming_dates = set(dates)
 
@@ -374,7 +380,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 task=task,
                 completed_at=dt.combine(date, dt.min.time().replace(hour=12)),
                 completed_value=completed_value,
-                notes='',
+                notes="",
             )
             added_count += 1
 
@@ -383,12 +389,14 @@ class TaskViewSet(viewsets.ModelViewSet):
             existing_dates[date].delete()
             removed_count += 1
 
-        return Response({
-            'added': added_count,
-            'removed': removed_count,
-            'total': len(incoming_dates),
-            'task': TaskWithCompletionsSerializer(task).data,
-        })
+        return Response(
+            {
+                "added": added_count,
+                "removed": removed_count,
+                "total": len(incoming_dates),
+                "task": TaskWithCompletionsSerializer(task).data,
+            }
+        )
 
 
 @extend_schema_view(
@@ -402,19 +410,95 @@ class TaskViewSet(viewsets.ModelViewSet):
 class TaskCompletionViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing task completions.
-
     Provides full CRUD access to completion records.
     """
+
     queryset = TaskCompletion.objects.all()
     serializer_class = TaskCompletionSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = TaskCompletionFilter
-    ordering_fields = ['completed_at']
-    ordering = ['-completed_at']
+    ordering_fields = ["completed_at"]
+    ordering = ["-completed_at"]
+
+    def _get_completed_minutes(self, task, completion):
+        completed_value = completion.completed_value
+        if completed_value is not None:
+            if task.unit_type == task.UnitType.HOURS:
+                return completed_value * 60
+            return completed_value
+        if completion.duration_minutes is not None:
+            return completion.duration_minutes
+        return None
+
+    def _get_time_completion_weight(self, task, completion):
+        if task.unit_type not in [task.UnitType.MINUTES, task.UnitType.HOURS]:
+            return None
+        target_minutes = task.target_in_minutes
+        if not target_minutes:
+            return None
+        completed_minutes = self._get_completed_minutes(task, completion)
+        if completed_minutes is None:
+            return None
+        return float(completed_minutes) / float(target_minutes)
+
+    def _get_target_completion_weight(self, task, completion):
+        target_value = task.target_value
+        completed_value = completion.completed_value
+        if completed_value is not None:
+            return float(completed_value) / float(target_value)
+        return 1 / float(target_value)
+
+    def _get_completion_weight(self, completion: TaskCompletion) -> float:
+        task = completion.task
+        if not task.target_value:
+            return 1.0
+
+        time_weight = self._get_time_completion_weight(task, completion)
+        if time_weight is not None:
+            return time_weight
+
+        return self._get_target_completion_weight(task, completion)
+
+    def _parse_task_ids(self, request):
+        raw_task_ids = request.query_params.getlist("task_ids")
+        if len(raw_task_ids) == 1 and "," in raw_task_ids[0]:
+            return [value.strip() for value in raw_task_ids[0].split(",") if value.strip()]
+        return [value for value in raw_task_ids if value]
+
+    def _build_daily_totals(self, queryset):
+        daily_totals = {}
+        for completion in queryset:
+            local_date = timezone.localtime(completion.completed_at).date()
+            date_key = local_date.isoformat()
+            weight = self._get_completion_weight(completion)
+
+            if date_key in daily_totals:
+                daily_totals[date_key] += weight
+            else:
+                daily_totals[date_key] = weight
+        return daily_totals
+
+    def _build_task_daily_totals(self, tasks_queryset):
+        daily_totals = {}
+        for task in tasks_queryset:
+            local_date = timezone.localtime(task.completed_at).date()
+            date_key = local_date.isoformat()
+            if date_key in daily_totals:
+                daily_totals[date_key] += 1.0
+            else:
+                daily_totals[date_key] = 1.0
+        return daily_totals
+
+    def _serialize_daily_totals(self, daily_totals):
+        ordered_dates = sorted(daily_totals.keys())
+        results = []
+        for date_key in ordered_dates:
+            results.append({"date": date_key, "value": daily_totals[date_key]})
+        return results
 
     def get_serializer_class(self):
         """Use different serializer for create/update."""
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in ["create", "update", "partial_update"]:
             return TaskCompletionCreateSerializer
         return TaskCompletionSerializer
 
@@ -429,10 +513,43 @@ class TaskCompletionViewSet(viewsets.ModelViewSet):
             queryset = queryset.none()
 
         # Additional filter by task_id if specified
-        task_id = self.request.query_params.get('task_id')
+        task_id = self.request.query_params.get("task_id")
         if task_id:
             queryset = queryset.filter(task_id=task_id)
         return queryset
+
+    @action(detail=False, methods=["get"], url_path="daily-summary")
+    def daily_summary(self, request):
+        queryset = self.filter_queryset(self.get_queryset()).select_related("task")
+        task_ids = self._parse_task_ids(request)
+
+        if task_ids:
+            queryset = queryset.filter(task_id__in=task_ids)
+        daily_totals = self._build_daily_totals(queryset)
+
+        if request.user.is_authenticated:
+            task_queryset = Task.objects.filter(
+                user=request.user,
+                is_recurring=False,
+                completed_at__isnull=False,
+            )
+            if task_ids:
+                task_queryset = task_queryset.filter(id__in=task_ids)
+            completed_after = request.query_params.get("completed_after")
+            completed_before = request.query_params.get("completed_before")
+            if completed_after:
+                task_queryset = task_queryset.filter(completed_at__gte=completed_after)
+            if completed_before:
+                task_queryset = task_queryset.filter(completed_at__lte=completed_before)
+            task_totals = self._build_task_daily_totals(task_queryset)
+            for date_key, value in task_totals.items():
+                if date_key in daily_totals:
+                    daily_totals[date_key] += value
+                else:
+                    daily_totals[date_key] = value
+
+        results = self._serialize_daily_totals(daily_totals)
+        return Response({"results": results})
 
 
 @extend_schema_view(
