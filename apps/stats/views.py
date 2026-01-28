@@ -53,7 +53,7 @@ from .services import (
 class UserStreakView(APIView):
     """
     Get current user's streak information.
-    
+
     GET: Get streak data (current streak, longest streak, etc.)
     POST: Recalculate streak from task history (fixes inconsistencies)
     """
@@ -129,7 +129,7 @@ class DailyProductivityView(APIView):
     def get(self, request):
         """Get daily productivity stats."""
         today = timezone.now().date()
-        
+
         # Single day
         date_str = request.query_params.get("date")
         if date_str:
@@ -140,16 +140,16 @@ class DailyProductivityView(APIView):
                     {"error": "Invalid date format. Use YYYY-MM-DD"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            
+
             # Update stats for this day
             record = update_daily_productivity(request.user, date)
             serializer = DailyProductivitySerializer(record)
             return Response(serializer.data)
-        
+
         # Date range
         start_str = request.query_params.get("start_date")
         end_str = request.query_params.get("end_date")
-        
+
         if start_str and end_str:
             try:
                 start_date = timezone.datetime.strptime(start_str, "%Y-%m-%d").date()
@@ -163,13 +163,13 @@ class DailyProductivityView(APIView):
             # Default: last 7 days
             end_date = today
             start_date = today - timedelta(days=6)
-        
+
         # Update stats for each day in range
         current = start_date
         while current <= end_date:
             update_daily_productivity(request.user, current)
             current += timedelta(days=1)
-        
+
         summary = get_productivity_summary(request.user, start_date, end_date)
         serializer = ProductivitySummarySerializer(summary)
         return Response(serializer.data)
@@ -216,12 +216,12 @@ class HabitPerformanceView(APIView):
         """Get summary of all habits."""
         from .services import update_habit_performance
         from apps.tasks.models import Task
-        
-        # Update all habit performances
-        habits = Task.objects.filter(user=request.user, is_recurring=True)
+
+        # Update all habit performances - only active recurring tasks
+        habits = Task.objects.filter(user=request.user, is_recurring=True, is_active=True)
         for habit in habits:
             update_habit_performance(habit)
-        
+
         summary = get_habits_summary(request.user)
         serializer = HabitSummarySerializer(summary)
         return Response(serializer.data)
@@ -242,15 +242,15 @@ class HabitDetailView(APIView):
         """Get performance for a specific recurring task."""
         from .services import update_habit_performance
         from apps.tasks.models import Task
-        
+
         try:
-            task = Task.objects.get(id=task_id, user=request.user, is_recurring=True)
+            task = Task.objects.get(id=task_id, user=request.user, is_recurring=True, is_active=True)
         except Task.DoesNotExist:
             return Response(
-                {"error": "Recurring task not found"},
+                {"error": "Active recurring task not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        
+
         perf = update_habit_performance(task)
         serializer = HabitPerformanceSerializer(perf)
         return Response(serializer.data)
@@ -278,7 +278,7 @@ class GoalProgressView(APIView):
         """Get summary of all goals progress."""
         from .services import update_goal_progress
         from apps.goals.models import Goal
-        
+
         # Update all goal progress
         goals = Goal.objects.filter(
             user=request.user,
@@ -286,7 +286,7 @@ class GoalProgressView(APIView):
         )
         for goal in goals:
             update_goal_progress(goal)
-        
+
         summary = get_goals_summary(request.user)
         serializer = GoalsSummarySerializer(summary)
         return Response(serializer.data)
@@ -307,7 +307,7 @@ class GoalProgressDetailView(APIView):
         """Get progress for a specific goal."""
         from .services import update_goal_progress
         from apps.goals.models import Goal
-        
+
         try:
             goal = Goal.objects.get(id=goal_id, user=request.user)
         except Goal.DoesNotExist:
@@ -315,7 +315,7 @@ class GoalProgressDetailView(APIView):
                 {"error": "Goal not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        
+
         progress = update_goal_progress(goal)
         serializer = GoalProgressSerializer(progress)
         return Response(serializer.data)
@@ -417,7 +417,7 @@ class GroupLeaderboardView(APIView):
         from apps.groups.models import Group, GroupMembership
         from .models import GroupRanking
         from .services import get_week_bounds, get_month_bounds
-        
+
         # Check group access
         try:
             group = Group.objects.get(id=group_id)
@@ -426,7 +426,7 @@ class GroupLeaderboardView(APIView):
                 {"error": "Group not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        
+
         # Check membership
         is_member = (
             group.owner == request.user or
@@ -434,31 +434,31 @@ class GroupLeaderboardView(APIView):
                 group=group, user=request.user, is_active=True
             ).exists()
         )
-        
+
         if not is_member and not group.is_public:
             return Response(
                 {"error": "You are not a member of this group"},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        
+
         period = request.query_params.get("period", "week")
         today = timezone.now().date()
-        
+
         if period == "month":
             period_type = PeriodComparison.PeriodType.MONTH
             period_start, _ = get_month_bounds(today)
         else:
             period_type = PeriodComparison.PeriodType.WEEK
             period_start, _ = get_week_bounds(today)
-        
+
         rankings = GroupRanking.objects.filter(
             group=group,
             period_type=period_type,
             period_start=period_start,
         ).select_related("user").order_by("rank")
-        
+
         my_rank = rankings.filter(user=request.user).first()
-        
+
         return Response({
             "group_id": group.id,
             "group_name": group.name,
@@ -496,36 +496,36 @@ class DashboardStatsView(APIView):
         )
         from apps.tasks.models import Task
         from apps.goals.models import Goal
-        
+
         user = request.user
         today = timezone.now().date()
         week_start = today - timedelta(days=today.weekday())
-        
+
         # Streak
         streak = get_or_create_streak(user)
         streak.check_streak_broken()
-        
+
         # Today
         today_stats = update_daily_productivity(user, today)
-        
+
         # This week
         week_summary = get_productivity_summary(user, week_start, today)
-        
+
         # Personal records
         records = PersonalRecord.objects.filter(
             user=user,
             is_current=True,
         ).order_by("record_type")[:5]
-        
-        # Top habits (by consistency)
-        habits = Task.objects.filter(user=user, is_recurring=True)[:5]
+
+        # Top habits (by consistency) - only active recurring tasks
+        habits = Task.objects.filter(user=user, is_recurring=True, is_active=True)[:5]
         for h in habits:
             update_habit_performance(h)
-        
+
         top_habits = HabitPerformance.objects.filter(
             task__user=user,
         ).order_by("-consistency_rate")[:5]
-        
+
         # Active goals
         goals = Goal.objects.filter(
             user=user,
@@ -533,12 +533,12 @@ class DashboardStatsView(APIView):
         )[:5]
         for g in goals:
             update_goal_progress(g)
-        
+
         active_goals = GoalProgress.objects.filter(
             goal__user=user,
             goal__status=Goal.Status.ACTIVE,
         ).order_by("-progress_percentage")[:5]
-        
+
         return Response({
             "streak": UserStreakSerializer(streak).data,
             "today": DailyProductivitySerializer(today_stats).data,

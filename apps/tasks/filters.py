@@ -71,6 +71,10 @@ class TaskFilter(django_filters.FilterSet):
         method="filter_shared_with_group",
         label="Filter tasks shared with a specific group",
     )
+    is_active = django_filters.BooleanFilter(
+        field_name="is_active",
+        label="Filter by active status",
+    )
 
     class Meta:
         model = Task
@@ -80,6 +84,7 @@ class TaskFilter(django_filters.FilterSet):
             "is_recurring": ["exact"],
             "recurrence_period": ["exact", "in"],
             "group": ["exact"],
+            "is_active": ["exact"],
         }
 
     def filter_goal(self, queryset, name, value):

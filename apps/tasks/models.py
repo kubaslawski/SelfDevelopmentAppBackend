@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 class Visibility(models.TextChoices):
     """Visibility levels for content (Task/Goal)."""
+
     PRIVATE = "private", _("Private")
     GROUP = "group", _("Group")
     PUBLIC = "public", _("Public")
@@ -230,6 +231,13 @@ class Task(TimeStampedModel):
         null=True,
         blank=True,
         help_text=_("When the recurring schedule ends (optional)"),
+    )
+    is_active = models.BooleanField(
+        _("is active"),
+        default=True,
+        help_text=_(
+            "Whether this recurring task is active (inactive tasks won't generate new completions)"
+        ),
     )
 
     # Additional metadata

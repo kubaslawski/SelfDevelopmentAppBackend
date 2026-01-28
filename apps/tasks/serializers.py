@@ -168,6 +168,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "recurrence_period",
             "recurrence_target_count",
             "recurrence_end_date",
+            "is_active",
             # Computed recurrence fields
             "recurrence_display",
             "current_period_start",
@@ -244,7 +245,7 @@ class TaskSerializer(serializers.ModelSerializer):
         # Validate visibility with shared_with_groups
         visibility = data.get("visibility", getattr(self.instance, "visibility", Visibility.PRIVATE) if self.instance else Visibility.PRIVATE)
         shared_with_group_ids = data.get("shared_with_group_ids", [])
-        
+
         if visibility == Visibility.GROUP and not shared_with_group_ids:
             # Check if instance already has groups
             if not (self.instance and self.instance.shared_with_groups.exists()):
@@ -258,32 +259,32 @@ class TaskSerializer(serializers.ModelSerializer):
         """Create task with shared_with_groups handling."""
         shared_with_group_ids = validated_data.pop("shared_with_group_ids", [])
         shared_with_groups = validated_data.pop("shared_with_groups", [])
-        
+
         task = super().create(validated_data)
-        
+
         # Handle shared_with_group_ids (write_only)
         if shared_with_group_ids:
             groups = Group.objects.filter(id__in=shared_with_group_ids)
             task.shared_with_groups.set(groups)
         elif shared_with_groups:
             task.shared_with_groups.set(shared_with_groups)
-        
+
         return task
 
     def update(self, instance, validated_data):
         """Update task with shared_with_groups handling."""
         shared_with_group_ids = validated_data.pop("shared_with_group_ids", None)
         shared_with_groups = validated_data.pop("shared_with_groups", None)
-        
+
         instance = super().update(instance, validated_data)
-        
+
         # Handle shared_with_group_ids (write_only)
         if shared_with_group_ids is not None:
             groups = Group.objects.filter(id__in=shared_with_group_ids)
             instance.shared_with_groups.set(groups)
         elif shared_with_groups is not None:
             instance.shared_with_groups.set(shared_with_groups)
-        
+
         return instance
 
 
@@ -320,6 +321,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             "is_recurring",
             "recurrence_period",
             "recurrence_target_count",
+            "is_active",
             "is_overdue",
             "is_period_complete",
             # Group

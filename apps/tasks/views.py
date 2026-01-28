@@ -80,6 +80,8 @@ class TaskOrderingFilter(filters.OrderingFilter):
     bulk_update_status=extend_schema(tags=["Tasks"]),
     recurring=extend_schema(tags=["Tasks"]),
     sync_completions=extend_schema(tags=["Tasks"]),
+    mark_finished=extend_schema(tags=["Tasks"]),
+    mark_active=extend_schema(tags=["Tasks"]),
 )
 class TaskViewSet(viewsets.ModelViewSet):
     """
@@ -131,13 +133,26 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Filter tasks by authenticated user.
+        By default, excludes inactive recurring tasks unless include_inactive=true is passed.
         """
+        from django.db.models import Q
+
         queryset = super().get_queryset().prefetch_related("milestone_links__milestone__goal")
         if self.request.user.is_authenticated:
             queryset = queryset.filter(user=self.request.user)
         else:
             # Return empty queryset for unauthenticated users
             queryset = queryset.none()
+
+        # Exclude inactive recurring tasks by default
+        # Check if include_inactive parameter is explicitly set to true
+        include_inactive = self.request.query_params.get('include_inactive', 'false').lower() == 'true'
+
+        if not include_inactive:
+            # Only show active recurring tasks or all non-recurring tasks
+            queryset = queryset.filter(
+                Q(is_recurring=False) | Q(is_recurring=True, is_active=True)
+            )
 
         return queryset
 
@@ -395,6 +410,57 @@ class TaskViewSet(viewsets.ModelViewSet):
                 "removed": removed_count,
                 "total": len(incoming_dates),
                 "task": TaskWithCompletionsSerializer(task).data,
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    def mark_finished(self, request, pk=None):
+        """
+        Mark a recurring task as finished (inactive).
+
+        This will set is_active=False, preventing new completions from being tracked.
+        The task and its completion history will be preserved.
+        """
+        task = self.get_object()
+
+        if not task.is_recurring:
+            return Response(
+                {"error": "This action is only available for recurring tasks"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        task.is_active = False
+        task.save(update_fields=["is_active", "updated_at"])
+
+        return Response(
+            {
+                "message": "Task marked as finished",
+                "task": TaskSerializer(task).data,
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    def mark_active(self, request, pk=None):
+        """
+        Mark a recurring task as active again.
+
+        This will set is_active=True, allowing new completions to be tracked.
+        """
+        task = self.get_object()
+
+        if not task.is_recurring:
+            return Response(
+                {"error": "This action is only available for recurring tasks"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        task.is_active = True
+        task.save(update_fields=["is_active", "updated_at"])
+
+        return Response(
+            {
+                "message": "Task marked as active",
+                "task": TaskSerializer(task).data,
             }
         )
 

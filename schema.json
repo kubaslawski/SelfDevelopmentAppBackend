@@ -569,7 +569,6 @@ paths:
       operationId: v1_completions_list
       description: |-
         ViewSet for managing task completions.
-
         Provides full CRUD access to completion records.
       parameters:
       - in: query
@@ -623,7 +622,6 @@ paths:
       operationId: v1_completions_create
       description: |-
         ViewSet for managing task completions.
-
         Provides full CRUD access to completion records.
       tags:
       - Completions
@@ -654,7 +652,6 @@ paths:
       operationId: v1_completions_retrieve
       description: |-
         ViewSet for managing task completions.
-
         Provides full CRUD access to completion records.
       parameters:
       - in: path
@@ -680,7 +677,6 @@ paths:
       operationId: v1_completions_update
       description: |-
         ViewSet for managing task completions.
-
         Provides full CRUD access to completion records.
       parameters:
       - in: path
@@ -717,7 +713,6 @@ paths:
       operationId: v1_completions_partial_update
       description: |-
         ViewSet for managing task completions.
-
         Provides full CRUD access to completion records.
       parameters:
       - in: path
@@ -754,7 +749,6 @@ paths:
       operationId: v1_completions_destroy
       description: |-
         ViewSet for managing task completions.
-
         Provides full CRUD access to completion records.
       parameters:
       - in: path
@@ -772,6 +766,25 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/completions/daily-summary/:
+    get:
+      operationId: v1_completions_daily_summary_retrieve
+      description: |-
+        ViewSet for managing task completions.
+        Provides full CRUD access to completion records.
+      tags:
+      - Completions
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCompletion'
+          description: ''
   /api/v1/feedback/:
     get:
       operationId: v1_feedback_list
@@ -3229,6 +3242,16 @@ paths:
           type: boolean
         description: Has due date
       - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: Include inactive tasks in results
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+        description: 'Filter by active status (default: True for recurring tasks)'
+      - in: query
         name: is_recurring
         schema:
           type: boolean
@@ -3673,6 +3696,85 @@ paths:
         required: true
       tags:
       - Tasks
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/v1/tasks/{id}/mark_active/:
+    post:
+      operationId: v1_tasks_mark_active_create
+      description: |-
+        Mark a recurring task as active again.
+
+        This will set is_active=True, allowing new completions to be tracked.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Task'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Task'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /api/v1/tasks/{id}/mark_finished/:
+    post:
+      operationId: v1_tasks_mark_finished_create
+      description: |-
+        Mark a recurring task as finished (inactive).
+
+        This will set is_active=False, preventing new completions from being tracked.
+        The task and its completion history will be preserved.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Task'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Task'
+        required: true
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -6403,6 +6505,10 @@ components:
           format: date
           nullable: true
           description: When the recurring schedule ends (optional)
+        is_active:
+          type: boolean
+          description: Whether this recurring task is active (inactive tasks won't
+            generate new completions)
         recurrence_display:
           type: string
           readOnly: true
@@ -7019,6 +7125,10 @@ components:
           format: date
           nullable: true
           description: When the recurring schedule ends (optional)
+        is_active:
+          type: boolean
+          description: Whether this recurring task is active (inactive tasks won't
+            generate new completions)
         recurrence_display:
           type: string
           readOnly: true
@@ -7347,6 +7457,10 @@ components:
           title: Target completions per period
           description: How many times the task should be completed per period (e.g.,
             3 times per week)
+        is_active:
+          type: boolean
+          description: Whether this recurring task is active (inactive tasks won't
+            generate new completions)
         is_overdue:
           type: boolean
           readOnly: true
@@ -7542,6 +7656,10 @@ components:
           format: date
           nullable: true
           description: When the recurring schedule ends (optional)
+        is_active:
+          type: boolean
+          description: Whether this recurring task is active (inactive tasks won't
+            generate new completions)
         recurrence_display:
           type: string
           readOnly: true
