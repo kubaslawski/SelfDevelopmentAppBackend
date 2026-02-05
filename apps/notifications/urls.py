@@ -4,6 +4,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    MotivationalQuotesView,
     NotificationPreferenceView,
     NotificationViewSet,
     RegisterPushTokenView,
@@ -17,6 +18,7 @@ router.register("notifications", NotificationViewSet, basename="notification")
 urlpatterns = [
     path("notifications/preferences/", NotificationPreferenceView.as_view(), name="preferences"),
     path("notifications/push-token/", RegisterPushTokenView.as_view(), name="push-token"),
+    path("notifications/motivational-quotes/", MotivationalQuotesView.as_view(), name="motivational-quotes"),
     path("", include(router.urls)),
 ]
 

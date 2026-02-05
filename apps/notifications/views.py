@@ -7,14 +7,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.llm import LLMError, RateLimitExceeded
 from .models import Notification, NotificationPreference
 from .serializers import (
+    MotivationalQuoteSerializer,
     NotificationListSerializer,
     NotificationPreferenceSerializer,
     NotificationSerializer,
     RegisterPushTokenSerializer,
 )
-from .services import get_or_create_preferences
+from .services import generate_motivational_quotes, get_or_create_preferences
 
 
 class NotificationPreferenceView(APIView):
@@ -113,6 +115,45 @@ class RegisterPushTokenView(APIView):
                 "message": "Push token removed.",
             }
         )
+
+
+class MotivationalQuotesView(APIView):
+    """
+    Generate motivational quotes based on user's current goals and tasks.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Notifications"],
+        responses={200: MotivationalQuoteSerializer(many=True)},
+    )
+    def get(self, request):
+        """Return motivational quotes personalized for the user."""
+        try:
+            quotes = generate_motivational_quotes(request.user)
+        except RateLimitExceeded as e:
+            return Response(
+                {
+                    "success": False,
+                    "error": "rate_limit_exceeded",
+                    "message": str(e),
+                    "retry_after": e.retry_after,
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        except LLMError:
+            return Response(
+                {
+                    "success": False,
+                    "error": "llm_error",
+                    "message": "Failed to generate motivational quotes. Please try again later.",
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        serializer = MotivationalQuoteSerializer(quotes, many=True)
+        return Response(serializer.data)
 
 
 @extend_schema_view(

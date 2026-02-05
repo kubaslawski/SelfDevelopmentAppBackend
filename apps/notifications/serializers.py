@@ -71,3 +71,10 @@ class NotificationListSerializer(serializers.ModelSerializer):
             "task",
         ]
 
+
+class MotivationalQuoteSerializer(serializers.Serializer):
+    """Serializer for motivational quotes."""
+
+    text = serializers.CharField()
+    focus_goal = serializers.CharField(allow_null=True, required=False)
+    focus_task = serializers.CharField(allow_null=True, required=False)

@@ -43,6 +43,21 @@ Rules:
 - Ask in the same language the user uses"""
 
 
+MOTIVATIONAL_QUOTES_SYSTEM = """You are a supportive motivational coach.
+
+Your goal is to create short, uplifting motivational quotes tailored to the user's
+current goals and tasks. Keep each quote to 1-2 sentences. Be positive, specific,
+and action-oriented without sounding cheesy.
+
+Rules:
+- Use the same language as the user data (Polish if in doubt)
+- Do not include emojis unless they are already present in the user's task/goal titles
+- Keep quotes short and impactful (max ~200 characters)
+- If there are no goals or tasks, provide general motivational quotes
+
+Return ONLY valid JSON."""
+
+
 # =============================================================================
 # QUESTION GENERATION (Step 1: Generate contextual questions)
 # =============================================================================
@@ -181,6 +196,30 @@ REMEMBER:
 - Include the EXACT resources/apps to use"""
 
 
+MOTIVATIONAL_QUOTES_TEMPLATE = """Użytkownik ma następujące cele i zadania.
+
+Cele:
+{goals_text}
+
+Zadania:
+{tasks_text}
+
+Wygeneruj {quote_count} krótkich cytatów motywacyjnych dopasowanych do tych danych.
+
+Zwróć TYLKO poprawny JSON w tym formacie:
+{{
+    "quotes": [
+        {{
+            "text": "Treść cytatu",
+            "focus_goal": "Tytuł celu (opcjonalnie)",
+            "focus_task": "Tytuł zadania (opcjonalnie)"
+        }}
+    ]
+}}
+
+Jeśli nie ma celów lub zadań, wygeneruj ogólne cytaty motywacyjne i ustaw focus_goal/focus_task na null."""
+
+
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
@@ -233,6 +272,29 @@ def format_goal_plan_prompt(
         today_date=today_date,
         num_milestones=num_milestones,
         tasks_per_milestone=tasks_per_milestone,
+    )
+
+
+def format_motivational_quotes_prompt(
+    goals_text: str,
+    tasks_text: str,
+    quote_count: int,
+) -> str:
+    """
+    Format the prompt for motivational quotes based on user's goals and tasks.
+
+    Args:
+        goals_text: Pre-formatted goals context.
+        tasks_text: Pre-formatted tasks context.
+        quote_count: Number of quotes to generate.
+
+    Returns:
+        Formatted prompt string.
+    """
+    return MOTIVATIONAL_QUOTES_TEMPLATE.format(
+        goals_text=goals_text,
+        tasks_text=tasks_text,
+        quote_count=quote_count,
     )
 
 

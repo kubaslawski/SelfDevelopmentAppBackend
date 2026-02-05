@@ -12,12 +12,21 @@ from datetime import datetime, time, timedelta
 from typing import Optional
 
 import requests
+from pydantic import ValidationError
 from django.conf import settings
 from django.db.models import QuerySet
 from django.utils import timezone
 
+from core.llm import LLMError, gemini_client
+from core.llm.prompts import (
+    MOTIVATIONAL_QUOTES_SYSTEM,
+    format_motivational_quotes_prompt,
+)
+from apps.goals.models import Goal
 from apps.tasks.models import Task
 
+from .dto import LLMQuotesResponseDTO
+from .entities import MotivationalQuote
 from .models import Notification, NotificationPreference
 
 logger = logging.getLogger(__name__)
@@ -593,6 +602,75 @@ def notify_info(user, title: str, body: str) -> Notification:
     )
 
 
+# =============================================================================
+# Motivational Quotes (LLM)
+# =============================================================================
+
+
+def generate_motivational_quotes(user, quote_count: int = 3) -> list[MotivationalQuote]:
+    """
+    Generate motivational quotes based on user's current goals and tasks.
+
+    Args:
+        user: User to personalize quotes for.
+        quote_count: Number of quotes to generate (1-5).
+
+    Returns:
+        List of MotivationalQuote entities.
+    """
+    quote_count = max(1, min(quote_count, 5))
+
+    goals = list(
+        Goal.objects.filter(user=user)
+        .exclude(
+            status__in=[
+                Goal.Status.COMPLETED,
+                Goal.Status.ABANDONED,
+                Goal.Status.DRAFT,
+            ]
+        )
+        .order_by("target_date")[:5]
+    )
+    tasks = list(
+        Task.objects.filter(user=user)
+        .exclude(
+            status__in=[
+                Task.Status.COMPLETED,
+                Task.Status.ARCHIVED,
+            ]
+        )
+        .order_by("due_date")[:10]
+    )
+
+    goals_text = _format_goals_context(goals)
+    tasks_text = _format_tasks_context(tasks)
+    prompt = format_motivational_quotes_prompt(
+        goals_text=goals_text,
+        tasks_text=tasks_text,
+        quote_count=quote_count,
+    )
+
+    try:
+        response = gemini_client.generate_json(
+            prompt=prompt,
+            user_id=user.id,
+            system_prompt=MOTIVATIONAL_QUOTES_SYSTEM,
+        )
+        parsed = LLMQuotesResponseDTO(**response)
+    except ValidationError as exc:
+        logger.error("Invalid LLM response for motivational quotes: %s", exc)
+        raise LLMError("Invalid LLM response format for motivational quotes.")
+
+    return [
+        MotivationalQuote(
+            text=item.text,
+            focus_goal=item.focus_goal,
+            focus_task=item.focus_task,
+        )
+        for item in parsed.quotes
+    ]
+
+
 def _handle_expo_response(
     notification: Notification, prefs: NotificationPreference, result: dict
 ) -> bool:
@@ -623,3 +701,34 @@ def _handle_expo_response(
         notification.mark_failed(error)
         logger.error(f"Failed notification {notification.id}: {error}")
         return False
+
+
+def _format_tasks_context(tasks: list[Task]) -> str:
+    """Format tasks for LLM prompt context."""
+    if not tasks:
+        return "Brak aktywnych zadań."
+
+    return "\n".join(_format_task_context(task) for task in tasks)
+
+
+def _format_goals_context(goals: list[Goal]) -> str:
+    """Format goals for LLM prompt context."""
+    if not goals:
+        return "Brak aktywnych celów."
+
+    return "\n".join(_format_goal_context(goal) for goal in goals)
+
+
+def _format_task_context(task: Task) -> str:
+    """Format a single task line."""
+    due_date = task.due_date.isoformat() if task.due_date else "brak terminu"
+    return (
+        f"- {task.title} | status: {task.status} | "
+        f"priorytet: {task.priority} | termin: {due_date}"
+    )
+
+
+def _format_goal_context(goal: Goal) -> str:
+    """Format a single goal line."""
+    target_date = goal.target_date.isoformat() if goal.target_date else "brak"
+    return f"- {goal.title} | status: {goal.status} | termin: {target_date}"

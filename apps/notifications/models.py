@@ -136,20 +136,20 @@ class Notification(TimeStampedModel):
         DAILY_REMINDER = "daily_reminder", _("Daily Recurring Reminder")
         WEEKLY_REMINDER = "weekly_reminder", _("Weekly Recurring Reminder")
         GOAL_REMINDER = "goal_reminder", _("Goal Milestone Reminder")
-        
+
         # Warnings (⚠️)
         WARNING = "warning", _("Warning")
         DEADLINE_WARNING = "deadline_warning", _("Deadline Warning")
-        
+
         # Suggestions (💡)
         SUGGESTION = "suggestion", _("Suggestion")
         TIP = "tip", _("Tip")
-        
+
         # Congratulations (🎉)
         CONGRATULATIONS = "congratulations", _("Congratulations")
         ACHIEVEMENT = "achievement", _("Achievement")
         STREAK = "streak", _("Streak")
-        
+
         # Info (ℹ️)
         INFO = "info", _("Information")
 
@@ -256,9 +256,9 @@ class Notification(TimeStampedModel):
         self.sent_at = timezone.now()
         self.sent_via_push = via_push
         self.sent_via_email = via_email
-        self.save(update_fields=[
-            "status", "sent_at", "sent_via_push", "sent_via_email", "updated_at"
-        ])
+        self.save(
+            update_fields=["status", "sent_at", "sent_via_push", "sent_via_email", "updated_at"]
+        )
 
     def mark_failed(self, error: str) -> None:
         """Mark notification as failed."""
@@ -271,4 +271,3 @@ class Notification(TimeStampedModel):
         if self.status == self.Status.PENDING:
             self.status = self.Status.CANCELLED
             self.save(update_fields=["status", "updated_at"])
-
