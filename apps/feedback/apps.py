@@ -6,3 +6,4 @@ class FeedbackConfig(AppConfig):
     name = "apps.feedback"
     verbose_name = "User Feedback"
 
+

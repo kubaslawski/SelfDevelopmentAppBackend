@@ -72,3 +72,4 @@ def completion_created(sender, instance, created, **kwargs):
     # Check if the task is now complete for the current period
     if task.is_period_complete:
         cancel_task_notifications(task)
+

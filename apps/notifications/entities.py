@@ -13,3 +13,4 @@ class MotivationalQuote:
     text: str
     focus_goal: Optional[str] = None
     focus_task: Optional[str] = None
+

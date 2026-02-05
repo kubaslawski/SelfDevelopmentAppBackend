@@ -17,3 +17,4 @@ def django_db_setup():
     """Configure Django DB for pytest."""
     pass
 
+

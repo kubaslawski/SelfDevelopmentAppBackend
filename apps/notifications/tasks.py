@@ -4,6 +4,7 @@ Celery tasks for notification processing.
 These tasks are scheduled by Celery Beat:
 - send_pending_notifications: Every minute
 - schedule_daily_reminders: Daily at 6:00 AM
+- schedule_motivational_quotes: Daily at 9:00 AM and 5:00 PM
 - cleanup_old_notifications: Weekly on Sunday at 3:00 AM
 """
 
@@ -16,8 +17,9 @@ from django.utils import timezone
 
 from apps.tasks.models import Task
 
-from .models import Notification
+from .models import Notification, NotificationPreference
 from .services import (
+    generate_motivational_quotes,
     get_pending_notifications,
     schedule_daily_recurring_reminder,
     send_push_notifications_batch,
@@ -144,6 +146,72 @@ def cleanup_old_notifications(self):
     except Exception as exc:
         logger.error(f"Error in cleanup_old_notifications: {exc}")
         raise
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=300)
+def schedule_motivational_quotes(self, hour_label: str | None = None):
+    """
+    Schedule motivational quote notifications for users twice daily.
+
+    Runs at 9:00 AM and 5:00 PM via Celery Beat.
+    Creates notifications only if user has meaningful task context.
+    """
+    try:
+        now = timezone.now()
+        reminder_key = f"motivational_quote_{now.date().isoformat()}_{hour_label or now.strftime('%H%M')}"
+
+        prefs = (
+            NotificationPreference.objects.filter(
+                notifications_enabled=True,
+                push_enabled=True,
+            )
+            .exclude(push_token="")
+            .select_related("user")
+        )
+
+        created_count = 0
+        skipped_count = 0
+        empty_count = 0
+
+        for pref in prefs:
+            user = pref.user
+
+            already_exists = Notification.objects.filter(
+                user=user,
+                notification_type=Notification.NotificationType.MOTIVATIONAL_QUOTE,
+                reminder_key=reminder_key,
+            ).exists()
+            if already_exists:
+                skipped_count += 1
+                continue
+
+            quotes = generate_motivational_quotes(
+                user=user,
+                quote_count=3,
+                notification_status=Notification.Status.PENDING,
+                scheduled_for=now,
+                reminder_key=reminder_key,
+            )
+            if quotes:
+                created_count += 1
+            else:
+                empty_count += 1
+
+        logger.info(
+            "Motivational quotes: created=%s, skipped=%s, empty=%s",
+            created_count,
+            skipped_count,
+            empty_count,
+        )
+        return {
+            "created": created_count,
+            "skipped": skipped_count,
+            "empty": empty_count,
+        }
+
+    except Exception as exc:
+        logger.error("Error in schedule_motivational_quotes: %s", exc)
+        raise self.retry(exc=exc)
 
 
 @shared_task(bind=True)

@@ -122,3 +122,4 @@ def get_remaining_requests(user_id: int) -> dict:
         },
     }
 
+

@@ -96,3 +96,4 @@ class CustomOAuth2Validator(OAuth2Validator):
 
         return False
 
+

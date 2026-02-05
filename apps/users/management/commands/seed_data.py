@@ -377,3 +377,4 @@ class Command(BaseCommand):
             )
         self.stdout.write(f"  Created {len(tasks_data)} tasks for {user.email}")
 
+

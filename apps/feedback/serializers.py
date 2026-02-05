@@ -126,3 +126,4 @@ class FeedbackAdminSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "user", "user_email", "created_at", "updated_at"]
 
+

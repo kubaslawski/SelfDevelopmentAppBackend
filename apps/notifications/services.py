@@ -607,7 +607,13 @@ def notify_info(user, title: str, body: str) -> Notification:
 # =============================================================================
 
 
-def generate_motivational_quotes(user, quote_count: int = 3) -> list[MotivationalQuote]:
+def generate_motivational_quotes(
+    user,
+    quote_count: int = 3,
+    notification_status: str = Notification.Status.SENT,
+    scheduled_for=None,
+    reminder_key: str | None = None,
+) -> list[MotivationalQuote]:
     """
     Generate motivational quotes based on user's current goals and tasks.
 
@@ -664,7 +670,13 @@ def generate_motivational_quotes(user, quote_count: int = 3) -> list[Motivationa
     if not quotes:
         return []
 
-    _record_motivational_quote_notification(user, quotes)
+    _record_motivational_quote_notification(
+        user,
+        quotes,
+        status=notification_status,
+        scheduled_for=scheduled_for,
+        reminder_key=reminder_key,
+    )
 
     return quotes
 
@@ -704,9 +716,12 @@ def _handle_expo_response(
 def _record_motivational_quote_notification(
     user,
     quotes: list[MotivationalQuote],
+    status: str = Notification.Status.SENT,
+    scheduled_for=None,
+    reminder_key: str | None = None,
 ) -> None:
     """Save a notification record for motivational quote generation."""
-    now = timezone.now()
+    now = scheduled_for or timezone.now()
     count = len(quotes)
     title = "Motywujące cytaty"
     if count == 1:
@@ -717,15 +732,18 @@ def _record_motivational_quote_notification(
     if count > 0:
         body = f"{body} Przykład: {quotes[0].text}"
 
+    if reminder_key is None:
+        reminder_key = f"motivational_quote_{now.timestamp()}"
+
     Notification.objects.create(
         user=user,
         notification_type=Notification.NotificationType.MOTIVATIONAL_QUOTE,
         title=title,
         body=body,
         scheduled_for=now,
-        reminder_key=f"motivational_quote_{now.timestamp()}",
-        status=Notification.Status.SENT,
-        sent_at=now,
+        reminder_key=reminder_key,
+        status=status,
+        sent_at=now if status == Notification.Status.SENT else None,
     )
 
 

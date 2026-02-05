@@ -41,6 +41,17 @@ app.conf.beat_schedule = {
         "task": "apps.notifications.tasks.cleanup_old_notifications",
         "schedule": crontab(hour=3, minute=0, day_of_week=0),
     },
+    # Motivational quotes twice daily
+    "schedule-motivational-quotes-morning": {
+        "task": "apps.notifications.tasks.schedule_motivational_quotes",
+        "schedule": crontab(hour=9, minute=0),
+        "args": ("09:00",),
+    },
+    "schedule-motivational-quotes-evening": {
+        "task": "apps.notifications.tasks.schedule_motivational_quotes",
+        "schedule": crontab(hour=17, minute=0),
+        "args": ("17:00",),
+    },
 }
 
 app.conf.timezone = "Europe/Warsaw"

@@ -229,3 +229,4 @@ class NotificationAdmin(admin.ModelAdmin):
         )
         self.message_user(request, f"Rescheduled {count} notifications for resend.")
 
+

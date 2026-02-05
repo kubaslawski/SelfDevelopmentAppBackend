@@ -132,3 +132,4 @@ class Feedback(models.Model):
         self.resolved_at = timezone.now()
         self.save(update_fields=["status", "resolved_at", "updated_at"])
 
+

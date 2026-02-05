@@ -107,3 +107,4 @@ class FeedbackAdmin(admin.ModelAdmin):
         queryset.update(status=Feedback.Status.IN_REVIEW)
         self.message_user(request, f"{queryset.count()} feedback(s) marked as in review.")
 
+
