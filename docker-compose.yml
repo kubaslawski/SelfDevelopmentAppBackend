@@ -39,8 +39,6 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.django
-      args:
-        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-local.txt}
     container_name: sda-django
     volumes:
       # Mount source code for hot reload
@@ -74,8 +72,6 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.django
-      args:
-        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-local.txt}
     container_name: sda-celery-worker
     command: celery -A config worker -l INFO
     volumes:
@@ -102,8 +98,6 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.django
-      args:
-        REQUIREMENTS_FILE: ${REQUIREMENTS_FILE:-local.txt}
     container_name: sda-celery-beat
     command: celery -A config beat -l INFO
     volumes:

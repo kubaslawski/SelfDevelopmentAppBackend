@@ -16,14 +16,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Build argument for requirements file (provided by docker-compose)
-ARG REQUIREMENTS_FILE
-
-
 # Install Python dependencies
 COPY requirements/ /app/requirements/
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements/local.txt
+    && pip install --no-cache-dir -r requirements/base.txt
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /entrypoint.sh
