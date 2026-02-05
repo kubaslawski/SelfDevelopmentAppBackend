@@ -152,6 +152,7 @@ class Notification(TimeStampedModel):
 
         # Info (ℹ️)
         INFO = "info", _("Information")
+        MOTIVATIONAL_QUOTE = "motivational_quote", _("Motivational Quote")
 
     class Status(models.TextChoices):
         """Notification delivery status."""

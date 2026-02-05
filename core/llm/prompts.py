@@ -196,15 +196,15 @@ REMEMBER:
 - Include the EXACT resources/apps to use"""
 
 
-MOTIVATIONAL_QUOTES_TEMPLATE = """Użytkownik ma następujące cele i zadania.
-
-Cele:
-{goals_text}
+MOTIVATIONAL_QUOTES_TEMPLATE = """Użytkownik ma następujące zadania.
 
 Zadania:
 {tasks_text}
 
-Wygeneruj {quote_count} krótkich cytatów motywacyjnych dopasowanych do tych danych.
+Wygeneruj do {quote_count} krótkich cytatów motywacyjnych wyłącznie na podstawie tytułu i opisu zadania.
+Każdy cytat ma nawiązywać do KORZYŚCI wynikających z wykonania danego zadania.
+Nie wymyślaj faktów, których nie ma w tytule/opisie.
+Jeśli w zadaniach nie ma istotnych szczegółów (tytuł i opis są zbyt ogólne), zwróć pustą listę.
 
 Zwróć TYLKO poprawny JSON w tym formacie:
 {{
@@ -217,7 +217,7 @@ Zwróć TYLKO poprawny JSON w tym formacie:
     ]
 }}
 
-Jeśli nie ma celów lub zadań, wygeneruj ogólne cytaty motywacyjne i ustaw focus_goal/focus_task na null."""
+Jeśli zwracasz pustą listę, użyj dokładnie: {{ "quotes": [] }}."""
 
 
 # =============================================================================
@@ -276,7 +276,6 @@ def format_goal_plan_prompt(
 
 
 def format_motivational_quotes_prompt(
-    goals_text: str,
     tasks_text: str,
     quote_count: int,
 ) -> str:
@@ -284,7 +283,6 @@ def format_motivational_quotes_prompt(
     Format the prompt for motivational quotes based on user's goals and tasks.
 
     Args:
-        goals_text: Pre-formatted goals context.
         tasks_text: Pre-formatted tasks context.
         quote_count: Number of quotes to generate.
 
@@ -292,7 +290,6 @@ def format_motivational_quotes_prompt(
         Formatted prompt string.
     """
     return MOTIVATIONAL_QUOTES_TEMPLATE.format(
-        goals_text=goals_text,
         tasks_text=tasks_text,
         quote_count=quote_count,
     )

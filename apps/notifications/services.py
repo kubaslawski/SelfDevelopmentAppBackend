@@ -12,17 +12,16 @@ from datetime import datetime, time, timedelta
 from typing import Optional
 
 import requests
-from pydantic import ValidationError
-from django.conf import settings
-from django.db.models import QuerySet
-from django.utils import timezone
-
 from core.llm import LLMError, gemini_client
 from core.llm.prompts import (
     MOTIVATIONAL_QUOTES_SYSTEM,
     format_motivational_quotes_prompt,
 )
-from apps.goals.models import Goal
+from django.conf import settings
+from django.db.models import QuerySet
+from django.utils import timezone
+from pydantic import ValidationError
+
 from apps.tasks.models import Task
 
 from .dto import LLMQuotesResponseDTO
@@ -242,6 +241,7 @@ NOTIFICATION_STYLE = {
     "streak": {"emoji": "🔥", "category": "congratulations"},
     # Info
     "info": {"emoji": "ℹ️", "category": "info"},
+    "motivational_quote": {"emoji": "✨", "category": "suggestion"},
 }
 
 
@@ -620,17 +620,6 @@ def generate_motivational_quotes(user, quote_count: int = 3) -> list[Motivationa
     """
     quote_count = max(1, min(quote_count, 5))
 
-    goals = list(
-        Goal.objects.filter(user=user)
-        .exclude(
-            status__in=[
-                Goal.Status.COMPLETED,
-                Goal.Status.ABANDONED,
-                Goal.Status.DRAFT,
-            ]
-        )
-        .order_by("target_date")[:5]
-    )
     tasks = list(
         Task.objects.filter(user=user)
         .exclude(
@@ -642,10 +631,12 @@ def generate_motivational_quotes(user, quote_count: int = 3) -> list[Motivationa
         .order_by("due_date")[:10]
     )
 
-    goals_text = _format_goals_context(goals)
+    tasks = [task for task in tasks if _has_useful_task_context(task)]
+    if not tasks:
+        return []
+
     tasks_text = _format_tasks_context(tasks)
     prompt = format_motivational_quotes_prompt(
-        goals_text=goals_text,
         tasks_text=tasks_text,
         quote_count=quote_count,
     )
@@ -661,7 +652,7 @@ def generate_motivational_quotes(user, quote_count: int = 3) -> list[Motivationa
         logger.error("Invalid LLM response for motivational quotes: %s", exc)
         raise LLMError("Invalid LLM response format for motivational quotes.")
 
-    return [
+    quotes = [
         MotivationalQuote(
             text=item.text,
             focus_goal=item.focus_goal,
@@ -669,6 +660,13 @@ def generate_motivational_quotes(user, quote_count: int = 3) -> list[Motivationa
         )
         for item in parsed.quotes
     ]
+
+    if not quotes:
+        return []
+
+    _record_motivational_quote_notification(user, quotes)
+
+    return quotes
 
 
 def _handle_expo_response(
@@ -703,6 +701,34 @@ def _handle_expo_response(
         return False
 
 
+def _record_motivational_quote_notification(
+    user,
+    quotes: list[MotivationalQuote],
+) -> None:
+    """Save a notification record for motivational quote generation."""
+    now = timezone.now()
+    count = len(quotes)
+    title = "Motywujące cytaty"
+    if count == 1:
+        body = "Wygenerowano 1 cytat motywacyjny."
+    else:
+        body = f"Wygenerowano {count} cytaty motywacyjne."
+
+    if count > 0:
+        body = f"{body} Przykład: {quotes[0].text}"
+
+    Notification.objects.create(
+        user=user,
+        notification_type=Notification.NotificationType.MOTIVATIONAL_QUOTE,
+        title=title,
+        body=body,
+        scheduled_for=now,
+        reminder_key=f"motivational_quote_{now.timestamp()}",
+        status=Notification.Status.SENT,
+        sent_at=now,
+    )
+
+
 def _format_tasks_context(tasks: list[Task]) -> str:
     """Format tasks for LLM prompt context."""
     if not tasks:
@@ -711,24 +737,49 @@ def _format_tasks_context(tasks: list[Task]) -> str:
     return "\n".join(_format_task_context(task) for task in tasks)
 
 
-def _format_goals_context(goals: list[Goal]) -> str:
-    """Format goals for LLM prompt context."""
-    if not goals:
-        return "Brak aktywnych celów."
-
-    return "\n".join(_format_goal_context(goal) for goal in goals)
-
-
 def _format_task_context(task: Task) -> str:
     """Format a single task line."""
     due_date = task.due_date.isoformat() if task.due_date else "brak terminu"
-    return (
-        f"- {task.title} | status: {task.status} | "
-        f"priorytet: {task.priority} | termin: {due_date}"
+    description = task.description.strip() if task.description else ""
+    details = (
+        f"- {task.title} | opis: {description} | "
+        f"status: {task.status} | priorytet: {task.priority} | termin: {due_date}"
     )
+    return details
 
 
-def _format_goal_context(goal: Goal) -> str:
-    """Format a single goal line."""
-    target_date = goal.target_date.isoformat() if goal.target_date else "brak"
-    return f"- {goal.title} | status: {goal.status} | termin: {target_date}"
+def _has_useful_task_context(task: Task) -> bool:
+    """Check if task has enough detail to generate a meaningful quote."""
+    title = task.title.strip()
+    description = task.description.strip() if task.description else ""
+    title_lower = title.lower()
+    description_lower = description.lower()
+
+    if len(title) < 4 and len(description) < 15:
+        return False
+
+    generic_titles = {
+        "zadanie",
+        "task",
+        "todo",
+        "do zrobienia",
+        "sprawa",
+        "test",
+        "abc",
+    }
+    if title_lower in generic_titles and len(description) < 15:
+        return False
+
+    if len(description) >= 15:
+        return True
+
+    if len(title) >= 8 and not any(token in title_lower for token in generic_titles):
+        return True
+
+    if any(
+        token in description_lower
+        for token in ["czyt", "książ", "inwest", "kurs", "trening", "nauka"]
+    ):
+        return True
+
+    return False
