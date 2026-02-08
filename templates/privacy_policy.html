@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Verely | Polityka Prywatności - Verely</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .language-toggle {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .language-toggle button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .language-toggle button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .language-toggle button.active {
+            background: #764ba2;
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .language-section {
+            display: none;
+        }
+
+        .language-section.active {
+            display: block;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        h3 {
+            color: #764ba2;
+            font-size: 1.3em;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .highlight {
+            background: #f0f4ff;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .contact-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .last-updated {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .language-toggle button {
+                padding: 10px 20px;
+                margin: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Privacy Policy</h1>
+            <p>Polityka Prywatności</p>
+        </div>
+
+        <div class="language-toggle">
+            <button onclick="switchLanguage('en')" id="btn-en" class="active">English 🇬🇧</button>
+            <button onclick="switchLanguage('pl')" id="btn-pl">Polski 🇵🇱</button>
+        </div>
+
+        <div class="content">
+            <!-- ENGLISH VERSION -->
+            <div id="lang-en" class="language-section active">
+                <p class="last-updated"><strong>Last Updated:</strong> February 8, 2026</p>
+
+                <h2>1. Introduction</h2>
+                <p>
+                    Welcome to <strong>Verely</strong> ("we," "our," or "us"). We are committed to protecting your personal data and respecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and services.
+                </p>
+
+                <div class="highlight">
+                    <strong>📱 Application Name:</strong> Verely<br>
+                    <strong>🏢 Data Controller:</strong> Verely Team<br>
+                    <strong>🌍 Jurisdiction:</strong> European Union (GDPR compliant)
+                </div>
+
+                <h2>2. Data We Collect</h2>
+
+                <h3>2.1 Personal Information</h3>
+                <ul>
+                    <li><strong>Account Data:</strong> Email address, username, first name, password (encrypted)</li>
+                    <li><strong>Authentication Data:</strong> Session tokens, authentication information</li>
+                </ul>
+
+                <h3>2.2 Usage Data</h3>
+                <ul>
+                    <li><strong>Tasks & Goals:</strong> Task titles, descriptions, due dates, completion status, goals, milestones</li>
+                    <li><strong>Activity Data:</strong> Task completions, streaks, statistics, progress tracking</li>
+                    <li><strong>Group Data:</strong> Group memberships, invitations, shared tasks</li>
+                    <li><strong>Notifications:</strong> Push notification tokens, notification preferences</li>
+                </ul>
+
+                <h3>2.3 Technical Data</h3>
+                <ul>
+                    <li><strong>Device Information:</strong> Device type, operating system, app version</li>
+                    <li><strong>Log Data:</strong> IP addresses, access times, error logs (stored temporarily)</li>
+                </ul>
+
+                <h3>2.4 AI-Generated Content</h3>
+                <p>AI-generated content is provided using third-party large language models.</p>
+                <ul>
+                    <li><strong>LLM Processing:</strong> Your tasks and goals may be processed by AI (Google Gemini) to generate personalized plans, motivational quotes, and suggestions</li>
+                    <li><strong>Data Sent to AI:</strong> Task titles, descriptions, goal information</li>
+                    <li><strong>Third-Party Processing:</strong> User-provided task and goal data may be transmitted to AI service providers in order to generate personalized content</li>
+                    <li><strong>Data Storage & Usage:</strong> Depending on the AI provider's policies, submitted data may be temporarily stored or used to improve AI services. We do not have direct control over how third-party AI providers process such data</li>
+                    <li><strong>Data Minimization:</strong> Where possible, we minimize the amount of data shared and avoid sending directly identifying information</li>
+                </ul>
+
+                <h2>3. How We Use Your Data</h2>
+
+                <h3>3.1 Primary Purposes</h3>
+                <ul>
+                    <li>✅ Provide and maintain the Verely service</li>
+                    <li>✅ Manage your account and authentication</li>
+                    <li>✅ Enable task management, goal tracking, and progress monitoring</li>
+                    <li>✅ Send notifications (task reminders, motivational quotes, group invitations)</li>
+                    <li>✅ Generate personalized AI-powered content (plans, suggestions, quotes)</li>
+                    <li>✅ Facilitate group collaboration and sharing</li>
+                </ul>
+                <p><strong>Note:</strong> The use of AI-powered features is voluntary and constitutes an integral part of the application's functionality.</p>
+
+                <h3>3.2 Secondary Purposes</h3>
+                <ul>
+                    <li>🔧 Debug and fix technical issues</li>
+                    <li>📧 Send important service updates and announcements</li>
+                    <li>🛡️ Detect and prevent fraud, abuse, and security incidents</li>
+                </ul>
+
+                <h2>4. Legal Basis for Processing (GDPR)</h2>
+                <ul>
+                    <li><strong>Contract Performance:</strong> Processing necessary to provide our services (Art. 6(1)(b) GDPR)</li>
+                    <li><strong>Consent:</strong> Push notifications, AI-generated content (Art. 6(1)(a) GDPR)</li>
+                    <li><strong>Legitimate Interests:</strong> Service improvement, security, fraud prevention (Art. 6(1)(f) GDPR)</li>
+                    <li><strong>Legal Obligation:</strong> Compliance with applicable laws (Art. 6(1)(c) GDPR)</li>
+                </ul>
+
+                <h2>5. Data Sharing and Disclosure</h2>
+
+                <h3>5.1 Third-Party Services</h3>
+                <p>We share your data with the following third-party services:</p>
+                <ul>
+                    <li><strong>Google Gemini (AI):</strong> For generating personalized plans and motivational quotes</li>
+                    <li><strong>Expo Push Notifications:</strong> For sending push notifications to your device</li>
+                    <li><strong>Cloud Hosting Provider:</strong> For storing application data securely</li>
+                </ul>
+
+                <h3>5.2 Group Sharing</h3>
+                <p>When you join a group or share tasks, the following data is visible to group members:</p>
+                <ul>
+                    <li>Your username and profile information</li>
+                    <li>Tasks you choose to share with the group</li>
+                    <li>Your activity within the group (completions, comments)</li>
+                </ul>
+
+                <h3>5.3 Legal Requirements</h3>
+                <p>We may disclose your data if required by law, court order, or governmental authority.</p>
+
+                <h3>5.4 Data Transfers Outside the European Union</h3>
+                <p>Some of the third-party services we use (e.g., AI providers) may process data outside the European Economic Area (EEA).</p>
+                <p>In such cases, data transfers are carried out in accordance with applicable GDPR regulations, in particular on the basis of Standard Contractual Clauses or other appropriate safeguards provided by law.</p>
+
+                <h2>6. Data Retention</h2>
+                <ul>
+                    <li><strong>Active Accounts:</strong> Data retained as long as your account is active</li>
+                    <li><strong>Deleted Accounts:</strong> Personal data deleted within 30 days of account deletion</li>
+                    <li><strong>Notifications:</strong> Deleted after 30 days (sent/cancelled/failed)</li>
+                    <li><strong>Logs:</strong> Technical logs retained for 90 days maximum</li>
+                    <li><strong>Backups:</strong> Backup data retained for 30 days, then permanently deleted</li>
+                </ul>
+
+                <h2>7. Your Rights (GDPR)</h2>
+                <p>Under GDPR, you have the following rights:</p>
+                <ul>
+                    <li><strong>Right to Access:</strong> Request a copy of your personal data</li>
+                    <li><strong>Right to Rectification:</strong> Correct inaccurate or incomplete data</li>
+                    <li><strong>Right to Erasure:</strong> Request deletion of your personal data ("right to be forgotten")</li>
+                    <li><strong>Right to Restriction:</strong> Limit how we process your data</li>
+                    <li><strong>Right to Data Portability:</strong> Receive your data in a structured, machine-readable format</li>
+                    <li><strong>Right to Object:</strong> Object to processing based on legitimate interests</li>
+                    <li><strong>Right to Withdraw Consent:</strong> Withdraw consent at any time (where processing is based on consent)</li>
+                    <li><strong>Right to Lodge a Complaint:</strong> File a complaint with your local data protection authority</li>
+                </ul>
+
+                <div class="highlight">
+                    <strong>📧 To exercise your rights, contact us at:</strong> kubaslawski.it@gmail.com
+                </div>
+
+                <h2>8. Data Security</h2>
+                <p>We implement industry-standard security measures to protect your data:</p>
+                <ul>
+                    <li>🔐 Encryption in transit (HTTPS/TLS)</li>
+                    <li>🔒 Password hashing (bcrypt/Argon2)</li>
+                    <li>🛡️ Secure authentication with JWT tokens</li>
+                    <li>🔑 Access controls and role-based permissions</li>
+                    <li>🔧 Regular security updates</li>
+                </ul>
+
+                <h2>9. Cookies and Tracking</h2>
+                <p>
+                    Our mobile app does not use cookies. We use local storage for authentication tokens and user preferences. Our web API may use session cookies for authentication.
+                </p>
+
+                <h2>10. Children's Data</h2>
+                <p>
+                    The Verely application is not intended for children under 16 years of age.
+                </p>
+                <p>
+                    We do not knowingly collect personal data from children. If we learn that a child's personal data has been collected without parental consent, we will take steps to delete it immediately.
+                </p>
+
+                <h2>11. Changes to This Policy</h2>
+                <p>
+                    We may update this Privacy Policy from time to time. We will notify you of significant changes via in-app notification or email. Continued use of the app after changes constitutes acceptance of the updated policy.
+                </p>
+
+                <h2>12. Contact Us</h2>
+                <div class="contact-info">
+                    <p><strong>📧 Email:</strong> kubaslawski.it@gmail.com</p>
+                </div>
+            </div>
+
+            <!-- POLISH VERSION -->
+            <div id="lang-pl" class="language-section">
+                <p class="last-updated"><strong>Ostatnia aktualizacja:</strong> 8 lutego 2026</p>
+
+                <h2>1. Wprowadzenie</h2>
+                <p>
+                    Witamy w <strong>Verely</strong> („my", „nasz" lub „nas"). Zobowiązujemy się do ochrony Twoich danych osobowych i poszanowania Twojej prywatności. Niniejsza Polityka Prywatności wyjaśnia, w jaki sposób zbieramy, wykorzystujemy, ujawniamy i chronimy Twoje informacje podczas korzystania z naszej aplikacji mobilnej i usług.
+                </p>
+
+                <div class="highlight">
+                    <strong>📱 Nazwa aplikacji:</strong> Verely<br>
+                    <strong>🏢 Administrator danych:</strong> Zespół Verely<br>
+                    <strong>🌍 Jurysdykcja:</strong> Unia Europejska (zgodność z RODO)
+                </div>
+
+                <h2>2. Dane, które zbieramy</h2>
+
+                <h3>2.1 Dane osobowe</h3>
+                <ul>
+                    <li><strong>Dane konta:</strong> Adres e-mail, nazwa użytkownika, imię, hasło (zaszyfrowane)</li>
+                    <li><strong>Dane uwierzytelniania:</strong> Tokeny sesji, informacje o uwierzytelnianiu</li>
+                </ul>
+
+                <h3>2.2 Dane użytkowania</h3>
+                <ul>
+                    <li><strong>Zadania i cele:</strong> Tytuły zadań, opisy, terminy, status ukończenia, cele, kamienie milowe</li>
+                    <li><strong>Dane aktywności:</strong> Ukończenia zadań, serie, statystyki, śledzenie postępów</li>
+                    <li><strong>Dane grup:</strong> Członkostwo w grupach, zaproszenia, współdzielone zadania</li>
+                    <li><strong>Powiadomienia:</strong> Tokeny powiadomień push, preferencje powiadomień</li>
+                </ul>
+
+                <h3>2.3 Dane techniczne</h3>
+                <ul>
+                    <li><strong>Informacje o urządzeniu:</strong> Typ urządzenia, system operacyjny, wersja aplikacji</li>
+                    <li><strong>Dane logów:</strong> Adresy IP, czasy dostępu, logi błędów (przechowywane tymczasowo)</li>
+                </ul>
+
+                <h3>2.4 Treści generowane przez AI</h3>
+                <p>Treści generowane przez AI są dostarczane przy użyciu modeli językowych stron trzecich.</p>
+                <ul>
+                    <li><strong>Przetwarzanie LLM:</strong> Twoje zadania i cele mogą być przetwarzane przez AI (Google Gemini) w celu generowania spersonalizowanych planów, cytatów motywacyjnych i sugestii</li>
+                    <li><strong>Dane wysyłane do AI:</strong> Tytuły zadań, opisy, informacje o celach</li>
+                    <li><strong>Przetwarzanie przez strony trzecie:</strong> Dane zadań i celów dostarczone przez użytkownika mogą być przesyłane do dostawców usług AI w celu generowania spersonalizowanych treści</li>
+                    <li><strong>Przechowywanie i wykorzystanie danych:</strong> W zależności od polityki dostawcy AI, przesłane dane mogą być tymczasowo przechowywane lub wykorzystywane do ulepszania usług AI. Nie mamy bezpośredniej kontroli nad tym, jak dostawcy AI stron trzecich przetwarzają takie dane</li>
+                    <li><strong>Minimalizacja danych:</strong> Tam, gdzie to możliwe, minimalizujemy ilość udostępnianych danych i unikamy wysyłania bezpośrednio identyfikujących informacji</li>
+                </ul>
+
+                <h2>3. Jak wykorzystujemy Twoje dane</h2>
+
+                <h3>3.1 Cele główne</h3>
+                <ul>
+                    <li>✅ Świadczenie i utrzymanie usługi Verely</li>
+                    <li>✅ Zarządzanie Twoim kontem i uwierzytelnianiem</li>
+                    <li>✅ Umożliwienie zarządzania zadaniami, śledzenia celów i monitorowania postępów</li>
+                    <li>✅ Wysyłanie powiadomień (przypomnienia o zadaniach, cytaty motywacyjne, zaproszenia do grup)</li>
+                    <li>✅ Generowanie spersonalizowanych treści AI (plany, sugestie, cytaty)</li>
+                    <li>✅ Ułatwienie współpracy grupowej i udostępniania</li>
+                </ul>
+                <p><strong>Uwaga:</strong> Korzystanie z funkcji opartych na AI jest dobrowolne i stanowi integralną część funkcjonalności aplikacji.</p>
+
+                <h3>3.2 Cele dodatkowe</h3>
+                <ul>
+                    <li>🔧 Debugowanie i naprawianie problemów technicznych</li>
+                    <li>📧 Wysyłanie ważnych aktualizacji usługi i ogłoszeń</li>
+                    <li>🛡️ Wykrywanie i zapobieganie oszustwom, nadużyciom i incydentom bezpieczeństwa</li>
+                </ul>
+
+                <h2>4. Podstawa prawna przetwarzania (RODO)</h2>
+                <ul>
+                    <li><strong>Wykonanie umowy:</strong> Przetwarzanie niezbędne do świadczenia naszych usług (Art. 6 ust. 1 lit. b RODO)</li>
+                    <li><strong>Zgoda:</strong> Powiadomienia push, treści generowane przez AI (Art. 6 ust. 1 lit. a RODO)</li>
+                    <li><strong>Prawnie uzasadnione interesy:</strong> Poprawa usługi, bezpieczeństwo, zapobieganie oszustwom (Art. 6 ust. 1 lit. f RODO)</li>
+                    <li><strong>Obowiązek prawny:</strong> Zgodność z obowiązującymi przepisami (Art. 6 ust. 1 lit. c RODO)</li>
+                </ul>
+
+                <h2>5. Udostępnianie i ujawnianie danych</h2>
+
+                <h3>5.1 Usługi stron trzecich</h3>
+                <p>Udostępniamy Twoje dane następującym usługom stron trzecich:</p>
+                <ul>
+                    <li><strong>Google Gemini (AI):</strong> Do generowania spersonalizowanych planów i cytatów motywacyjnych</li>
+                    <li><strong>Expo Push Notifications:</strong> Do wysyłania powiadomień push na Twoje urządzenie</li>
+                    <li><strong>Dostawca hostingu w chmurze:</strong> Do bezpiecznego przechowywania danych aplikacji</li>
+                </ul>
+
+                <h3>5.2 Udostępnianie w grupach</h3>
+                <p>Gdy dołączasz do grupy lub udostępniasz zadania, następujące dane są widoczne dla członków grupy:</p>
+                <ul>
+                    <li>Twoja nazwa użytkownika i informacje profilowe</li>
+                    <li>Zadania, które zdecydujesz się udostępnić grupie</li>
+                    <li>Twoja aktywność w grupie (ukończenia, komentarze)</li>
+                </ul>
+
+                <h3>5.3 Wymogi prawne</h3>
+                <p>Możemy ujawnić Twoje dane, jeśli jest to wymagane przez prawo, nakaz sądowy lub organ rządowy.</p>
+
+                <h3>5.4 Przekazywanie danych poza Unię Europejską</h3>
+                <p>Niektóre z wykorzystywanych przez nas usług stron trzecich (np. dostawcy AI) mogą przetwarzać dane poza Europejskim Obszarem Gospodarczym (EOG).</p>
+                <p>W takich przypadkach przekazywanie danych odbywa się zgodnie z obowiązującymi przepisami RODO, w szczególności na podstawie standardowych klauzul umownych lub innych odpowiednich zabezpieczeń przewidzianych przez prawo.</p>
+
+                <h2>6. Przechowywanie danych</h2>
+                <ul>
+                    <li><strong>Aktywne konta:</strong> Dane przechowywane tak długo, jak Twoje konto jest aktywne</li>
+                    <li><strong>Usunięte konta:</strong> Dane osobowe usuwane w ciągu 30 dni od usunięcia konta</li>
+                    <li><strong>Powiadomienia:</strong> Usuwane po 30 dniach (wysłane/anulowane/nieudane)</li>
+                    <li><strong>Logi:</strong> Logi techniczne przechowywane maksymalnie przez 90 dni</li>
+                    <li><strong>Kopie zapasowe:</strong> Dane kopii zapasowych przechowywane przez 30 dni, następnie trwale usuwane</li>
+                </ul>
+
+                <h2>7. Twoje prawa (RODO)</h2>
+                <p>Zgodnie z RODO masz następujące prawa:</p>
+                <ul>
+                    <li><strong>Prawo dostępu:</strong> Żądanie kopii swoich danych osobowych</li>
+                    <li><strong>Prawo do sprostowania:</strong> Poprawianie nieprawidłowych lub niekompletnych danych</li>
+                    <li><strong>Prawo do usunięcia:</strong> Żądanie usunięcia swoich danych osobowych („prawo do bycia zapomnianym")</li>
+                    <li><strong>Prawo do ograniczenia:</strong> Ograniczenie sposobu przetwarzania Twoich danych</li>
+                    <li><strong>Prawo do przenoszenia danych:</strong> Otrzymanie swoich danych w ustrukturyzowanym, powszechnie używanym formacie</li>
+                    <li><strong>Prawo do sprzeciwu:</strong> Sprzeciw wobec przetwarzania opartego na prawnie uzasadnionych interesach</li>
+                    <li><strong>Prawo do wycofania zgody:</strong> Wycofanie zgody w dowolnym momencie (gdy przetwarzanie opiera się na zgodzie)</li>
+                    <li><strong>Prawo do wniesienia skargi:</strong> Złożenie skargi do lokalnego organu ochrony danych</li>
+                </ul>
+
+                <div class="highlight">
+                    <strong>📧 Aby skorzystać ze swoich praw, skontaktuj się z nami:</strong> kubaslawski.it@gmail.com
+                </div>
+
+                <h2>8. Bezpieczeństwo danych</h2>
+                <p>Wdrażamy standardowe środki bezpieczeństwa w celu ochrony Twoich danych:</p>
+                <ul>
+                    <li>🔐 Szyfrowanie w transmisji (HTTPS/TLS)</li>
+                    <li>🔒 Haszowanie haseł (bcrypt/Argon2)</li>
+                    <li>🛡️ Bezpieczne uwierzytelnianie z tokenami JWT</li>
+                    <li>🔑 Kontrola dostępu i uprawnienia oparte na rolach</li>
+                    <li>🔧 Regularne aktualizacje bezpieczeństwa</li>
+                </ul>
+
+                <h2>9. Pliki cookie i śledzenie</h2>
+                <p>
+                    Nasza aplikacja mobilna nie używa plików cookie. Używamy lokalnej pamięci do tokenów uwierzytelniania i preferencji użytkownika. Nasze API webowe może używać plików cookie sesji do uwierzytelniania.
+                </p>
+
+                <h2>10. Dane dzieci</h2>
+                <p>
+                    Aplikacja Verely nie jest przeznaczona dla dzieci poniżej 16. roku życia.
+                </p>
+                <p>
+                    Nie zbieramy świadomie danych osobowych dzieci. Jeśli dowiemy się, że dane osobowe dziecka zostały zebrane bez zgody opiekuna prawnego, podejmiemy kroki w celu ich niezwłocznego usunięcia.
+                </p>
+
+                <h2>11. Zmiany w tej polityce</h2>
+                <p>
+                    Możemy od czasu do czasu aktualizować tę Politykę Prywatności. Powiadomimy Cię o istotnych zmianach za pomocą powiadomienia w aplikacji lub e-maila. Kontynuowanie korzystania z aplikacji po wprowadzeniu zmian oznacza akceptację zaktualizowanej polityki.
+                </p>
+
+                <h2>12. Kontakt</h2>
+                <div class="contact-info">
+                    <p><strong>📧 E-mail:</strong> kubaslawski.it@gmail.com</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Verely</strong> - Your Personal Development Companion</p>
+            <p>© 2026 Verely. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        function switchLanguage(lang) {
+            // Hide all language sections
+            document.querySelectorAll('.language-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.language-toggle button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected language section
+            document.getElementById('lang-' + lang).classList.add('active');
+            document.getElementById('btn-' + lang).classList.add('active');
+
+            // Update page title
+            if (lang === 'en') {
+                document.title = 'Privacy Policy - Verely';
+            } else {
+                document.title = 'Polityka Prywatności - Verely';
+            }
+        }
+
+        // Set default language based on browser language
+        window.addEventListener('DOMContentLoaded', () => {
+            const browserLang = navigator.language || navigator.userLanguage;
+            if (browserLang.startsWith('pl')) {
+                switchLanguage('pl');
+            }
+        });
+    </script>
+</body>
+</html>
+
