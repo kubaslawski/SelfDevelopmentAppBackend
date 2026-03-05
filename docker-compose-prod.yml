@@ -42,8 +42,8 @@ services:
       - DEMO_HTTP=true
       - SECURE_SSL_REDIRECT=false
 
-      - ALLOWED_HOSTS=*
-      - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
+      - ALLOWED_HOSTS=api-sda.com,localhost
+      - CSRF_TRUSTED_ORIGINS=https://api-sda.com,https://*.trycloudflare.com,https://*.ngrok-free.app
 
       - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
@@ -80,8 +80,8 @@ services:
       - DEMO_HTTP=true
       - SECURE_SSL_REDIRECT=false
 
-      - ALLOWED_HOSTS=*
-      - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
+      - ALLOWED_HOSTS=api-sda.com,localhost
+      - CSRF_TRUSTED_ORIGINS=https://api-sda.com,https://*.trycloudflare.com,https://*.ngrok-free.app
 
       - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
@@ -116,8 +116,8 @@ services:
       - DEMO_HTTP=true
       - SECURE_SSL_REDIRECT=false
 
-      - ALLOWED_HOSTS=*
-      - CSRF_TRUSTED_ORIGINS=http://91.99.236.86:8000,http://91.99.236.86,https://*.trycloudflare.com,https://*.ngrok-free.app
+      - ALLOWED_HOSTS=api-sda.com,localhost
+      - CSRF_TRUSTED_ORIGINS=https://api-sda.com,https://*.trycloudflare.com,https://*.ngrok-free.app
 
       - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}

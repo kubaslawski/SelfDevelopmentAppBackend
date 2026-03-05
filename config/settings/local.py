@@ -10,6 +10,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '192.168.33.6', '*']
 
+# CSRF settings for local development
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+]
+
 # Database - PostgreSQL in Docker
 # Supports both DB_* (docker-compose) and POSTGRES_* (legacy) env vars
 DATABASES = {

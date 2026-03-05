@@ -33,5 +33,3 @@ class LLMConnectionError(LLMError):
     """Raised when connection to LLM provider fails."""
 
     pass
-
-

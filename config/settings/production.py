@@ -12,6 +12,13 @@ ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS", default="", cast=lambda v: [s.strip() for s in v.split(",") if s.strip()]
 )
 
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="https://api-sda.com",
+    cast=lambda v: [s.strip() for s in v.split(",") if s.strip()],
+)
+
 # Database - PostgreSQL for production
 DATABASES = {
     "default": {
@@ -57,19 +64,6 @@ CACHES = {
 # Session with Redis
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
-
-# Sentry for error tracking
-SENTRY_DSN = config("SENTRY_DSN", default="")
-if SENTRY_DSN:
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        integrations=[DjangoIntegration()],
-        traces_sample_rate=0.1,
-        send_default_pii=False,
-    )
 
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

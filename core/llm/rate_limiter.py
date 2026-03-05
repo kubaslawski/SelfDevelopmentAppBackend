@@ -5,6 +5,7 @@ Uses Django's cache backend to track request counts per user.
 """
 
 from datetime import datetime, timedelta
+
 from django.core.cache import cache
 
 from .config import LLM_RATE_LIMIT_REQUESTS_PER_DAY, LLM_RATE_LIMIT_REQUESTS_PER_HOUR
@@ -121,5 +122,3 @@ def get_remaining_requests(user_id: int) -> dict:
             "remaining": max(0, LLM_RATE_LIMIT_REQUESTS_PER_DAY - daily_used),
         },
     }
-
-

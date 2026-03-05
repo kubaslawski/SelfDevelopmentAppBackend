@@ -21,7 +21,7 @@ from .models import Task, TaskCompletion
 def task_saved(sender, instance, created, **kwargs):
     """
     Handle task creation and updates.
-    
+
     - New task with due_date: schedule reminders
     - New recurring daily task: schedule daily reminder
     - Task completed: cancel pending notifications
@@ -60,7 +60,7 @@ def task_deleted(sender, instance, **kwargs):
 def completion_created(sender, instance, created, **kwargs):
     """
     Handle task completion for recurring tasks.
-    
+
     When a recurring task reaches its target for the period,
     cancel any pending reminders for that task.
     """
@@ -68,7 +68,7 @@ def completion_created(sender, instance, created, **kwargs):
         return
 
     task = instance.task
-    
+
     # Check if the task is now complete for the current period
     if task.is_period_complete:
         cancel_task_notifications(task)
