@@ -70,6 +70,8 @@ urlpatterns = [
     path("api/v1/", include("apps.groups.urls")),
     # API v1 - Stats
     path("api/v1/", include("apps.stats.urls")),
+    # API v1 - Workouts
+    path("api/v1/", include("apps.workouts.urls")),
     # API Documentation
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
