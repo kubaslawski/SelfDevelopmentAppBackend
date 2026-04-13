@@ -44,6 +44,7 @@ services:
 
       - ALLOWED_HOSTS=api-sda.com,localhost
       - CSRF_TRUSTED_ORIGINS=https://api-sda.com,https://localhost:5174,http://localhost:5174
+      - CORS_ALLOWED_ORIGINS=http://localhost:5174
 
       - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
