@@ -15,7 +15,7 @@ ALLOWED_HOSTS = config(
 # CSRF settings
 CSRF_TRUSTED_ORIGINS = config(
     "CSRF_TRUSTED_ORIGINS",
-    default="https://api-sda.com",
+    default="https://api-sda.com,http://localhost:5174",
     cast=lambda v: [s.strip() for s in v.split(",") if s.strip()],
 )
 

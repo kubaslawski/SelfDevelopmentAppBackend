@@ -43,7 +43,7 @@ services:
       - SECURE_SSL_REDIRECT=false
 
       - ALLOWED_HOSTS=api-sda.com,localhost
-      - CSRF_TRUSTED_ORIGINS=https://api-sda.com,https://*.trycloudflare.com,https://*.ngrok-free.app
+      - CSRF_TRUSTED_ORIGINS=https://api-sda.com,https://localhost:5174,http://localhost:5174
 
       - DJANGO_SECRET_KEY=eG3u4W2r0SFV8QcMQ4DWyncvkI9r-ZQMhmvnwV53ewHuIgiJnMMqjbeGPs13DzToj3H80aI-P41qqyJhVnNT_w
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
@@ -139,7 +139,8 @@ services:
       redis:
         condition: service_healthy
     networks: [sda-network]
-
+CSRF_TRUSTED_ORIGINS=https://api-sda:
+  com,https://localhost:5174,http://localhost:5174:
 
 networks:
   sda-network:
