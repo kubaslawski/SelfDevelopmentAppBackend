@@ -186,6 +186,7 @@ CORS_ALLOWED_ORIGINS = config(
     default="http://localhost:5174,http://127.0.0.1:5174",
     cast=lambda v: [s.strip() for s in v.split(",")],
 )
+CORS_ALLOW_CREDENTIALS = True
 
 # Simple JWT settings
 from datetime import timedelta
