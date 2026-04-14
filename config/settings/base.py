@@ -44,6 +44,14 @@ LOCAL_APPS = [
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
+# Email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = config("EMAIL_HOST", default="")
+EMAIL_PORT = config("EMAIL_PORT", default=587, cast=int)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = True
+
 # Custom User Model
 AUTH_USER_MODEL = "users.User"
 
@@ -203,6 +211,17 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
 }
+
+# PUBLIC_API_BASE_URL — set in config.settings.local and config.settings.production
+# (registration email verification links).
+
+# Optional deep link shown on the verification success HTML page ("Open app").
+EMAIL_VERIFICATION_APP_DEEP_LINK = config(
+    "EMAIL_VERIFICATION_APP_DEEP_LINK",
+    default="selfdevelopmentapp://login",
+)
+
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="no-reply@verely.app")
 
 # OAuth2 Provider settings (django-oauth-toolkit)
 OAUTH2_PROVIDER = {

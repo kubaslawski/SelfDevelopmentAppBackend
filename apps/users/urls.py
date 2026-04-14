@@ -8,6 +8,7 @@ from .views import (
     LogoutView,
     RegisterView,
     UserProfileView,
+    VerifyEmailView,
 )
 
 app_name = "users"
@@ -15,6 +16,7 @@ app_name = "users"
 urlpatterns = [
     # Authentication
     path("auth/register/", RegisterView.as_view(), name="register"),
+    path("auth/verify-email/", VerifyEmailView.as_view(), name="verify-email"),
     path("auth/login/", LoginView.as_view(), name="login"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
     # User profile

@@ -101,6 +101,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("password_confirm")
         user = User.objects.create_user(**validated_data)
+        user.is_active = False
+        user.save(update_fields=["is_active"])
         return user
 
 
@@ -170,3 +172,10 @@ class ChangePasswordSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise serializers.ValidationError("Old password is incorrect.")
         return value
+
+
+class EmailVerificationSerializer(serializers.Serializer):
+    """Serializer for email verification token payload."""
+
+    uid = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
