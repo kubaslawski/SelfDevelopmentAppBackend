@@ -139,6 +139,7 @@ class HabitSummarySerializer(serializers.Serializer):
 
     total_habits = serializers.IntegerField()
     average_consistency = serializers.FloatField()
+    all_habits = HabitPerformanceSerializer(many=True)
     best_habits = HabitPerformanceSerializer(many=True)
     at_risk_habits = HabitPerformanceSerializer(many=True)
     improving_habits = HabitPerformanceSerializer(many=True)

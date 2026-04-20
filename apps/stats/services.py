@@ -405,6 +405,7 @@ def get_habits_summary(user) -> dict:
     return {
         "total_habits": total,
         "average_consistency": round(avg_consistency, 1),
+        "all_habits": list(habits.order_by("-consistency_rate")),
         "best_habits": list(habits.filter(consistency_rate__gte=80).order_by("-consistency_rate")[:5]),
         "at_risk_habits": list(habits.filter(trend="at_risk")),
         "improving_habits": list(habits.filter(trend="improving")),
