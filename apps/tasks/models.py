@@ -169,6 +169,18 @@ class Task(TimeStampedModel):
     due_date = models.DateTimeField(
         _("due date"), null=True, blank=True, help_text=_("Deadline for completing the task")
     )
+    start_datetime = models.DateTimeField(
+        _("start datetime"),
+        null=True,
+        blank=True,
+        help_text=_("When the user starts working on this task"),
+    )
+    end_datetime = models.DateTimeField(
+        _("end datetime"),
+        null=True,
+        blank=True,
+        help_text=_("When the user stops working on this task"),
+    )
     completed_at = models.DateTimeField(
         _("completed at"),
         null=True,
@@ -579,6 +591,12 @@ class Task(TimeStampedModel):
             if not self.recurrence_period:
                 raise ValidationError(
                     {"recurrence_period": _("Recurrence period is required for recurring tasks.")}
+                )
+
+        if self.start_datetime and self.end_datetime:
+            if self.end_datetime <= self.start_datetime:
+                raise ValidationError(
+                    {"end_datetime": _("End datetime must be after start datetime.")}
                 )
 
 

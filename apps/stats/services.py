@@ -402,13 +402,26 @@ def get_habits_summary(user) -> dict:
     if total > 0:
         avg_consistency = sum(h.consistency_rate for h in habits) / total
 
+    best_habits = list(habits.filter(consistency_rate__gte=80).order_by("-consistency_rate")[:5])
+    at_risk_habits = list(habits.filter(trend="at_risk"))
+    improving_habits = list(habits.filter(trend="improving"))
+
+    # Collect IDs already represented in the categorized buckets
+    excluded_ids = {h.id for h in best_habits}
+    excluded_ids.update(h.id for h in at_risk_habits)
+    excluded_ids.update(h.id for h in improving_habits)
+
+    rest_habits = list(
+        habits.exclude(id__in=excluded_ids).order_by("-consistency_rate")
+    )
+
     return {
         "total_habits": total,
         "average_consistency": round(avg_consistency, 1),
-        "all_habits": list(habits.order_by("-consistency_rate")),
-        "best_habits": list(habits.filter(consistency_rate__gte=80).order_by("-consistency_rate")[:5]),
-        "at_risk_habits": list(habits.filter(trend="at_risk")),
-        "improving_habits": list(habits.filter(trend="improving")),
+        "best_habits": best_habits,
+        "at_risk_habits": at_risk_habits,
+        "improving_habits": improving_habits,
+        "rest_habits": rest_habits,
     }
 
 
