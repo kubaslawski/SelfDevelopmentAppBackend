@@ -155,6 +155,8 @@ class TaskSerializer(serializers.ModelSerializer):
             "status",
             "priority",
             "due_date",
+            "start_datetime",
+            "end_datetime",
             "completed_at",
             # TaskGroup (for organizing)
             "group",
@@ -317,6 +319,8 @@ class TaskListSerializer(serializers.ModelSerializer):
             "status",
             "priority",
             "due_date",
+            "start_datetime",
+            "end_datetime",
             "completed_at",
             "is_recurring",
             "recurrence_period",
