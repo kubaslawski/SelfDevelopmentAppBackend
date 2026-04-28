@@ -141,6 +141,19 @@ services:
         condition: service_healthy
     networks: [sda-network]
 
+  frontend:
+    build:
+      context: ../SelfDevelopmentAppWeb
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://api-sda.com
+    container_name: sda-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - web
+    networks: [sda-network]
+
 networks:
   sda-network:
     driver: bridge

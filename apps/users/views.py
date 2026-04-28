@@ -150,7 +150,12 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        _send_verification_email(user)
+        try:
+            _send_verification_email(user)
+        except Exception:
+            # Don't 500 the registration if SMTP is misconfigured or unreachable.
+            # The user can request a resend; we still want the account persisted.
+            logger.exception("Failed to send verification email to %s", user.email)
 
         return Response(
             {
