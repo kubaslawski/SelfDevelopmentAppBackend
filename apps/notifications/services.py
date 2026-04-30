@@ -12,7 +12,7 @@ from datetime import datetime, time, timedelta
 from typing import Optional
 
 import requests
-from core.llm import LLMError, gemini_client
+from core.llm import LLMError, RateLimitExceeded, gemini_client
 from core.llm.prompts import (
     MOTIVATIONAL_QUOTES_SYSTEM,
     format_motivational_quotes_prompt,
@@ -607,6 +607,51 @@ def notify_info(user, title: str, body: str) -> Notification:
 # =============================================================================
 
 
+def _already_attempted_motivational_quotes_today(user) -> bool:
+    """
+    Have we already attempted to generate motivational quotes for this user
+    today? Counts both successful and failed (rate-limited / errored)
+    attempts — `Notification` rows of type MOTIVATIONAL_QUOTE created
+    today, regardless of `status`.
+    """
+    today = timezone.localdate()
+    return Notification.objects.filter(
+        user=user,
+        notification_type=Notification.NotificationType.MOTIVATIONAL_QUOTE,
+        scheduled_for__date=today,
+    ).exists()
+
+
+def _record_motivational_quote_failure(user, error: str) -> None:
+    """
+    Persist a single FAILED MOTIVATIONAL_QUOTE notification for today.
+
+    This is the circuit breaker. Once recorded,
+    `_already_attempted_motivational_quotes_today` short-circuits any
+    further calls today, so a flapping client (`AppState`-driven retries
+    in the mobile hook) cannot keep pounding the LLM.
+
+    `update_or_create` keyed on (user, reminder_key) keeps it idempotent —
+    multiple calls within the same day overwrite the same row instead of
+    spamming the table.
+    """
+    today = timezone.localdate()
+    reminder_key = f"motivational_quote_failed_{today.isoformat()}"
+
+    Notification.objects.update_or_create(
+        user=user,
+        reminder_key=reminder_key,
+        defaults={
+            "notification_type": Notification.NotificationType.MOTIVATIONAL_QUOTE,
+            "title": "Motywujące cytaty",
+            "body": "Nie udało się wygenerować cytatów dzisiaj. Spróbujemy jutro.",
+            "scheduled_for": timezone.now(),
+            "status": Notification.Status.FAILED,
+            "error_message": (error or "")[:500],
+        },
+    )
+
+
 def generate_motivational_quotes(
     user,
     quote_count: int = 3,
@@ -617,6 +662,14 @@ def generate_motivational_quotes(
     """
     Generate motivational quotes based on user's current goals and tasks.
 
+    Behaviour:
+      - At most one LLM hit per user per day. Subsequent calls in the same
+        day return [] without touching Gemini, regardless of whether the
+        first attempt succeeded or failed.
+      - On `RateLimitExceeded` / other `LLMError`s a FAILED notification
+        record is persisted *before* the exception is re-raised, so the
+        circuit breaker stays armed.
+
     Args:
         user: User to personalize quotes for.
         quote_count: Number of quotes to generate (1-5).
@@ -625,6 +678,14 @@ def generate_motivational_quotes(
         List of MotivationalQuote entities.
     """
     quote_count = max(1, min(quote_count, 5))
+
+    # --- Circuit breaker -------------------------------------------------
+    if _already_attempted_motivational_quotes_today(user):
+        logger.info(
+            "Motivational quotes skipped for user %s — already attempted today",
+            user.id,
+        )
+        return []
 
     tasks = list(
         Task.objects.filter(user=user)
@@ -654,8 +715,16 @@ def generate_motivational_quotes(
             system_prompt=MOTIVATIONAL_QUOTES_SYSTEM,
         )
         parsed = LLMQuotesResponseDTO(**response)
+    except RateLimitExceeded as exc:
+        # Trip the breaker — every later call today returns [] instantly.
+        _record_motivational_quote_failure(user, f"RateLimitExceeded: {exc}")
+        raise
+    except LLMError as exc:
+        _record_motivational_quote_failure(user, f"LLMError: {exc}")
+        raise
     except ValidationError as exc:
         logger.error("Invalid LLM response for motivational quotes: %s", exc)
+        _record_motivational_quote_failure(user, f"ValidationError: {exc}")
         raise LLMError("Invalid LLM response format for motivational quotes.")
 
     quotes = [
@@ -668,6 +737,9 @@ def generate_motivational_quotes(
     ]
 
     if not quotes:
+        # LLM returned nothing usable — still arm the breaker so we don't
+        # immediately retry on the next request.
+        _record_motivational_quote_failure(user, "LLM returned no quotes")
         return []
 
     _record_motivational_quote_notification(

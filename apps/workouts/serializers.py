@@ -191,3 +191,18 @@ class ExerciseSerializer(serializers.ModelSerializer):
         model = Exercise
         fields = ["id", "name"]
         read_only_fields = ["id"]
+
+
+class ExerciseProgressEntrySerializer(serializers.Serializer):
+    """One day's worth of aggregated progress for a single exercise.
+
+    The aggregate is computed in `services.progress_service.get_exercise_progress`
+    via `Avg`, `Max`, `Sum` on `ExerciseSet`. `avg_weight` / `max_weight` /
+    `total_volume` may be `None` when the day has no sets recorded.
+    """
+
+    date = serializers.DateField()
+    avg_weight = serializers.FloatField(allow_null=True)
+    max_weight = serializers.FloatField(allow_null=True)
+    total_reps = serializers.IntegerField(allow_null=True)
+    total_volume = serializers.FloatField(allow_null=True)

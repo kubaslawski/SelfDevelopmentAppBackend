@@ -1,6 +1,6 @@
 from django.db.models.functions import TruncDate
 from django.utils.dateparse import parse_date
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from .models import Exercise, ExerciseSet, SessionExercise, WorkoutPlan, WorkoutSession
 from .serializers import (
+    ExerciseProgressEntrySerializer,
     ExerciseSerializer,
     ExerciseSetSerializer,
     SessionExerciseSerializer,
@@ -166,9 +167,40 @@ class ExerciseSetViewSet(viewsets.ModelViewSet):
 
 
 class ExerciseProgressAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    """Per-day aggregated progress for one exercise (avg/max weight,
+    total reps, total volume). drf-spectacular needs `serializer_class`
+    to infer schema even though we don't go through GenericAPIView."""
 
-    @extend_schema(tags=["Workouts"])
+    permission_classes = [IsAuthenticated]
+    serializer_class = ExerciseProgressEntrySerializer
+
+    @extend_schema(
+        tags=["Workouts"],
+        parameters=[
+            OpenApiParameter(
+                name="exercise_id",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="ID of the exercise to compute progress for.",
+            ),
+            OpenApiParameter(
+                name="from",
+                type={"type": "string", "format": "date"},
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Inclusive start date (YYYY-MM-DD).",
+            ),
+            OpenApiParameter(
+                name="to",
+                type={"type": "string", "format": "date"},
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Inclusive end date (YYYY-MM-DD).",
+            ),
+        ],
+        responses={200: ExerciseProgressEntrySerializer(many=True)},
+    )
     def get(self, request):
         exercise_id = request.query_params.get("exercise_id")
         if not exercise_id:

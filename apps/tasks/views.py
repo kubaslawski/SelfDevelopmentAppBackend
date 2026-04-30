@@ -2,6 +2,7 @@
 Views for the Tasks app.
 """
 
+from django.db import transaction
 from django.db.models import Case, IntegerField, Value, When
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
@@ -14,6 +15,8 @@ from rest_framework.response import Response
 from .filters import TaskCompletionFilter, TaskFilter
 from .models import Task, TaskCompletion, TaskGroup
 from .serializers import (
+    BulkUpdateCompletionsResponseSerializer,
+    BulkUpdateCompletionsSerializer,
     SyncCompletionsResponseSerializer,
     SyncCompletionsSerializer,
     TaskCompletionCreateSerializer,
@@ -80,6 +83,7 @@ class TaskOrderingFilter(filters.OrderingFilter):
     bulk_update_status=extend_schema(tags=["Tasks"]),
     recurring=extend_schema(tags=["Tasks"]),
     sync_completions=extend_schema(tags=["Tasks"]),
+    bulk_update_completions=extend_schema(tags=["Tasks"]),
     mark_finished=extend_schema(tags=["Tasks"]),
     mark_active=extend_schema(tags=["Tasks"]),
 )
@@ -409,6 +413,92 @@ class TaskViewSet(viewsets.ModelViewSet):
                 "added": added_count,
                 "removed": removed_count,
                 "total": len(incoming_dates),
+                "task": TaskWithCompletionsSerializer(task).data,
+            }
+        )
+
+    @extend_schema(
+        request=BulkUpdateCompletionsSerializer,
+        responses={200: BulkUpdateCompletionsResponseSerializer},
+    )
+    @action(detail=True, methods=["post"], url_path="bulk-update-completions")
+    def bulk_update_completions(self, request, pk=None):
+        """
+        Atomically apply explicit add/remove operations on a recurring
+        task's completions.
+
+        Unlike `sync_completions`, this endpoint never touches a completion
+        the client did not explicitly name:
+        - `additions`: each entry creates a new TaskCompletion
+        - `removals`: each ID is deleted ONLY if it belongs to this task
+
+        IDs that do not belong to the task are returned in `skipped_ids`
+        (no error raised — keeps the request idempotent in the face of
+        races/double-taps).
+
+        The whole operation runs inside a single DB transaction so a partial
+        failure rolls back both adds and removes.
+        """
+        task = self.get_object()
+
+        if not task.is_recurring:
+            return Response(
+                {"error": "This action is only available for recurring tasks"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = BulkUpdateCompletionsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        additions = serializer.validated_data.get("additions") or []
+        removal_ids = serializer.validated_data.get("removals") or []
+
+        # Deduplicate removal IDs upfront — no point hitting DB twice for
+        # the same row.
+        unique_removal_ids = list(dict.fromkeys(removal_ids))
+
+        with transaction.atomic():
+            # 1. Removals — only IDs that actually belong to this task.
+            # We compute this *before* deleting, so we can report which IDs
+            # were skipped (didn't belong here) and which were actually
+            # removed (returned from filter).
+            owned_ids = set(
+                task.completions.filter(id__in=unique_removal_ids).values_list(
+                    "id", flat=True
+                )
+            )
+            skipped_ids = [
+                cid for cid in unique_removal_ids if cid not in owned_ids
+            ]
+            removed_ids = list(owned_ids)
+
+            if removed_ids:
+                TaskCompletion.objects.filter(id__in=removed_ids).delete()
+
+            # 2. Additions — create new completions in input order so the
+            # response preserves client intent.
+            new_completions: list[TaskCompletion] = []
+            for item in additions:
+                new_completions.append(
+                    TaskCompletion.objects.create(
+                        task=task,
+                        completed_at=item["completed_at"],
+                        completed_value=item.get("completed_value"),
+                        notes=item.get("notes", ""),
+                    )
+                )
+
+        # Refresh task instance so TaskWithCompletionsSerializer sees the
+        # new state (latest 10 completions, derived counters, etc.).
+        task.refresh_from_db()
+
+        return Response(
+            {
+                "added": TaskCompletionSerializer(
+                    new_completions, many=True
+                ).data,
+                "removed_ids": removed_ids,
+                "skipped_ids": skipped_ids,
                 "task": TaskWithCompletionsSerializer(task).data,
             }
         )

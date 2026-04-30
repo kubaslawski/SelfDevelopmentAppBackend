@@ -156,3 +156,150 @@ class TestTaskAPI:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.django_db
+class TestBulkUpdateCompletions:
+    """Tests for the bulk_update_completions action."""
+
+    @pytest.fixture
+    def recurring_task(self):
+        return Task.objects.create(
+            title="Daily push-ups",
+            is_recurring=True,
+            recurrence_period=Task.RecurrencePeriod.DAILY,
+            recurrence_target_count=1,
+        )
+
+    def _url(self, task):
+        return reverse(
+            "tasks:task-bulk-update-completions", args=[task.id]
+        )
+
+    def test_additions_create_completions(self, api_client, recurring_task):
+        from apps.tasks.models import TaskCompletion
+
+        response = api_client.post(
+            self._url(recurring_task),
+            data={
+                "additions": [
+                    {"completed_at": "2026-04-01T10:00:00Z"},
+                    {"completed_at": "2026-04-02T10:00:00Z", "notes": "easy"},
+                ]
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["added"]) == 2
+        assert response.data["removed_ids"] == []
+        assert response.data["skipped_ids"] == []
+        # Both new completions are persisted with returned IDs
+        ids = [c["id"] for c in response.data["added"]]
+        assert TaskCompletion.objects.filter(id__in=ids).count() == 2
+
+    def test_removals_only_touch_listed_ids(self, api_client, recurring_task):
+        """The classic regression: a sparse removal list MUST NOT delete
+        completions the client did not name."""
+        from apps.tasks.models import TaskCompletion
+        from django.utils import timezone
+
+        keep1 = TaskCompletion.objects.create(
+            task=recurring_task, completed_at=timezone.now()
+        )
+        delete_me = TaskCompletion.objects.create(
+            task=recurring_task, completed_at=timezone.now()
+        )
+        keep2 = TaskCompletion.objects.create(
+            task=recurring_task, completed_at=timezone.now()
+        )
+
+        response = api_client.post(
+            self._url(recurring_task),
+            data={"removals": [delete_me.id]},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["removed_ids"] == [delete_me.id]
+        assert response.data["skipped_ids"] == []
+        assert TaskCompletion.objects.filter(id=keep1.id).exists()
+        assert TaskCompletion.objects.filter(id=keep2.id).exists()
+        assert not TaskCompletion.objects.filter(id=delete_me.id).exists()
+
+    def test_cross_task_removal_is_skipped(self, api_client, recurring_task):
+        """Sending a completion ID that belongs to *another* task must
+        not delete it — id ends up in skipped_ids instead."""
+        from apps.tasks.models import TaskCompletion
+        from django.utils import timezone
+
+        other_task = Task.objects.create(
+            title="Other recurring",
+            is_recurring=True,
+            recurrence_period=Task.RecurrencePeriod.DAILY,
+        )
+        foreign = TaskCompletion.objects.create(
+            task=other_task, completed_at=timezone.now()
+        )
+
+        response = api_client.post(
+            self._url(recurring_task),
+            data={"removals": [foreign.id]},
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["removed_ids"] == []
+        assert response.data["skipped_ids"] == [foreign.id]
+        assert TaskCompletion.objects.filter(id=foreign.id).exists()
+
+    def test_combined_add_and_remove_atomic(self, api_client, recurring_task):
+        from apps.tasks.models import TaskCompletion
+        from django.utils import timezone
+
+        existing = TaskCompletion.objects.create(
+            task=recurring_task, completed_at=timezone.now()
+        )
+
+        response = api_client.post(
+            self._url(recurring_task),
+            data={
+                "additions": [{"completed_at": "2026-04-10T08:00:00Z"}],
+                "removals": [existing.id],
+            },
+            format="json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert len(response.data["added"]) == 1
+        assert response.data["removed_ids"] == [existing.id]
+        assert not TaskCompletion.objects.filter(id=existing.id).exists()
+
+    def test_rejects_non_recurring_task(self, api_client, sample_task):
+        """sample_task is non-recurring; endpoint must reject."""
+        response = api_client.post(
+            self._url(sample_task),
+            data={"additions": []},
+            format="json",
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_empty_payload_is_noop(self, api_client, recurring_task):
+        from apps.tasks.models import TaskCompletion
+        from django.utils import timezone
+
+        TaskCompletion.objects.create(
+            task=recurring_task, completed_at=timezone.now()
+        )
+
+        response = api_client.post(
+            self._url(recurring_task), data={}, format="json"
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["added"] == []
+        assert response.data["removed_ids"] == []
+        assert response.data["skipped_ids"] == []
+        assert (
+            TaskCompletion.objects.filter(task=recurring_task).count() == 1
+        )
+
+

@@ -439,3 +439,66 @@ class SyncCompletionsResponseSerializer(serializers.Serializer):
     removed = serializers.IntegerField(help_text="Number of completions removed")
     total = serializers.IntegerField(help_text="Total completions after sync")
     task = TaskWithCompletionsSerializer()
+
+
+class BulkCompletionAdditionSerializer(serializers.Serializer):
+    """A single completion to be created via bulk_update_completions."""
+
+    completed_at = serializers.DateTimeField(
+        help_text="When the completion happened (ISO 8601)",
+    )
+    completed_value = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True,
+        help_text="Optional completed value (uses task's unit semantics)",
+    )
+    notes = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        default="",
+        help_text="Optional notes for this completion",
+    )
+
+
+class BulkUpdateCompletionsSerializer(serializers.Serializer):
+    """
+    Explicit add/remove payload for bulk_update_completions.
+
+    Unlike sync_completions (which deletes everything not in the incoming
+    list), this endpoint only touches the completions the client names
+    explicitly. Removals are addressed by primary key, so duplicates on the
+    same day stay unambiguous.
+    """
+
+    additions = BulkCompletionAdditionSerializer(
+        many=True,
+        required=False,
+        default=list,
+        help_text="List of new completions to create",
+    )
+    removals = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        required=False,
+        default=list,
+        help_text="IDs of completions to delete (must belong to this task)",
+    )
+
+
+class BulkUpdateCompletionsResponseSerializer(serializers.Serializer):
+    """Response for bulk_update_completions."""
+
+    added = TaskCompletionSerializer(
+        many=True,
+        help_text="Newly created completions, including their assigned IDs",
+    )
+    removed_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="IDs of completions that were actually deleted",
+    )
+    skipped_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="Removal IDs that did not belong to this task and were ignored",
+    )
+    task = TaskWithCompletionsSerializer()
